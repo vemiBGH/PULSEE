@@ -19,7 +19,7 @@ def adjoint(a):
 
 
 # Define quantum gates
-class N_Gate(Operator):
+class NGate(Operator):
 	"""
 	Quantum n-gate as defined in Scherer pg. 169: a unitary operator U: H^n -> 
 	H^n. If n = 1, one has a unary gate; if n = 2, one has a binary gate. 
@@ -47,7 +47,7 @@ class N_Gate(Operator):
 		return np.matmul(self.matrix, state.matrix)
 
 
-class Qubit_State:
+class QubitState:
 	def __init__(self, qs, matrix):
 		"""
 		Params
@@ -66,7 +66,7 @@ class Qubit_State:
 		return self._matrix 
 
 
-class Composite_Qubit_Space:
+class CompositeQubitSpace:
 	"""
 	Implementation of an n-fold tensor product of qubit spaces (as defined in 
 	Scherer 85) 
@@ -95,7 +95,7 @@ class Composite_Qubit_Space:
 		return self._n
 
 
-class Qubit_Space(Composite_Qubit_Space):
+class QubitSpace(CompositeQubitSpace):
 	"""
 	Implementation of a qubit space as specified by Scherer : a two-dimensional 
 	Hilbert space equipped with an eigenbasis |0> and |1> and a corresponding 
@@ -115,13 +115,13 @@ class Qubit_Space(Composite_Qubit_Space):
 		if alpha is not None and beta is not None: 
 			matrix = np.cos(beta / 2) * self._base_zero + np.sin(beta / 2) \
 					* np.exp(1j * alpha) * self._base_one 
-			return Qubit_State(self, matrix)
+			return QubitState(self, matrix)
 
 		elif coeffs is not None: 
 			assert np.conjugate(coeffs[0]) * coeffs[0] + \
 				   np.conjugate(coeffs[1]) * coeffs[1] == 1 and len(coeffs) == 2
 			matrix = coeffs[0] * self._base_zero + coeffs[1] * self._base_one
-			return Qubit_State(self, matrix)
+			return QubitState(self, matrix)
 
 		else: 
 			raise ValueError("State vector must be created using either " \
@@ -129,7 +129,9 @@ class Qubit_Space(Composite_Qubit_Space):
 
 
 # Defined quantum gates.
-HADAMARD = N_Gate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), Qubit_Space())
-
+HADAMARD = NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), QubitSpace())
+# TODO LOOK INTO THIS 2 qubits -> entangled qubit 
 	
-	
+if __name__ == '__main__':
+	qs = CompositeQubitSpace(3)
+	print(qs.basis_from_indices([1, 1, 0]))
