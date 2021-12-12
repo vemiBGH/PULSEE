@@ -1,0 +1,2 @@
+class MatrixRepresentationError(Exception):
+	pass 

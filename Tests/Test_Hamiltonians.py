@@ -1,5 +1,5 @@
-import sys
-sys.path.insert(1, '../Code')
+# import sys
+# sys.path.insert(1, '../src')
 
 import math
 import numpy as np
@@ -8,14 +8,14 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from Operators import Operator, Density_Matrix, Observable, \
+from pulsee.Operators import Operator, Density_Matrix, Observable, \
                       random_operator, random_density_matrix, random_observable
 
-from Many_Body import tensor_product_operator, partial_trace
+from pulsee.Many_Body import partial_trace
 
-from Nuclear_Spin import Nuclear_Spin, Many_Spins
+from pulsee.Nuclear_Spin import Nuclear_Spin, Many_Spins
 
-from Hamiltonians import h_zeeman, h_quadrupole, \
+from pulsee.Hamiltonians import h_zeeman, h_quadrupole, \
                          v0_EFG, v1_EFG, v2_EFG, \
                          h_single_mode_pulse, \
                          h_multiple_mode_pulse, \
