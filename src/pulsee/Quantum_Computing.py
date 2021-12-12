@@ -53,16 +53,19 @@ class NGate(Operator):
 		self._n = qs.n
 		x = np.array(x)
 		if not np.shape(x) == (2 ** self._n, 2 ** self._n):
-			raise MatrixRepresentationError(f'Input array shape {np.shape(x)} invalid for ' \
-				+ f'qubit space H^{self._n}')
+			raise MatrixRepresentationError(f'Input array shape {np.shape(x)} '
+				+ f'invalid for qubit space H^{self._n}')
 		if np.array_equal(np.matmul(adjoint(x), x), np.identity(self._n)):
 			raise MatrixRepresentationError('Input array must be unitary.')
 
 		super().__init__(x)
 	
 	def apply(self, state):
-		assert self._n == state.n
-		return np.matmul(self.matrix, state.matrix)
+		if self._n != state.n:
+			raise MatrixRepresentationError(f'Dimension {self._n} of gate ' + \
+									f'does not match dimension {state.n} of state.')
+		
+		return QubitState(self._qs, np.matmul(self.matrix, state.matrix))
 
 
 class QubitState:
@@ -75,10 +78,10 @@ class QubitState:
 		            (possibly composite) qubit space of which this qubit state 
 					is an element.
 		"""
-		if not np.log2(np.shape(matrix)[0]) == qs.n:
+		if np.shape(matrix)[0] != 2 ** qs.n:
 			raise MatrixRepresentationError(f'Improper array shape ' + \
-							 f'{np.shape(matrix[0])} for matrix representation ' + \
-							 f'of {qs.n}-dimensional qubit space.')
+							 f'{np.shape(matrix)[0]} for matrix representation ' + \
+							 f'of {2 ** qs.n}-dimensional qubit space.')
 		self._matrix = matrix
 		self._qs = qs 
 
@@ -86,12 +89,12 @@ class QubitState:
 	def matrix(self): 
 		return self._matrix 
 
-
+	# TODO consider renaming Density_Matrix to density operator? 
 	@property
 	def density_matrix(self):
 		onb = self._qs.onb_matrices() 
 
-		density_matrix = np.zeros((len(onb), len(onb)))
+		density_matrix = np.zeros((len(onb), len(onb)), dtype='complex_')
 		for i in range(0, len(onb)):
 			for j in range(0, len(onb)): 
 				density_matrix[i][j] = np.dot(np.conjugate(onb[i]), self.matrix) \
@@ -99,6 +102,20 @@ class QubitState:
 								
 		# Density_Matrix:
 		return Density_Matrix(density_matrix)
+
+	def get_density_matrix(self): 
+		return self.density_matrix
+
+	@property 
+	def n(self): 
+		return self._qs.n
+
+	@property 
+	def qs(self): 
+		return self._qs
+
+	def __mul__(self, other):
+		return tensor_product(self, other)
 
 
 class CompositeQubitSpace:
@@ -116,6 +133,24 @@ class CompositeQubitSpace:
 			raise ValueError(f'Invalid qubit space composition: {n}.')	
 		self._n = n 
 	
+	def basis_ket_from_indices(self, indices):
+		"""
+		Generate the QubitState of the basis ket of the desired 
+		composition of basis qubits. E.g., if given `[0, 1, 0]` generates the 
+		state ket |010⟩ as a QubitState.
+
+		Params
+		------
+		- `indices`: iterable of one of {0, 1}. States of qubits of which this 
+					 basis is a composition. 
+		
+		Returns
+		------
+		An ndarray representing the matrix representation of this composite 
+		state ket. 
+		"""
+		return QubitState(self, self.basis_from_indices(indices))
+
 	def basis_from_indices(self, indices):
 		"""
 		Generate the matrix representation of the basis ket of the desired 
@@ -136,8 +171,9 @@ class CompositeQubitSpace:
 		if not np.all([0 <= i <= 1 for i in indices]):
 			raise MatrixRepresentationError(f'{indices} has one index greater than 1.')
 		if not len(indices) == self._n:
-			raise MatrixRepresentationError(f'Number of indices in {indices} does not match ' + \
-							 f'dimension of composite qubit space: {self._n}.')
+			raise MatrixRepresentationError(f'Number of indices in {indices} ' + \
+							 f'does not match dimension of composite qubit ' + \
+							 f'space: {self._n}.')
 		basis = np.zeros((2 ** self._n))
 		k = 1
 		indices.reverse()
@@ -219,12 +255,40 @@ class QubitSpace(CompositeQubitSpace):
 		else: 
 			raise MatrixRepresentationError("State vector must be created using either " \
 						   + "coefficients or polar and azimuthal angles.")
+			
+
+
+def tensor_product(q1, q2):
+	"""
+	Take the tensor product of two qubit states.
+
+	Params
+	------
+	- `q1`: a QubitState
+	- `q2`: a QubitState
+
+	Returns
+	------
+	A QubitState in the CompositeQubitSpace of dimension n1 * n2 where 
+	n1 is the dimension of q1's qubit space and n2 is the dimension of q2's 
+	qubit space. 
+	"""
+	cqs = CompositeQubitSpace(q1.n + q2.n)
+	prod = np.array([])
+	for c in q1.matrix: 
+		prod = np.append(prod, c * q2.matrix)
+	return QubitState(cqs, prod)
+
 
 
 # Define quantum gates.
-HADAMARD = NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), QubitSpace())
-CNOT = NGate(np.array([[1, 0, 0, 0], 
+hadamard = lambda x: NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), 
+						QubitSpace()).apply(x) 
+cnot = lambda x: NGate(np.array([[1, 0, 0, 0], 
 					   [0, 1, 0, 0], 
 					   [0, 0, 0, 1], 
 					   [0, 0, 1, 0]]), 
-			 CompositeQubitSpace(2))
+			 CompositeQubitSpace(2)).apply(x)
+pauli_x = lambda x: NGate(np.array([[0, 1], [1, 0]]), QubitSpace()).apply(x)
+pauli_y = lambda x: NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace()).apply(x)
+pauli_z = lambda x: NGate(np.array([[1, 0], [0, -1]]), QubitSpace()).apply(x)
