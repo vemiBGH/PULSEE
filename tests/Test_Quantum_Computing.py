@@ -29,7 +29,7 @@ def test_n_fold_composite_basis_matrix(indices):
 	assume(n > 0)
 	qs = CompositeQubitSpace(n)
 	try:
-		basis_matrix = qs.basis_from_indices(indices)
+		qs.basis_from_indices(indices)
 	except MatrixRepresentationError: 
 		assume(False)
 

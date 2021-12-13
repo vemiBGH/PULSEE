@@ -46,11 +46,11 @@ class NGate(Operator):
 	Params
 	------
 	- `x`: the array representing this operator. 
-	- `qs`: the qubit space on which this operator/gate acts. 
+	- `qubit_space`: the qubit space on which this operator/gate acts. 
 	"""
-	def __init__(self, x, qs):
-		self._qs = qs 
-		self._n = qs.n
+	def __init__(self, x, qubit_space):
+		self._qubit_space = qubit_space
+		self._n = qubit_space.n
 		x = np.array(x)
 		if not np.shape(x) == (2 ** self._n, 2 ** self._n):
 			raise MatrixRepresentationError(f'Input array shape {np.shape(x)} '
@@ -65,34 +65,33 @@ class NGate(Operator):
 			raise MatrixRepresentationError(f'Dimension {self._n} of gate ' + \
 									f'does not match dimension {state.n} of state.')
 		
-		return QubitState(self._qs, np.matmul(self.matrix, state.matrix))
+		return QubitState(self._qubit_space, np.matmul(self.matrix, state.matrix))
 
 
 class QubitState:
-	def __init__(self, qs, matrix):
+	def __init__(self, qubit_space, matrix):
 		"""
 		Params
 		------
-		- `qs`: the qubit space of which this qubit state is an element.
+		- `qubit_space`: the qubit space of which this qubit state is an element.
 		- `matrix`: an 1 by n matrix, where n is the number of factors of the 
 		            (possibly composite) qubit space of which this qubit state 
 					is an element.
 		"""
-		if np.shape(matrix)[0] != 2 ** qs.n:
+		if np.shape(matrix)[0] != 2 ** qubit_space.n:
 			raise MatrixRepresentationError(f'Improper array shape ' + \
 							 f'{np.shape(matrix)[0]} for matrix representation ' + \
-							 f'of {2 ** qs.n}-dimensional qubit space.')
+							 f'of {2 ** qubit_space.n}-dimensional qubit space.')
 		self._matrix = matrix
-		self._qs = qs 
+		self._qubit_space = qubit_space 
 
 	@property 
 	def matrix(self): 
 		return self._matrix 
 
 	# TODO consider renaming Density_Matrix to density operator? 
-	@property
-	def density_matrix(self):
-		onb = self._qs.onb_matrices() 
+	def get_density_matrix(self):
+		onb = self._qubit_space.onb_matrices() 
 
 		density_matrix = np.zeros((len(onb), len(onb)), dtype='complex_')
 		for i in range(0, len(onb)):
@@ -100,22 +99,69 @@ class QubitState:
 				density_matrix[i][j] = np.dot(np.conjugate(onb[i]), self.matrix) \
 									 * np.dot(np.conjugate(self.matrix), onb[j])
 								
-		# Density_Matrix:
 		return Density_Matrix(density_matrix)
 
-	def get_density_matrix(self): 
-		return self.density_matrix
+	@property
+	def density_matrix(self): 
+		return self.get_density_matrix()
 
 	@property 
 	def n(self): 
-		return self._qs.n
+		return self._qubit_space.n
 
 	@property 
-	def qs(self): 
-		return self._qs
+	def qubit_space(self): 
+		return self._qubit_space
 
 	def __mul__(self, other):
 		return tensor_product(self, other)
+
+	@property
+	def subqubits(self):
+		return self._subqubits
+	
+	def get_reduced_density_matrix(self, index):
+		"""
+		The reduced density matrix of this qubit as specified by Baaquie (2013)
+		page 103. 
+
+		Params
+		------
+		- `subqubit_index`: index of the subqubit to "trace out"
+		
+		Returns
+		------
+		The reduced density matrix of this QubitState.
+		"""
+		if self.qubit_space.n != 2: 
+			raise MatrixRepresentationError('Reduced density matrix currently ' + \
+										'unsupported for n > 2.')
+
+		density_matrix = self.density_matrix.matrix
+		reduced_density_matrix = np.zeros((2, 2), dtype="complex_")
+		# https://physics.stackexchange.com/questions/179671/how-to-take-partial-trace
+		for k in QubitSpace().onb_matrices():
+			k_otimes_identity = np.kron(k, np.eye(2, dtype="complex_"))
+			if index == 1:
+				k_otimes_identity = np.kron(np.eye(2, dtype="complex_"), k)
+				
+			reduced_density_matrix += np.matmul(k_otimes_identity,
+								 np.matmul(density_matrix, np.transpose(k_otimes_identity)))
+					
+
+		return reduced_density_matrix
+
+	def __add__(self, other):
+		if self.n != other.n: 
+			raise MatrixRepresentationError(f'Cannot cast qubit with n = {self.n}' + \
+				f' to qubit with n = {other.n}.')
+		return QubitState(self.qubit_space, normalize(self.matrix + other.matrix))
+
+	def __sub__(self, other):
+		if self.n != other.n: 
+			raise MatrixRepresentationError(f'Cannot cast qubit with n = {self.n}' + \
+				f' to qubit with n = {other.n}.')
+		return QubitState(self.qubit_space, normalize(self.matrix - other.matrix))
 
 
 class CompositeQubitSpace:
@@ -273,11 +319,13 @@ def tensor_product(q1, q2):
 	n1 is the dimension of q1's qubit space and n2 is the dimension of q2's 
 	qubit space. 
 	"""
-	cqs = CompositeQubitSpace(q1.n + q2.n)
-	prod = np.array([])
-	for c in q1.matrix: 
-		prod = np.append(prod, c * q2.matrix)
-	return QubitState(cqs, prod)
+	# Find number of qubit spaces that this composite qubit's qubit space is 
+	# comprised of 
+	n = q1.n + q2.n 
+
+	# Make matrix representation of tensor product. 
+	prod = np.kron(q1.matrix, q2.matrix)
+	return QubitState(CompositeQubitSpace(n), prod)
 
 
 
@@ -292,3 +340,6 @@ cnot = lambda x: NGate(np.array([[1, 0, 0, 0],
 pauli_x = lambda x: NGate(np.array([[0, 1], [1, 0]]), QubitSpace()).apply(x)
 pauli_y = lambda x: NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace()).apply(x)
 pauli_z = lambda x: NGate(np.array([[1, 0], [0, -1]]), QubitSpace()).apply(x)
+phase = lambda x: NGate(np.array([[1, 0], [0, 1j]]), QubitSpace()).apply(x)
+pi_8 = lambda x: NGate(np.array([[1, 0], [np.exp(1j* np.pi / 4)]]), QubitSpace()) \
+				.apply(x)
