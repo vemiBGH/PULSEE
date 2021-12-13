@@ -1,5 +1,5 @@
 # PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)
-## Development branch for Quantum Computing Module [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lzawbrito/PULSEE/lbrito-quantum-computing?labpath=demos%2F)
+## Development branch for Quantum Computing Module [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/lzawbrito/PULSEE/lbrito-quantum-computing?labpath=demos%2Fquantum_computing_demo.ipynb)
 Authors: Davide Candoli (Università di Bologna) and Lucas Brito (Brown University)
 
 ## Installation
