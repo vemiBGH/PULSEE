@@ -8,14 +8,14 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from pulsee.Operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, Density_Matrix, Observable, \
                       random_operator, random_density_matrix, random_observable
 
-from pulsee.Many_Body import partial_trace
+from pulsee.many_body import partial_trace
 
-from pulsee.Nuclear_Spin import Nuclear_Spin, Many_Spins
+from pulsee.nuclear_spin import Nuclear_Spin, Many_Spins
 
-from pulsee.Hamiltonians import h_zeeman, h_quadrupole, \
+from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
                          v0_EFG, v1_EFG, v2_EFG, \
                          h_single_mode_pulse, \
                          h_multiple_mode_pulse, \

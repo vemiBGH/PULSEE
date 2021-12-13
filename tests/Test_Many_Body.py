@@ -7,10 +7,10 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee.Operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, Density_Matrix, Observable, \
                       random_operator, random_density_matrix, random_observable
 
-from pulsee.Many_Body import tensor_product, partial_trace
+from pulsee.many_body import tensor_product, partial_trace
 
 @given(d = st.integers(min_value=1, max_value=8))
 @settings(deadline = None)

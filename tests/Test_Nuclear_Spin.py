@@ -7,11 +7,11 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee.Operators import Operator, Observable, \
+from pulsee.operators import Operator, Observable, \
                       random_operator, random_density_matrix, random_observable, \
                       commutator
 
-from pulsee.Nuclear_Spin import Nuclear_Spin, Many_Spins
+from pulsee.nuclear_spin import Nuclear_Spin, Many_Spins
         
 
 def test_spin_quantum_number_initialisation_with_non_half_integer():

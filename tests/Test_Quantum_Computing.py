@@ -2,8 +2,8 @@ import sys
 import numpy as np
 sys.path.insert(1, '../Code')
 
-from pulsee.exceptions.Quantum_Computing import MatrixRepresentationError
-from pulsee.Quantum_Computing import CompositeQubitSpace, QubitSpace 
+from pulsee.exceptions.quantum_computing import MatrixRepresentationError
+from pulsee.quantum_computing import CompositeQubitSpace, QubitSpace 
 
 import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume

@@ -12,16 +12,16 @@ from matplotlib.pyplot import xticks, yticks
 import hypothesis.strategies as st
 from hypothesis import given, assume
 
-from pulsee.Operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, Density_Matrix, Observable, \
                       random_density_matrix
 
-from pulsee.Many_Body import tensor_product
+from pulsee.many_body import tensor_product
 
-from pulsee.Nuclear_Spin import Nuclear_Spin
+from pulsee.nuclear_spin import Nuclear_Spin
 
-from pulsee.Hamiltonians import h_j_coupling
+from pulsee.hamiltonians import h_j_coupling
 
-from pulsee.Simulation import nuclear_system_setup, \
+from pulsee.simulation import nuclear_system_setup, \
                        power_absorption_spectrum, \
                        evolve, \
                        RRF_operator, \

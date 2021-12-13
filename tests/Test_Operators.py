@@ -12,7 +12,7 @@ from scipy.constants import Planck, Boltzmann
 import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume
 
-from pulsee.Operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, Density_Matrix, Observable, \
                       random_operator, random_density_matrix, random_observable, \
                       commutator, magnus_expansion_1st_term, \
                       magnus_expansion_2nd_term, \
