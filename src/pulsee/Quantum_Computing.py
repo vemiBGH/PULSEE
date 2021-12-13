@@ -59,6 +59,9 @@ class NGate(Operator):
 			raise MatrixRepresentationError('Input array must be unitary.')
 
 		super().__init__(x)
+
+	def __call__(self, qubit): 
+		return self.apply(qubit)
 	
 	def apply(self, state):
 		if self._n != state.n:
@@ -330,16 +333,15 @@ def tensor_product(q1, q2):
 
 
 # Define quantum gates.
-hadamard = lambda x: NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), 
-						QubitSpace()).apply(x) 
-cnot = lambda x: NGate(np.array([[1, 0, 0, 0], 
+hadamard = NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), 
+						QubitSpace())
+cnot = NGate(np.array([[1, 0, 0, 0], 
 					   [0, 1, 0, 0], 
 					   [0, 0, 0, 1], 
 					   [0, 0, 1, 0]]), 
-			 CompositeQubitSpace(2)).apply(x)
-pauli_x = lambda x: NGate(np.array([[0, 1], [1, 0]]), QubitSpace()).apply(x)
-pauli_y = lambda x: NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace()).apply(x)
-pauli_z = lambda x: NGate(np.array([[1, 0], [0, -1]]), QubitSpace()).apply(x)
-phase = lambda x: NGate(np.array([[1, 0], [0, 1j]]), QubitSpace()).apply(x)
-pi_8 = lambda x: NGate(np.array([[1, 0], [np.exp(1j* np.pi / 4)]]), QubitSpace()) \
-				.apply(x)
+			 CompositeQubitSpace(2))
+pauli_x = NGate(np.array([[0, 1], [1, 0]]), QubitSpace())
+pauli_y = NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace())
+pauli_z = NGate(np.array([[1, 0], [0, -1]]), QubitSpace())
+phase = NGate(np.array([[1, 0], [0, 1j]]), QubitSpace())
+pi_8 = NGate(np.array([[1, 0], [np.exp(1j* np.pi / 4)]]), QubitSpace())
