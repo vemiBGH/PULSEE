@@ -1,9 +1,9 @@
 import math
 import numpy as np
 
-from .Operators import Operator, Observable
+from .operators import Operator, Observable
 
-from .Many_Body import tensor_product
+from .many_body import tensor_product
 
 class Nuclear_Spin:
     """

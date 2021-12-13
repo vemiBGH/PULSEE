@@ -1,4 +1,4 @@
-from pulsee.Quantum_Computing import * 
+from pulsee.quantum_computing import * 
 
 # Create qubit space object. 
 qs = QubitSpace()
