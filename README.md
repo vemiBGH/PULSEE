@@ -13,7 +13,7 @@ through simulations of spin evolution phenomena---I have implemented the
 fundamental components of quantum circuits in the form of a new PULSEE
 module titled `Quantum_Computing`.
 
-Instalation 
+Installation 
 ===========
 
 To use this development version of PULSEE, first install the dependencies as 
