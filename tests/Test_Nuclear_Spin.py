@@ -11,13 +11,13 @@ from pulsee.operators import Operator, Observable, \
                       random_operator, random_density_matrix, random_observable, \
                       commutator
 
-from pulsee.nuclear_spin import Nuclear_Spin, Many_Spins
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
         
 
 def test_spin_quantum_number_initialisation_with_non_half_integer():
     wrong_input = 2.6
     try:
-        I = Nuclear_Spin(wrong_input)
+        I = NuclearSpin(wrong_input)
         raise AssertionError
     except ValueError as ve:
         if not "The given spin quantum number is not a half-integer number" in ve.args[0]:
@@ -27,7 +27,7 @@ def test_spin_quantum_number_initialisation_with_non_half_integer():
         
 @given(s = st.integers(min_value=1, max_value=14))
 def test_spin_raising_lowering_operators_are_hermitian_conjugate(s):
-    n_s = Nuclear_Spin(s/2)
+    n_s = NuclearSpin(s/2)
     raising_dagger = n_s.I['+'].dagger()
     lowering = n_s.I['-']
     note("Adjoint of I_raising = %r" % (raising_dagger.matrix))
@@ -39,7 +39,7 @@ def test_spin_raising_lowering_operators_are_hermitian_conjugate(s):
 # between the cartesian components of the spin
 @given(s = st.integers(min_value=1, max_value=14))
 def test_spin_commutation_relation(s):
-    n_s = Nuclear_Spin(s/2)
+    n_s = NuclearSpin(s/2)
     left_hand_side = commutator(n_s.I['x'], n_s.I['y'])
     right_hand_side = 1j*n_s.I['z']
     note("[I_x, I_y] = %r" % (left_hand_side.matrix))
@@ -50,9 +50,9 @@ def test_spin_commutation_relation(s):
 def test_dimensions_many_spin_operator(dim):
     spin = []
     for i in range(3):
-        spin.append(Nuclear_Spin((dim[i]-1)/2))
+        spin.append(NuclearSpin((dim[i]-1)/2))
         
-    many_spins = Many_Spins([spin[0], spin[1], spin[2]])
+    many_spins = ManySpins([spin[0], spin[1], spin[2]])
     note("spin[0].I[-] = %r" % (spin[0].I['-'].matrix))
     note("spin[1].I[-] = %r" % (spin[1].I['-'].matrix))
     note("spin[2].I[-] = %r" % (spin[2].I['-'].matrix))
@@ -63,10 +63,10 @@ def test_dimensions_many_spin_operator(dim):
 # of a system of two spins with quantum number s = 3/2, 5/2 respectively has the possible eigenvalues
 # 1, 2, 3, 4
 def test_angular_momentum_sum_rules():
-    spin1 = Nuclear_Spin(3/2)
-    spin2 = Nuclear_Spin(5/2)
+    spin1 = NuclearSpin(3/2)
+    spin2 = NuclearSpin(5/2)
     
-    spin_system = Many_Spins([spin1, spin2])
+    spin_system = ManySpins([spin1, spin2])
     
     I_sq_mod = spin_system.I['x']**2 + spin_system.I['y']**2 + spin_system.I['z']**2
     

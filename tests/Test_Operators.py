@@ -12,7 +12,7 @@ from scipy.constants import Planck, Boltzmann
 import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume
 
-from pulsee.operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, DensityMatrix, Observable, \
                       random_operator, random_density_matrix, random_observable, \
                       commutator, magnus_expansion_1st_term, \
                       magnus_expansion_2nd_term, \
@@ -203,32 +203,32 @@ def test_reversibility_change_picture(d):
 def test_dmatrix_initialisation_non_hermitian():
     wrong_input = np.array([[1, 1], [0, 0]])
     try:
-        dm = Density_Matrix(wrong_input)
+        dm = DensityMatrix(wrong_input)
         raise AssertionError
     except ValueError:
         pass
     except AssertionError:
-        raise AssertionError("No ValueError raised by the initialisation of a Density_Matrix with a non-hermitian square array")
+        raise AssertionError("No ValueError raised by the initialisation of a DensityMatrix with a non-hermitian square array")
 
 def test_dmatrix_initialisation_non_unit_trace():
     wrong_input = np.array([[1, 0], [0, 1]])
     try:
-        dm = Density_Matrix(wrong_input)
+        dm = DensityMatrix(wrong_input)
         raise AssertionError
     except ValueError:
         pass
     except AssertionError:
-        raise AssertionError("No ValueError raised by the initialisation of a Density_Matrix with a square array with trace different from 1")
+        raise AssertionError("No ValueError raised by the initialisation of a DensityMatrix with a square array with trace different from 1")
 
 def test_dmatrix_initialisation_not_positive():
     wrong_input = np.array([[2, 0], [0, -1]])
     try:
-        dm = Density_Matrix(wrong_input)
+        dm = DensityMatrix(wrong_input)
         raise AssertionError
     except ValueError:
         pass
     except AssertionError:
-        raise AssertionError("No ValueError raised by the initialisation of a Density_Matrix with a square array which is not positive")
+        raise AssertionError("No ValueError raised by the initialisation of a DensityMatrix with a square array which is not positive")
 
 @given(d = st.integers(min_value=1, max_value=8))
 @settings(deadline = None)
@@ -240,8 +240,8 @@ def test_free_evolution_conserves_dm_properties(d):
     except ValueError as ve:
         if "The input array lacks the following properties: \n" in ve.args[0]:
             error_message = ve.args[0][49:]
-            error_message = "The evolved Density_Matrix lacks the following properties: \n" + error_message
-            note("Initial Density_Matrix = %r" % (dm.matrix))
+            error_message = "The evolved DensityMatrix lacks the following properties: \n" + error_message
+            note("Initial DensityMatrix = %r" % (dm.matrix))
             note("Hamiltonian = %r" % (h.matrix))
             raise AssertionError(error_message)
 
@@ -263,7 +263,7 @@ def test_random_density_matrix_satisfies_dm_properties(d):
     except ValueError as ve:
         if "The input array lacks the following properties: \n" in ve.args[0]:
             error_message = ve.args[0][49:]
-            error_message = "The generated random Density_Matrix lacks the following properties: \n" + error_message
+            error_message = "The generated random DensityMatrix lacks the following properties: \n" + error_message
             raise AssertionError(error_message)
 
 # Checks that the space of density matrices is a convex space, i.e. that the linear combination

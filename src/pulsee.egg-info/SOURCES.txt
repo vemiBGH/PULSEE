@@ -3,7 +3,7 @@ README.md
 setup.py
 src/pulsee/Hamiltonians.py
 src/pulsee/Many_Body.py
-src/pulsee/Nuclear_Spin.py
+src/pulsee/NuclearSpin.py
 src/pulsee/Operators.py
 src/pulsee/PULSEE_GUI.py
 src/pulsee/Quantum_Computing.py

@@ -16,8 +16,8 @@ def tensor_product(A, B):
     
     Returns
     -------
-    1. If both A and B belong to type Density_Matrix, the function returns a
-       Density_Matrix object initialised with such a matrix; 
+    1. If both A and B belong to type DensityMatrix, the function returns a
+       DensityMatrix object initialised with such a matrix; 
     2. If both A and B belong to type Observable, the function returns an
        Observable object initialised with such a matrix;
     3. Otherwise, the function returns a generic Operator object initialised
@@ -36,8 +36,8 @@ def tensor_product(A, B):
                 for jj in range(d_B):
                     A_tensor_B[i * d_B + ii, j * d_B + jj] = A.matrix[i, j] * B.matrix[ii, jj]
     
-    if isinstance(A, Density_Matrix) and isinstance(B, Density_Matrix):
-        return Density_Matrix(A_tensor_B)
+    if isinstance(A, DensityMatrix) and isinstance(B, DensityMatrix):
+        return DensityMatrix(A_tensor_B)
     
     elif isinstance(A, Observable) and isinstance(B, Observable):
         return Observable(A_tensor_B)
@@ -68,8 +68,8 @@ def partial_trace(operator, subspaces_dimensions, index_position):
     Returns
     -------
     There are 3 possibilities:
-    1. If operator belongs to type Density_Matrix, the function returns a
-       Density_Matrix object representing the desired partial trace; 
+    1. If operator belongs to type DensityMatrix, the function returns a
+       DensityMatrix object representing the desired partial trace; 
     2. If operator belongs to type Observable, the function returns a Observable
        object representing the desired partial trace;
     3. Otherwise, the function returns a generic Operator object representing
@@ -103,8 +103,8 @@ def partial_trace(operator, subspaces_dimensions, index_position):
         
     partial_trace = partial_trace[d_downhill:, d_downhill:]
     
-    if isinstance(operator, Density_Matrix):
-        return Density_Matrix(partial_trace)
+    if isinstance(operator, DensityMatrix):
+        return DensityMatrix(partial_trace)
     
     elif isinstance(operator, Observable):
         return Observable(partial_trace)

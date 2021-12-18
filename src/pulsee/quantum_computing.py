@@ -1,4 +1,4 @@
-from .operators import Observable, Operator, Density_Matrix
+from .operators import Observable, Operator, DensityMatrix
 import numpy as np 
 from .exceptions.quantum_computing import MatrixRepresentationError
 

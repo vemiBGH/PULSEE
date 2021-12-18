@@ -9,17 +9,17 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
-from Operators import Operator, DensityMatrix, Observable, \
+from .operators import Operator, DensityMatrix, Observable, \
                       magnus_expansion_1st_term, \
                       magnus_expansion_2nd_term, \
                       magnus_expansion_3rd_term, \
                       canonical_density_matrix
 
-from Many_Body import tensor_product
+from .many_body import tensor_product
 
-from Nuclear_Spin import Nuclear_Spin, Many_Spins
+from .nuclear_spin import NuclearSpin, ManySpins
 
-from Hamiltonians import h_zeeman, h_quadrupole, \
+from .hamiltonians import h_zeeman, h_quadrupole, \
                          v0_EFG, v1_EFG, v2_EFG, \
                          h_single_mode_pulse, \
                          h_multiple_mode_pulse, \
@@ -127,7 +127,7 @@ def nuclear_system_setup(
     
     Returns
     -------
-    - [0]: Nuclear_Spin / Many_Spins
+    - [0]: NuclearSpin / ManySpins
            The single spin/spin system subject to the NMR/NQR experiment.
 
     - [1]: Observable
@@ -155,7 +155,7 @@ def nuclear_system_setup(
     h_unperturbed = 0
     
     for i in range(len(spin_par)):
-        spins.append(Nuclear_Spin(spin_par[i]['quantum number'], \
+        spins.append(NuclearSpin(spin_par[i]['quantum number'], \
                                   spin_par[i]['gamma/2pi']))
         
         if quad_par is not None:
@@ -174,7 +174,7 @@ def nuclear_system_setup(
         else:
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
     
-    spin_system = Many_Spins(spins)
+    spin_system = ManySpins(spins)
     
     h_unperturbed = Operator(spin_system.d) * 0
     
@@ -208,7 +208,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     
     Parameters
     ----------
-    - spin: Nuclear_Spin / Many_Spins
+    - spin: NuclearSpin / ManySpins
   
             Single spin/spin system under study.
   
@@ -261,7 +261,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     d = h_unperturbed.dimension()
     
     # Operator of the magnetic moment of the spin system
-    if isinstance(spin,  Many_Spins):
+    if isinstance(spin,  ManySpins):
         magnetic_moment = Operator(spin.d) * 0
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I['x']
@@ -383,7 +383,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
     
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
   
             Spin under study.
     
@@ -508,7 +508,7 @@ def RRF_operator(spin, RRF_par):
   
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
             
             Spin under study.
   
@@ -712,7 +712,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
     
             Spin under study.
     

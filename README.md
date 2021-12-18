@@ -78,7 +78,7 @@ functions. The class structure is as follows:
 
     For convenience, the `QubitState` class is equipped with a
     `get_density_matrix` method as well as a functionally identical
-    `density_matrix` property. This returns a `Density_Matrix` operator
+    `density_matrix` property. This returns a `DensityMatrix` operator
     as defined in `operators.py`, the matrix representation of which is
     computed with respect to the object's qubit space computational
     basis. The method `QubitState.get_reduced_density_matrix` computes

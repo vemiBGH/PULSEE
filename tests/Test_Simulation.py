@@ -12,12 +12,12 @@ from matplotlib.pyplot import xticks, yticks
 import hypothesis.strategies as st
 from hypothesis import given, assume
 
-from pulsee.operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, DensityMatrix, Observable, \
                       random_density_matrix
 
 from pulsee.many_body import tensor_product
 
-from pulsee.nuclear_spin import Nuclear_Spin
+from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.hamiltonians import h_j_coupling
 
@@ -184,7 +184,7 @@ def test_j_coupling_refocusing_sequence():
 
 def test_RRF_operator_proportional_to_Iz_for_theta_0():
     
-    spin = Nuclear_Spin(3/2, 1.)
+    spin = NuclearSpin(3/2, 1.)
     
     RRF_par = {'nu_RRF': 10,
               'theta_RRF': 0,

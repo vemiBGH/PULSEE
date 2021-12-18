@@ -3,11 +3,11 @@ from cmath import exp
 import numpy as np
 import pandas as pd
 
-from .operators import Operator, Density_Matrix, Observable
+from .operators import Operator, DensityMatrix, Observable
 
 from .many_body import tensor_product
 
-from .nuclear_spin import Nuclear_Spin, Many_Spins
+from .nuclear_spin import NuclearSpin, ManySpins
 
 def h_zeeman(spin, theta_z, phi_z, B_0):
     """
@@ -16,7 +16,7 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
     
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
             Spin under study;
     - theta_z: float
                Polar angle of the magnetic field in the laboratory coordinate
@@ -51,7 +51,7 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
     
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
             Spin under study;
     - e2qQ: float
             Product of the quadrupole moment constant, eQ, and the eigenvalue of
@@ -208,7 +208,7 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t):
     
     Parameters
     ----------
-    - spin: Nuclear_Spin
+    - spin: NuclearSpin
             Spin under study.
     - frequency: non-negative float
                  Frequency of the monochromatic wave (expressed in MHz).
@@ -250,14 +250,14 @@ def h_multiple_mode_pulse(spin, mode, t):
     """
     Computes the term of the Hamiltonian describing the interaction with a
     superposition of single-mode electromagnetic pulses. If the passed argument
-    spin is a Nuclear_Spin object, the returned Hamiltonian will describe the
+    spin is a NuclearSpin object, the returned Hamiltonian will describe the
     interaction between the pulse of radiation and the single spin; if it is a
-    Many_Spins object, it will represent the interaction with the whole system
+    ManySpins object, it will represent the interaction with the whole system
     of many spins.
     
     Parameters
     ----------
-    - spin: Nuclear_Spin or Many_Spins
+    - spin: NuclearSpin or ManySpins
             Spin or spin system under study;
     - mode: pandas.DataFrame
             Table of the parameters of each electromagnetic mode in the
@@ -288,7 +288,7 @@ def h_multiple_mode_pulse(spin, mode, t):
     phase = mode['phase']
     theta = mode['theta_p']
     phi = mode['phi_p']
-    if isinstance(spin, Many_Spins):
+    if isinstance(spin, ManySpins):
         for i in mode.index:
             h_pulse = Operator(spin.d) * 0
             for n in range(spin.n_spins):
@@ -299,7 +299,7 @@ def h_multiple_mode_pulse(spin, mode, t):
                 for l in range(spin.n_spins)[n+1:]:
                     term_n = tensor_product(term_n, Operator(spin.spin[l].d))
                 h_pulse = h_pulse + term_n
-    elif isinstance(spin, Nuclear_Spin):
+    elif isinstance(spin, NuclearSpin):
         for i in mode.index:
             h_pulse = h_pulse + h_single_mode_pulse(spin, omega[i], B[i], 
                                                 phase[i], theta[i], phi[i], t)
@@ -338,7 +338,7 @@ def h_j_coupling(spins, j_matrix):
     
     Parameters
     ----------
-    - spins: Many_Spins
+    - spins: ManySpins
              Spins' system under study;
              
     - j_matrix: np.ndarray

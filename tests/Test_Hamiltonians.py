@@ -8,12 +8,12 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from pulsee.operators import Operator, Density_Matrix, Observable, \
+from pulsee.operators import Operator, DensityMatrix, Observable, \
                       random_operator, random_density_matrix, random_observable
 
 from pulsee.many_body import partial_trace
 
-from pulsee.nuclear_spin import Nuclear_Spin, Many_Spins
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
 
 from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
                          v0_EFG, v1_EFG, v2_EFG, \
@@ -24,7 +24,7 @@ from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
 
 @given(par = st.lists(st.floats(min_value=0, max_value=20), min_size=3, max_size=3))
 def test_zeeman_hamiltonian_changes_sign_when_magnetic_field_is_flipped(par):
-    spin = Nuclear_Spin()
+    spin = NuclearSpin()
     h_z1 = h_zeeman(spin, par[0], par[1], par[2])
     h_z2 = h_zeeman(spin, math.pi-par[0], par[1]+math.pi, par[2])
     note("h_zeeman(theta, phi) = %r" % (h_z1.matrix))
@@ -34,7 +34,7 @@ def test_zeeman_hamiltonian_changes_sign_when_magnetic_field_is_flipped(par):
     
 @given(gamma = st.lists(st.floats(min_value=0, max_value=2*math.pi), min_size=2, max_size=2))
 def test_h_quadrupole_independent_of_gamma_when_EFG_is_symmetric(gamma):
-    spin = Nuclear_Spin()
+    spin = NuclearSpin()
     h_q1 = h_quadrupole(spin, 1, 0, 1, 1, gamma[0])
     h_q2 = h_quadrupole(spin, 1, 0, 1, 1, gamma[1])
     note("h_quadrupole(gamma1) = %r" % (h_q1.matrix))
@@ -59,7 +59,7 @@ def test_v2_becomes_proportional_to_eta_when_angles_are_0(eta):
         
 @given(n = st.integers(min_value=-20, max_value=20))
 def test_periodicity_pulse_hamiltonian(n):
-    spin = Nuclear_Spin(1., 1.)
+    spin = NuclearSpin(1., 1.)
     nu = 5.
     t1 = 1.
     t2 = t1 + n/nu
@@ -74,7 +74,7 @@ def test_periodicity_pulse_hamiltonian(n):
 # changed by sign
 @given(t = st.floats(min_value=0, max_value=20))
 def test_time_reversal_equivalent_opposite_circular_polarization(t):
-    spin = Nuclear_Spin(1., 1.)
+    spin = NuclearSpin(1., 1.)
     mode_forward = pd.DataFrame([(5., 10., 0., 0., 0.),
                                  (5., 10., math.pi/2, math.pi/2, 0.)], 
                                 columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
@@ -88,7 +88,7 @@ def test_time_reversal_equivalent_opposite_circular_polarization(t):
 # Checks that the Hamiltonian of the pulse expressed in the interaction picture is equal to that in the
 # Schroedinger picture when it commutes with the unperturbed Hamiltonian
 def test_interaction_picture_leaves_pulse_hamiltonian_unaltered_when_commutative_property_holds():
-    spin = Nuclear_Spin(1., 1.)
+    spin = NuclearSpin(1., 1.)
     mode = pd.DataFrame([(5., 10., 0., math.pi/2, 0.)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     h_unperturbed = 5.*spin.I['x']
@@ -99,9 +99,9 @@ def test_interaction_picture_leaves_pulse_hamiltonian_unaltered_when_commutative
 def test_partial_trace_j_coupling_hamiltonian_over_non_interacting_spins_subspaces():
     spins = []
     for i in range(4):
-        spins.append(Nuclear_Spin())
+        spins.append(NuclearSpin())
     
-    spin_system = Many_Spins(spins)
+    spin_system = ManySpins(spins)
     
     j_matrix = np.zeros((4, 4))
     

@@ -42,9 +42,9 @@ from kivy.uix.popup import Popup
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
-from Operators import Operator, Density_Matrix, Observable
+from Operators import Operator, DensityMatrix, Observable
 
-from Nuclear_Spin import Nuclear_Spin
+from NuclearSpin import NuclearSpin
 
 from Simulation import nuclear_system_setup, \
                        power_absorption_spectrum, \
@@ -100,13 +100,13 @@ class Simulation_Manager:
     
     temperature = 300.
             
-    spin = Nuclear_Spin()
+    spin = NuclearSpin()
     
     h_unperturbed = Observable(1)
         
     decoherence_time = 100.
         
-    dm = np.ndarray(5, dtype=Density_Matrix)
+    dm = np.ndarray(5, dtype=DensityMatrix)
 
     FID_times = np.ndarray(1)
     

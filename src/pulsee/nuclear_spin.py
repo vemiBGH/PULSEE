@@ -5,7 +5,7 @@ from .operators import Operator, Observable
 
 from .many_body import tensor_product
 
-class Nuclear_Spin:
+class NuclearSpin:
     """
     An instance of the following class is to be thought as an all-round
     representation of the nuclear spin angular momentum. Indeed, it includes all
@@ -38,7 +38,7 @@ class Nuclear_Spin:
     """
     def __init__(self, s=1, gamma_over_2pi=1):
         """
-        Constructs an instance of Nuclear_Spin.
+        Constructs an instance of NuclearSpin.
         
         Parameters
         ----------
@@ -66,7 +66,7 @@ class Nuclear_Spin:
 
     Returns
     -------
-    The initialised Nuclear_Spin object.
+    The initialised NuclearSpin object.
     
     Raises
     ------
@@ -147,26 +147,26 @@ class Nuclear_Spin:
         return I    
 
 
-class Many_Spins(Nuclear_Spin):
+class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins,
-    and its attributes include the individual Nuclear_Spin objects, the
+    and its attributes include the individual NuclearSpin objects, the
     dimensions of the full Hilbert space and the components of the overall spin
     operator.
     """
     def __init__(self, spins):
         """
-        Constructs an instance of Many_Spins.
+        Constructs an instance of ManySpins.
   
         Parameters
         ----------
         - spins: list
-                 List of the Nuclear_Spin objects which represent the spins in
+                 List of the NuclearSpin objects which represent the spins in
                  the system.
                  
         Action
         ------
-        Stores the Nuclear_Spin objects contained in the spins argument into the
+        Stores the NuclearSpin objects contained in the spins argument into the
         attribute spin, maintaining their original ordering.
         
         Initialises the attribute d with the product of each spin's dimensions d.
@@ -177,7 +177,7 @@ class Many_Spins(Nuclear_Spin):
         
         Returns
         -------
-        The initialised Many_Spins object.
+        The initialised ManySpins object.
         """        
         self.n_spins = len(spins)
         
@@ -201,14 +201,14 @@ class Many_Spins(Nuclear_Spin):
     def many_spin_operator(self, component):
         """
         Returns the specified spherical or cartesian component of the spin
-        operator of the Many_Spins system.
+        operator of the ManySpins system.
         
         Parameters
         ----------
         - component: string
                      Specifies which component of the overall spin is to be
                      computed, following the key-value correspondence of the
-                     attribute I of Nuclear_Spin.
+                     attribute I of NuclearSpin.
                      
         Returns
         -------
