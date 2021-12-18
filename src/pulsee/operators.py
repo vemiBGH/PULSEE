@@ -325,7 +325,7 @@ class Operator:
     
     def cast_to_density_matrix(self):
         """
-        Returns an object of the class Density_Matrix initialised with the
+        Returns an object of the class DensityMatrix initialised with the
         matrix of the owner Operator object, if all the properties of a density
         matrix are satisfied.
         
@@ -335,7 +335,7 @@ class Operator:
         missing in the matrix of the owner object. Also, an error message
         explaining which properties are not satisfied is shown.  
         """
-        return Density_Matrix(self.matrix)
+        return DensityMatrix(self.matrix)
     
     def cast_to_observable(self):
         """
@@ -350,12 +350,12 @@ class Operator:
 
     def free_evolution(self, stat_hamiltonian, time):
         """
-        Tries to cast the operator into the type Density_Matrix (using method
+        Tries to cast the operator into the type DensityMatrix (using method
         cast_to_density_matrix), and in case of success returns this object
         evolved through the time time under the effect of stat_hamiltonian,
-        calling the method of Density_Matrix with the same name.
+        calling the method of DensityMatrix with the same name.
         
-        See the description of Density_Matrix.free_evolution below for details.
+        See the description of DensityMatrix.free_evolution below for details.
         """
         dm = self.cast_to_density_matrix()
         return dm.free_evolution(stat_hamiltonian, time)
@@ -373,12 +373,12 @@ class Operator:
         return ob.expectation_value(density_matrix)
 
 
-# Objects of the class Density_Matrix are special Operator objects characterised
+# Objects of the class DensityMatrix are special Operator objects characterised
 # by the following properties: 
 # i)   Hermitianity;
 # ii)  Unit trace;
 # iii) Positivity
-class Density_Matrix(Operator):
+class DensityMatrix(Operator):
     """
     A density matrix is a formal representation of the state of a quantum system
     which assigns a unique operator to each state. Density matrices associated
@@ -398,7 +398,7 @@ class Density_Matrix(Operator):
     
     def __init__(self, x):
         """
-        Constructs an instance of Density_Matrix.
+        Constructs an instance of DensityMatrix.
   
         Parameters
         ----------
@@ -413,7 +413,7 @@ class Density_Matrix(Operator):
         
         Returns
         -------
-        The initialised Density_Matrix object.
+        The initialised DensityMatrix object.
         
         Raises
         ------
@@ -454,11 +454,11 @@ class Density_Matrix(Operator):
         
         Returns
         -------
-        A Density_Matrix object representing the evolved state.
+        A DensityMatrix object representing the evolved state.
         """
         iHt = (1j * 2 * math.pi * static_hamiltonian * time)
         evolved_dm = self.sim_trans(iHt, exp=True)
-        return Density_Matrix(evolved_dm.matrix)
+        return DensityMatrix(evolved_dm.matrix)
 
 
 # Objects of the class Observable are hermitian operators representing the measurable properties of the
@@ -512,8 +512,8 @@ class Observable(Operator):
         
         Parameters
         ----------
-        - density_matrix: Density_Matrix (or any Operator which can be cast to
-                          Density_Matrix) State of the system.
+        - density_matrix: DensityMatrix (or any Operator which can be cast to
+                          DensityMatrix) State of the system.
                           
         Returns
         -------
@@ -578,20 +578,20 @@ def random_density_matrix(d):
     ----------
     
     - d: int
-         Dimensions of the Density_Matrix to be generated.
+         Dimensions of the DensityMatrix to be generated.
     
     Returns
     -------
-    A Density_Matrix object whose matrix is d-dimensional and has randomly
+    A DensityMatrix object whose matrix is d-dimensional and has randomly
     generated eigenvalues.  
     """
     spectrum = np.random.random(d)
     spectrum_norm = spectrum/(spectrum.sum())
-    dm_diag = Density_Matrix(np.diag(spectrum_norm))
+    dm_diag = DensityMatrix(np.diag(spectrum_norm))
     cob = (1j * random_observable(d))  # The exponential of this matrix is a 
                                        # generic unitary transformation
     dm = dm_diag.sim_trans(cob, exp=True)
-    return Density_Matrix(dm.matrix)
+    return DensityMatrix(dm.matrix)
 
 
 def commutator(A, B):
@@ -720,7 +720,7 @@ def canonical_density_matrix(hamiltonian, temperature):
 
     Returns
     -------
-    A Density_Matrix object which embodies the canonical density matrix.
+    A DensityMatrix object which embodies the canonical density matrix.
     
     Raises
     ------
@@ -733,7 +733,7 @@ def canonical_density_matrix(hamiltonian, temperature):
     numerator = exponent.exp()
     canonical_partition_function = numerator.trace()
     canonical_dm = numerator/canonical_partition_function
-    return Density_Matrix(canonical_dm.matrix)
+    return DensityMatrix(canonical_dm.matrix)
 
 
 

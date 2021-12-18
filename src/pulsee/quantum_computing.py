@@ -91,10 +91,10 @@ class QubitState:
     def matrix(self): 
         return self._matrix 
 
-    # TODO consider renaming Density_Matrix to Density_Operator? 
+    # TODO consider renaming DensityMatrix to Density_Operator? 
     def get_density_matrix(self):
         density_matrix = np.outer(self.matrix, self.matrix)
-        return Density_Matrix(density_matrix)
+        return DensityMatrix(density_matrix)
 
     @property
     def density_matrix(self): 
