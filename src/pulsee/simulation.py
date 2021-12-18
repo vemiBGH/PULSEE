@@ -9,7 +9,7 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
-from Operators import Operator, Density_Matrix, Observable, \
+from Operators import Operator, DensityMatrix, Observable, \
                       magnus_expansion_1st_term, \
                       magnus_expansion_2nd_term, \
                       magnus_expansion_3rd_term, \
@@ -113,11 +113,11 @@ def nuclear_system_setup(
       Specifies the state of the system at time t=0.
     
       If the keyword canonical is passed, the function will return a
-      Density_Matrix object representing the state of thermal equilibrium at the
+      DensityMatrix object representing the state of thermal equilibrium at the
       temperature specified by the same-named argument.
       
       If a square complex array is passed, the function will return a
-      Density_Matrix object directly initialised with it.
+      DensityMatrix object directly initialised with it.
       
       Default value is 'canonical'.
     
@@ -134,7 +134,7 @@ def nuclear_system_setup(
            The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar
            and J-coupling terms (expressed in MHz).
            
-    - [2]: Density_Matrix
+    - [2]: DensityMatrix
            The density matrix representing the state of the system at time t=0,
            initialised according to initial_state.  
     """
@@ -193,7 +193,7 @@ def nuclear_system_setup(
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(h_unperturbed, temperature)
     else:
-        dm_initial = Density_Matrix(initial_state)
+        dm_initial = DensityMatrix(initial_state)
     
     if len(spins) == 1:
         return spins[0], Observable(h_unperturbed.matrix), dm_initial
@@ -226,7 +226,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                   
                   Default value is True.
   
-    - dm_initial: Density_Matrix or None
+    - dm_initial: DensityMatrix or None
   
                   Density matrix of the system at time t=0, just before the
                   application of the pulse.
@@ -391,7 +391,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
   
                      Hamiltonian of the nucleus at equilibrium (in MHz).
     
-    - dm_initial: Density_Matrix
+    - dm_initial: DensityMatrix
   
                   Density matrix of the system at time t=0, just before the
                   application of the pulse.
@@ -465,7 +465,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
     
     Returns
     -------
-    The Density_Matrix object representing the state of the system (in the
+    The DensityMatrix object representing the state of the system (in the
     Schroedinger picture) evolved through a time pulse_time under the action of
     the specified pulse.
     """
@@ -497,7 +497,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
             
     dm_evolved = dm_evolved_new_picture.changed_picture(o_change_of_picture, pulse_time, invert=True)
         
-    return Density_Matrix(dm_evolved.matrix)
+    return DensityMatrix(dm_evolved.matrix)
 
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame
@@ -555,7 +555,7 @@ def plot_real_part_density_matrix(
   
     Parameters
     ----------
-    - dm: Density_Matrix
+    - dm: DensityMatrix
   
           Density matrix to be plotted.
           
@@ -720,7 +720,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
   
                      Unperturbed Hamiltonian of the system (in MHz).
     
-    - dm: Density_Matrix
+    - dm: DensityMatrix
   
           Density matrix representing the state of the system at the beginning
           of the acquisition of the signal.
