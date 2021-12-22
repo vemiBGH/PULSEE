@@ -1,5 +1,6 @@
 from .operators import Observable, Operator, DensityMatrix
 import numpy as np 
+from typing import Iterable
 from .exceptions.quantum_computing import MatrixRepresentationError
 
 
@@ -36,6 +37,104 @@ def normalize(a):
     return a / norm 
 
 
+class CompositeQubitSpace:
+    """
+    Implementation of an n-fold tensor product of qubit spaces (as defined in 
+    Scherer 85) 
+    """
+    def __init__(self, n: int): 
+        """
+        Params
+        ------
+        - n: number of qubit spaces of which this is a composition. 
+        """
+        if n <= 0: 
+            raise ValueError(f'Invalid qubit space composition: {n}.')	
+        self._n = n 
+    
+    def basis_ket_from_indices(self, indices: Iterable[int]):
+        """
+        Generate the QubitState of the basis ket of the desired 
+        composition of basis qubits. E.g., if given `[0, 1, 0]` generates the 
+        state ket |010⟩ as a QubitState.
+
+        Params
+        ------
+        - `indices`: iterable of one of {0, 1}. States of qubits of which this 
+                     basis is a composition. 
+        
+        Returns
+        ------
+        An ndarray representing the matrix representation of this composite 
+        state ket. 
+        """
+        return QubitState(self, self.basis_from_indices(indices))
+
+    def basis_from_indices(self, indices):
+        """
+        Generate the matrix representation of the basis ket of the desired 
+        composition of basis qubits. E.g., if given `[0, 1, 0]` generates the 
+        state ket |010⟩ as a matrix. 
+
+        Params
+        ------
+        - `indices`: iterable of one of {0, 1}. States of qubits of which this 
+                     basis is a composition. 
+        
+        Returns
+        ------
+        An ndarray representing the matrix representation of this composite 
+        state ket. 
+        """
+        # Ensure that no index is greater than 1 
+        if not np.all([0 <= i <= 1 for i in indices]):
+            raise MatrixRepresentationError(f'{indices} has one index greater than 1.')
+        if not len(indices) == self._n:
+            raise MatrixRepresentationError(f'Number of indices in {indices} ' + \
+                             f'does not match dimension of composite qubit ' + \
+                             f'space: {self._n}.')
+        basis = np.zeros((2 ** self._n))
+        k = 1
+        indices.reverse()
+        i = indices[0]
+        for ind in indices[1:]: 
+            i += (ind) * 2 ** k 
+            k += 1 
+        basis[i] = 1
+        return basis
+
+    def onb_matrices(self):
+        """
+        Returns
+        ------
+        A list containing the orthonormal basis as matrix representations. 
+        TODO less complex to just generate list [1, 0, 0, ...], [0, 1, 0 ...],
+        ... without loss of generality?
+        """
+
+        matrices = [] 
+        def add_bit(bit, vec):
+            new_vec = vec + [bit]
+            if len(new_vec) == self.n: 
+                matrices.append(self.basis_from_indices(new_vec))
+            else: 
+                add_bit(0, new_vec)
+                add_bit(1, new_vec)
+
+        add_bit(0, [])
+        add_bit(1, [])
+        return matrices
+
+    def __eq__(self, other):
+        if isinstance(other, CompositeQubitSpace):
+            return self.n == other.n 
+        return False 
+
+    @property
+    def n(self): 
+        return self._n
+
+
 class NGate(Operator):
     """
     Quantum n-gate as defined in Scherer pg. 169: a unitary operator U: H^n → 
@@ -47,7 +146,7 @@ class NGate(Operator):
     - `x`: the array representing this operator. 
     - `qubit_space`: the qubit space on which this operator/gate acts. 
     """
-    def __init__(self, x, qubit_space):
+    def __init__(self, x, qubit_space: CompositeQubitSpace):
         self._qubit_space = qubit_space
         self._n = qubit_space.n
         x = np.array(x)
@@ -71,7 +170,7 @@ class NGate(Operator):
 
 
 class QubitState:
-    def __init__(self, qubit_space, matrix):
+    def __init__(self, qubit_space: CompositeQubitSpace, matrix):
         """
         Params
         ------
@@ -159,103 +258,6 @@ class QubitState:
         return QubitState(self.qubit_space, normalize(self.matrix - other.matrix))
 
 
-class CompositeQubitSpace:
-    """
-    Implementation of an n-fold tensor product of qubit spaces (as defined in 
-    Scherer 85) 
-    """
-    def __init__(self, n: int): 
-        """
-        Params
-        ------
-        - n: number of qubit spaces of which this is a composition. 
-        """
-        if n <= 0: 
-            raise ValueError(f'Invalid qubit space composition: {n}.')	
-        self._n = n 
-    
-    def basis_ket_from_indices(self, indices):
-        """
-        Generate the QubitState of the basis ket of the desired 
-        composition of basis qubits. E.g., if given `[0, 1, 0]` generates the 
-        state ket |010⟩ as a QubitState.
-
-        Params
-        ------
-        - `indices`: iterable of one of {0, 1}. States of qubits of which this 
-                     basis is a composition. 
-        
-        Returns
-        ------
-        An ndarray representing the matrix representation of this composite 
-        state ket. 
-        """
-        return QubitState(self, self.basis_from_indices(indices))
-
-    def basis_from_indices(self, indices):
-        """
-        Generate the matrix representation of the basis ket of the desired 
-        composition of basis qubits. E.g., if given `[0, 1, 0]` generates the 
-        state ket |010⟩ as a matrix. 
-
-        Params
-        ------
-        - `indices`: iterable of one of {0, 1}. States of qubits of which this 
-                     basis is a composition. 
-        
-        Returns
-        ------
-        An ndarray representing the matrix representation of this composite 
-        state ket. 
-        """
-        # Ensure that no index is greater than 1 
-        if not np.all([0 <= i <= 1 for i in indices]):
-            raise MatrixRepresentationError(f'{indices} has one index greater than 1.')
-        if not len(indices) == self._n:
-            raise MatrixRepresentationError(f'Number of indices in {indices} ' + \
-                             f'does not match dimension of composite qubit ' + \
-                             f'space: {self._n}.')
-        basis = np.zeros((2 ** self._n))
-        k = 1
-        indices.reverse()
-        i = indices[0]
-        for ind in indices[1:]: 
-            i += (ind) * 2 ** k 
-            k += 1 
-        basis[i] = 1
-        return basis
-
-    def onb_matrices(self):
-        """
-        Returns
-        ------
-        A list containing the orthonormal basis as matrix representations. 
-        TODO less complex to just generate list [1, 0, 0, ...], [0, 1, 0 ...],
-        ... without loss of generality?
-        """
-
-        matrices = [] 
-        def add_bit(bit, vec):
-            new_vec = vec + [bit]
-            if len(new_vec) == self.n: 
-                matrices.append(self.basis_from_indices(new_vec))
-            else: 
-                add_bit(0, new_vec)
-                add_bit(1, new_vec)
-
-        add_bit(0, [])
-        add_bit(1, [])
-        return matrices
-
-    def __eq__(self, other):
-        if isinstance(other, CompositeQubitSpace):
-            return self.n == other.n 
-        return False 
-
-    @property
-    def n(self): 
-        return self._n
-
 
 class QubitSpace(CompositeQubitSpace):
     """
@@ -273,7 +275,7 @@ class QubitSpace(CompositeQubitSpace):
     # Defined observable for this qubit
     _observable = Observable(np.array([[1, 0], [0, -1]]))
 
-    def make_state(self, alpha=None, beta=None, coeffs=None):
+    def make_state(self, alpha=None, beta=None, coeffs: Iterable[float]=None):
         """
         TODO 
         - prioritizes angles; if one of angles is not defined uses coefficients.
