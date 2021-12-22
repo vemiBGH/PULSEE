@@ -1,6 +1,4 @@
-import sys
 import numpy as np
-sys.path.insert(1, '../Code')
 
 from pulsee.exceptions.quantum_computing import MatrixRepresentationError
 from pulsee.quantum_computing import CompositeQubitSpace, QubitSpace 
