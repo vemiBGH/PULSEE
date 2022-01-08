@@ -42,11 +42,11 @@ from kivy.uix.popup import Popup
 from kivy.garden.matplotlib import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
-from Operators import Operator, DensityMatrix, Observable
+from pulsee.operators import Operator, DensityMatrix, Observable
 
-from NuclearSpin import NuclearSpin
+from pulsee.nuclear_spin import NuclearSpin
 
-from Simulation import nuclear_system_setup, \
+from pulsee.simulation import nuclear_system_setup, \
                        power_absorption_spectrum, \
                        evolve, RRF_operator, \
                        plot_real_part_density_matrix, \
