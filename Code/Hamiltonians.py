@@ -316,7 +316,7 @@ def h_j_coupling(spins, j_matrix):
             
     return h_j.cast_to_observable()
 
-def h_CSisotropic(spin,  delta_iso, B_0):
+def h_CS_isotropic(spin, delta_iso, B_0):
     """
     Computes the term of the Hamiltonian associated with the chemical shift interaction in the secular approximation for isotropic liquids between the nuclear spin and the external static field.
     
@@ -344,7 +344,7 @@ def h_CSisotropic(spin,  delta_iso, B_0):
 
 def h_D1(spins,  b_D, theta):
     """
-    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor homonuclear & heteronuclear spins. H_{D2} \approx \hslash b_D (3\cos^2\theta-1)I_{1z}I_{2z}.
+    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor homonuclear & heteronuclear spins. {H}_{D1} \approx  b_D \frac{3\cos^2\theta-1}{2})[3I_{1z}I_{2z} -\mathbf{I}_1\cdot  \mathbf{I}_2].
     
     Parameters
     ----------
@@ -368,7 +368,7 @@ def h_D1(spins,  b_D, theta):
 
 def h_D2(spins,  b_D, theta):
     """
-    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor homonuclear & heteronuclear spins. H_{D2} \approx \hslash b_D (3\cos^2\theta-1)I_{1z}I_{2z}.
+    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor heteronuclear spins. H_{D2} \approx \hslash b_D (3\cos^2\theta-1)I_{1z}I_{2z}.
     
     Parameters
     ----------
@@ -389,7 +389,7 @@ def h_D2(spins,  b_D, theta):
     return Observable(h_d2.matrix)
         
     
-def h_HFsecular(spins,  A, B):
+def h_HF_secular(spins,  A, B):
     """
     Computes the term of the Hamiltonian associated with the hyperfine interaction in the secular approximationfor between two spins. H_{D2} \approx A S_{z}I_{z} + B S_{z}I_{x}  .
     
@@ -411,7 +411,7 @@ def h_HFsecular(spins,  A, B):
            B*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['x'])
     return Observable(h_hf.matrix)
 
-def h_jsecular(spins,  J):
+def h_j_secular(spins,  J):
     """
     Computes the term of the Hamiltonian associated with the J-coupling in the secular approximationfor between two spins.
     
@@ -420,7 +420,7 @@ def h_jsecular(spins,  J):
     - spin: Many_Spins
             2 Spins in the system under study;
     - J: float
-         The J-coupling constant.
+         The J-coupling constant in Hz.
     
     Returns
     -------

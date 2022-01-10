@@ -24,10 +24,12 @@ from Hamiltonians import h_zeeman, h_quadrupole, \
                          h_single_mode_pulse, \
                          h_multiple_mode_pulse, \
                          h_changed_picture, \
-                         h_j_coupling
+                         h_j_coupling, \
+                         h_CS_isotropic, h_D1, h_D2,\
+                         h_HF_secular, h_j_secular
+    
 
-
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, initial_state='canonical', temperature=1e-4):
+def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None D1initial_state='canonical', temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing the spin (either a single one or a multiple spins' system), the unperturbed Hamiltonian (made up of the Zeeman, quadrupolar and J-coupling contributions) and the initial state of the system.
 
@@ -83,6 +85,74 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
       When it is None, the J-coupling effects are not taken into account.      
       Default value is None.
     
+    - cs_param: dict
+    
+     Map containing information about the chemical shift. The keys and values required to this argument are shown in the table below:
+     
+      |         key         |       value      |
+      |         ---         |       -----      |
+      |      'delta_iso'    |       float      |
+      
+      where delta_iso is the magnitude of the chemical shift in Hz.
+      
+      When it is None, the chemical shift is not taken into account.      
+      Default value is None.
+    
+    - D1_param: dict
+    
+     Map containing information about the dipolar interaction in the secular approximation for homonuclear & heteronuclear spins. The keys and values required to this argument are shown in the table below:
+     
+      |         key         |       value      |
+      |         ---         |       -----      |
+      |        'b_d'        |       float      |
+      |       'theta'       |       float      |
+      
+      where b_d is the magnitude of dipolar constant,  b_D\equiv \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle between the two spins (expressed in radians).
+      
+      When it is None, the dipolar interaction in the secular approximation  for homonuclear & heteronuclear spins is not taken into account.      
+      Default value is None.
+      
+    - D2_param: dict
+    
+     Map containing information about the dipolar interaction in the secular approximation for heteronuclear spins. The keys and values required to this argument are shown in the table below:
+     
+      |         key         |       value      |
+      |         ---         |       -----      |
+      |        'b_d'        |       float      |
+      |       'theta'       |       float      |
+      
+      where b_d is the magnitude of dipolar constant,  b_D\equiv \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle between the two spins (expressed in radians).
+      
+      When it is None, the dipolar interaction in the secular approximation  for heteronuclear spins is not taken into account.      
+      Default value is None.
+      
+    - hf_param: dict
+    
+     Map containing information about the hyperfine interaction in the secular approximation between two spins. The keys and values required to this argument are shown in the table below:
+     
+      |         key         |       value      |
+      |         ---         |       -----      |
+      |         'A'         |       float      |
+      |         'B'         |       float      |
+      
+      where A, B are constant of the hyperfine interaction inthe secular approximation, see paper. 
+      
+      When it is None, the hyperfine interaction in the secular approximation between two spins is not taken into account.      
+      Default value is None.
+      
+    - hf_param: dict
+    
+     Map containing information about the J-couping in the secular approximation. The keys and values required to this argument are shown in the table below:
+     
+      |         key         |       value      |
+      |         ---         |       -----      |
+      |         'J'         |       float      |
+      
+      where J is the J-coupling constant in Hz.
+      
+      When it is None, the J-couping in the secular approximation is not taken into account.      
+      Default value is None.
+      
     - initial_state: either string or numpy.ndarray
   
       Specifies the state of the system at time t=0.
@@ -147,6 +217,9 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
                                           zeem_par['field magnitude']))
         else:
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
+        
+        if cs_param is not None:
+            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], zeem_par['field magnitude']))
     
     spin_system = Many_Spins(spins)
     
@@ -162,6 +235,25 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
     
     if j_matrix is not None:
         h_j = h_j_coupling(spin_system, j_matrix)
+        h_unperturbed = h_unperturbed + h_j
+        
+    if D1_param is not None:
+        h_d1 = h_D1(spin_system, D1_param['b_D'], \
+                                 D1_param['theta'])
+        h_unperturbed = h_unperturbed + h_d1
+    
+    if D2_param is not None:
+        h_d2 = h_D2(spin_system, D2_param['b_D'], \
+                                 D2_param['theta'])
+        h_unperturbed = h_unperturbed + h_d2
+    
+    if hf_param is not None:
+        h_hf = h_HF_secular(spin_system, hf_param['A'], \
+                                 hf_param['B'])
+        h_unperturbed = h_unperturbed + h_hf
+        
+    if j_sec_param is not None:
+        h_j = h_j_secular(spin_system, j_sec_param['J'])
         h_unperturbed = h_unperturbed + h_j
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
