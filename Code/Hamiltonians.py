@@ -298,6 +298,7 @@ def h_j_coupling(spins, j_matrix):
     -------
     Observable object acting on the full Hilbert space of the spins' system representing the Hamiltonian of the J-coupling between the spins.
     """
+    ### NOTE: This can be used for any coupling that has a tensor interaction, such as the full checmical shift, and full dipolar interaction, where the appropriate matrix is passed. ### 
     h_j = Operator(spins.d)*0
     
     for m in range(j_matrix.shape[0]):
@@ -314,6 +315,119 @@ def h_j_coupling(spins, j_matrix):
             h_j = h_j + term_nm
             
     return h_j.cast_to_observable()
+
+def h_CSisotropic(spin,  delta_iso, B_0):
+    """
+    Computes the term of the Hamiltonian associated with the chemical shift interaction in the secular approximation for isotropic liquids between the nuclear spin and the external static field.
+    
+    Parameters
+    ----------
+    - spin: Nuclear_Spin
+            Spin under study;
+    - delta_iso: float
+                   Magnitude of the chemical shift in Hz - H_CS = -delta_iso\omgega_0 Iz 
+    - B_0: non-negative float
+           Magnitude of the external magnetic field (expressed in tesla).
+    
+    Returns
+    -------
+    An Observable object which represents the Zeeman Hamiltonian in the laboratory reference frame (expressed in MHz).
+    
+    Raises
+    ------
+    ValueError, when the passed B_0 is a negative number.
+    """
+    if B_0<0: raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
+    h_cs = -delta_iso*spin.gyro_ratio_over_2pi*B_0* \
+          *spin.I['z']
+    return Observable(h_cs.matrix)
+
+def h_D1(spins,  b_D, theta):
+    """
+    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor homonuclear & heteronuclear spins. H_{D2} \approx \hslash b_D (3\cos^2\theta-1)I_{1z}I_{2z}.
+    
+    Parameters
+    ----------
+    - spin: Many_Spins
+            2 Spins in the system under study;
+    - b_D: float
+           Magnitude of dipolar constant, b_D\equiv \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}.
+    - theta: float
+           Polar angle between the two spins (expressed in radians).
+    
+    Returns
+    -------
+   Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
+    
+    """
+    h_d1 = b_D*(1/2)*(3*(math.cos(theta)**2)-1)*( \
+            2*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z'])-\
+            tensor_product(spins.spin[0].I['x'], spins.spin[1].I['x']) -\
+            tensor_product(spins.spin[0].I['y'], spins.spin[1].I['y']) )
+    return Observable(h_d1.matrix)
+
+def h_D2(spins,  b_D, theta):
+    """
+    Computes the term of the Hamiltonian associated with the dipolar interaction in the secular approximationfor homonuclear & heteronuclear spins. H_{D2} \approx \hslash b_D (3\cos^2\theta-1)I_{1z}I_{2z}.
+    
+    Parameters
+    ----------
+    - spin: Many_Spins
+            2 Spins in the system under study;
+    - b_D: float
+           Magnitude of dipolar constant, b_D\equiv \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}.
+    - theta: float
+           Polar angle between the two spins (expressed in radians).
+    
+    Returns
+    -------
+   Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
+    
+    """
+    h_d2 = b_D*(3*(math.cos(theta)**2)-1)*( \
+            tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z']) )
+    return Observable(h_d2.matrix)
         
+    
+def h_HFsecular(spins,  A, B):
+    """
+    Computes the term of the Hamiltonian associated with the hyperfine interaction in the secular approximationfor between two spins. H_{D2} \approx A S_{z}I_{z} + B S_{z}I_{x}  .
+    
+    Parameters
+    ----------
+    - spin: Many_Spins
+            2 Spins in the system under study;
+    - A: float
+         Constant, see paper.
+    - B: float
+         Constant, see paper.
+    
+    Returns
+    -------
+   Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
+    
+    """
+    h_hf = A*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z']) +\
+           B*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['x'])
+    return Observable(h_hf.matrix)
+
+def h_jsecular(spins,  J):
+    """
+    Computes the term of the Hamiltonian associated with the J-coupling in the secular approximationfor between two spins.
+    
+    Parameters
+    ----------
+    - spin: Many_Spins
+            2 Spins in the system under study;
+    - J: float
+         The J-coupling constant.
+    
+    Returns
+    -------
+   Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
+    
+    """
+    h_j = 2*np.pi*J*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z'])
+    return Observable(h_j.matrix)
 
 
