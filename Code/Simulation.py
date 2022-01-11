@@ -29,7 +29,7 @@ from Hamiltonians import h_zeeman, h_quadrupole, \
                          h_HF_secular, h_j_secular
     
 
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None D1initial_state='canonical', temperature=1e-4):
+def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, D1initial_state='canonical', temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing the spin (either a single one or a multiple spins' system), the unperturbed Hamiltonian (made up of the Zeeman, quadrupolar and J-coupling contributions) and the initial state of the system.
 
