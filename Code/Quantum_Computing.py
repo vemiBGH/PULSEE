@@ -1,7 +1,10 @@
 from Operators import Observable, Operator, DensityMatrix
 import numpy as np 
 from typing import Iterable
-from exceptions.Quantum_computing import MatrixRepresentationError
+
+
+class MatrixRepresentationError(Exception):
+    pass 
 
 
 def adjoint(a):
@@ -105,11 +108,12 @@ class CompositeQubitSpace:
 
     def onb_matrices(self):
         """
+        Obtain the orthonormal basis of this qubit space as matrix 
+        representations.
+
         Returns
         ------
         A list containing the orthonormal basis as matrix representations. 
-        TODO less complex to just generate list [1, 0, 0, ...], [0, 1, 0 ...],
-        ... without loss of generality?
         """
 
         matrices = [] 
@@ -190,8 +194,12 @@ class QubitState:
     def matrix(self): 
         return self._matrix 
 
-    # TODO consider renaming DensityMatrix to Density_Operator? 
     def get_density_matrix(self):
+        """
+        Returns
+        ------
+        This instance's density matrix as a DensityMatrix object.
+        """
         density_matrix = np.outer(self.matrix, self.matrix)
         return DensityMatrix(density_matrix)
 
@@ -230,6 +238,7 @@ class QubitState:
 
         density_matrix = self.density_matrix.matrix
         reduced_density_matrix = np.zeros((2, 2), dtype="complex_")
+
         # https://physics.stackexchange.com/questions/179671/how-to-take-partial-trace
         for k in QubitSpace().onb_matrices():
             k_otimes_identity = np.kron(k, np.eye(2, dtype="complex_"))
@@ -275,15 +284,31 @@ class QubitSpace(CompositeQubitSpace):
     # Defined observable for this qubit
     _observable = Observable(np.array([[1, 0], [0, -1]]))
 
-    def make_state(self, alpha=None, beta=None, coeffs: Iterable[float]=None):
+    def make_state(self, azimuthal=None, polar=None, coeffs: Iterable[float]=None):
         """
-        TODO 
-        - prioritizes angles; if one of angles is not defined uses coefficients.
-        - normalizes coefficients. 
+        Produces a QubitState according to the provided parameters. Accepts 
+        either the polar and azimuthal angles of the Bloch sphere representation 
+        or the coefficients of the orthonormal basis expansion of the state. 
+        
+        If all parameters are given, prioritizes angles; if one of the angles 
+        is not given, uses coefficients. Normalizes coefficients. 
+        
+        Params
+        ------
+        - `azimuthal`: the azimuthal angle of the Bloch sphere representation of 
+                   this state. 
+        - `polar`: the polar angle of the Bloch sphere representation of this 
+                   this state. 
+        - `coeffs`: the coefficients of the orthonormal basis expansion of this 
+                    state. 
+        
+        Returns
+        ------
+        A QubitState. 
         """
-        if alpha is not None and beta is not None: 
-            matrix = np.cos(beta / 2) * self._base_zero + np.sin(beta / 2) \
-                    * np.exp(1j * alpha) * self._base_one 
+        if azimuthal is not None and polar is not None: 
+            matrix = np.cos(polar / 2) * self._base_zero + np.sin(polar / 2) \
+                    * np.exp(1j * azimuthal) * self._base_one 
             return QubitState(self, matrix)
 
         elif coeffs is not None: 
@@ -338,3 +363,4 @@ pauli_y = NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace())
 pauli_z = NGate(np.array([[1, 0], [0, -1]]), QubitSpace())
 phase = NGate(np.array([[1, 0], [0, 1j]]), QubitSpace())
 pi_8 = NGate(np.array([[1, 0], [0, np.exp(1j* np.pi / 4)]]), QubitSpace())
+
