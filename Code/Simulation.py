@@ -35,8 +35,10 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
     ----------
     - spin_par: dict / list of dict
   
-      Map/list of maps containing information about the nuclear spin/spins under consideration. The keys and values required to each dictionary in this argument are shown in the table below.
-  
+      Map/list of maps containing information about the nuclear spin/spins under
+      consideration. The keys and values required to each dictionary in this
+      argument are shown in the table below.
+      
       |           key          |         value        |
       |           ---          |         -----        |
       |    'quantum number'    |  half-integer float  |
@@ -46,8 +48,11 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
 
     - quad_par: dict / list of dict
     
-      Map/maps containing information about the quadrupolar interaction between the electric quadrupole moment and the EFG for each nucleus in the system. The keys and values required to each dictionary in this argument are shown in the table below:
-  
+      Map/maps containing information about the quadrupolar interaction between
+      the electric quadrupole moment and the EFG for each nucleus in the system.
+      The keys and values required to each dictionary in this argument are shown
+      in the table below:
+      
       |           key           |       value        |
       |           ---           |       -----        |
       |   'coupling constant'   |       float        |
@@ -56,29 +61,42 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
       |        'beta_q'         |       float        |
       |        'gamma_q'        |       float        |
     
-    where 'coupling constant' stands for the product e2qQ in the expression of the quadrupole term of the Hamiltonian (to be provided in MHz), 'asymmetry parameter' refers to the same-named property of the EFG, and 'alpha_q', 'beta_q' and 'gamma_q' are the Euler angles for the conversion from the LAB coordinate system to the system of the principal axes of the EFG tensor (PAS) (to be expressed in radians).
+      where 'coupling constant' stands for the product e2qQ in the expression of
+      the quadrupole term of the Hamiltonian (to be provided in MHz), 'asymmetry
+      parameter' refers to the same-named property of the EFG, and 'alpha_q',
+      'beta_q' and 'gamma_q' are the Euler angles for the conversion from the LAB
+      coordinate system to the system of the principal axes of the EFG tensor
+      (PAS) (to be expressed in radians).
     
       When it is None, the quadrupolar interaction of all the spins in the system is not taken into account.
       Default value is None.
     
     - zeem_par: dict
        
-      Map containing information about the magnetic field interacting with the magnetic moment of each nucleus in the system. The keys and values required to this argument are shown in the table below:
-
+      Map containing information about the magnetic field interacting with the
+      magnetic moment of each nucleus in the system. The keys and values
+      required to this argument are shown in the table below:
+      
       |         key         |       value      |
       |         ---         |       -----      |
       |      'theta_z'      |       float      |
       |       'phi_z'       |       float      |
       |  'field magnitude'  |  positive float  |
 
-      where 'theta_z' and 'phi_z' are the polar and azimuthal angles of the magnetic field with respect to the LAB system (to be measured in radians), while field magnitude is to be expressed in tesla.
+      where 'theta_z' and 'phi_z' are the polar and azimuthal angles of the
+      magnetic field with respect to the LAB system (to be measured in radians),
+      while field magnitude is to be expressed in tesla.
       
       When it is None, the Zeeman interaction is not taken into account.
       Default value is None.
     
     - j_matrix: np.ndarray
     
-      Array whose elements represent the coefficients Jmn which determine the strength of the J-coupling between each pair of spins in the system. For the details on these data, see the description of the same-named parameter in the docstrings of the function h_j_coupling in the module Hamiltonians.py.
+      Array whose elements represent the coefficients Jmn which determine the
+      strength of the J-coupling between each pair of spins in the system. For
+      the details on these data, see the description of the same-named parameter
+      in the docstrings of the function h_j_coupling in the module
+      Hamiltonians.py.
       
       When it is None, the J-coupling effects are not taken into account.      
       Default value is None.
@@ -87,10 +105,13 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
   
       Specifies the state of the system at time t=0.
     
-      If the keyword canonical is passed, the function will return a Density_Matrix object representing the state of thermal equilibrium at the temperature specified by the same-named argument.
-    
-      If a square complex array is passed, the function will return a Density_Matrix object directly initialised with it.
-    
+      If the keyword canonical is passed, the function will return a
+      Density_Matrix object representing the state of thermal equilibrium at the
+      temperature specified by the same-named argument.
+      
+      If a square complex array is passed, the function will return a
+      Density_Matrix object directly initialised with it.
+      
       Default value is 'canonical'.
     
     - temperature: float
@@ -107,11 +128,13 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
 
     - [1]: Observable
   
-           The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar and J-coupling terms (expressed in MHz).
-    
+           The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar
+           and J-coupling terms (expressed in MHz).
+           
     - [2]: Density_Matrix
   
-           The density matrix representing the state of the system at time t=0, initialised according to initial_state.
+           The density matrix representing the state of the system at time t=0,
+           initialised according to initial_state.
     """
     
     if not isinstance(spin_par, list):
