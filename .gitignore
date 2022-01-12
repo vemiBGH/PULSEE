@@ -2,5 +2,6 @@ tests/
 src/
 scratch_ipynbs/
 tests/
+tests/.pytest_cache
 notes/
 .vscode/
