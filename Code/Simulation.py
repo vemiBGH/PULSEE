@@ -29,7 +29,7 @@ from Hamiltonians import h_zeeman, h_quadrupole, \
                          h_HF_secular, h_j_secular
     
 
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, D1initial_state='canonical', temperature=1e-4):
+def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, initial_state='canonical', temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing the spin (either a single one or a multiple spins' system), the unperturbed Hamiltonian (made up of the Zeeman, quadrupolar and J-coupling contributions) and the initial state of the system.
 
@@ -219,7 +219,8 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
         
         if cs_param is not None:
-            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], zeem_par['field magnitude']))
+            if cs_param != 0.0 :
+                h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], zeem_par['field magnitude']))
     
     spin_system = Many_Spins(spins)
     
@@ -238,23 +239,35 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
         h_unperturbed = h_unperturbed + h_j
         
     if D1_param is not None:
-        h_d1 = h_D1(spin_system, D1_param['b_D'], \
-                                 D1_param['theta'])
-        h_unperturbed = h_unperturbed + h_d1
+        if ((D1_param['b_D'] == 0.) and (D1_param['theta'] ==0.)):
+            pass
+        else:
+            h_d1 = h_D1(spin_system, D1_param['b_D'], \
+                                     D1_param['theta'])
+            h_unperturbed = h_unperturbed + h_d1
     
     if D2_param is not None:
-        h_d2 = h_D2(spin_system, D2_param['b_D'], \
-                                 D2_param['theta'])
-        h_unperturbed = h_unperturbed + h_d2
+        if ((D2_param['b_D'] == 0.) and (D2_param['theta'] ==0.)):
+            pass
+        else:
+            h_d2 = h_D2(spin_system, D2_param['b_D'], \
+                                     D2_param['theta'])
+            h_unperturbed = h_unperturbed + h_d2
     
     if hf_param is not None:
-        h_hf = h_HF_secular(spin_system, hf_param['A'], \
-                                 hf_param['B'])
-        h_unperturbed = h_unperturbed + h_hf
+        if ((hf_param['A'] == 0.) and (hf_param['B'] ==0.)):
+            pass
+        else:
+            h_hf = h_HF_secular(spin_system, hf_param['A'], \
+                                     hf_param['B'])
+            h_unperturbed = h_unperturbed + h_hf
         
     if j_sec_param is not None:
-        h_j = h_j_secular(spin_system, j_sec_param['J'])
-        h_unperturbed = h_unperturbed + h_j
+        if (j_sec_param['J']==0.0):
+                pass
+        else:
+            h_j = h_j_secular(spin_system, j_sec_param['J'])
+            h_unperturbed = h_unperturbed + h_j
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(h_unperturbed, temperature)

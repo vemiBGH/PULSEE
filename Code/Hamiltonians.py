@@ -338,7 +338,7 @@ def h_CS_isotropic(spin, delta_iso, B_0):
     ValueError, when the passed B_0 is a negative number.
     """
     if B_0<0: raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
-    h_cs = -delta_iso*spin.gyro_ratio_over_2pi*B_0* \
+    h_cs = -delta_iso*spin.gyro_ratio_over_2pi*B_0 \
           *spin.I['z']
     return Observable(h_cs.matrix)
 
@@ -413,8 +413,8 @@ def h_HF_secular(spins,  A, B):
 
 def h_j_secular(spins,  J):
     """
-    Computes the term of the Hamiltonian associated with the J-coupling in the secular approximationfor between two spins.
-    
+    Computes the term of the Hamiltonian associated with the J-coupling in the secular approximation  between two spins.
+
     Parameters
     ----------
     - spin: Many_Spins

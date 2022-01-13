@@ -39,7 +39,14 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 
-from kivy.garden.matplotlib import FigureCanvasKivyAgg
+try:
+    from kivy.garden.matplotlib import FigureCanvasKivyAgg
+except ImportError as e:
+    print("Locally imported FigureCanvasKivy")
+    from backend_kivyagg import FigureCanvasKivyAgg
+
+    #catch an ImportError that happens due to some versions of kivy.
+    #This shouldn't be a problem in future updates of matplotlib and kivy.
 
 # NMR-NQRSimulationSoftware imports
 from Operators import Operator, Density_Matrix, Observable
@@ -60,16 +67,38 @@ from Simulation import nuclear_system_setup, \
 class Simulation_Manager:
     spin_par = {'quantum number' : 0.,
                 'gamma/2pi' : 0.}
+
+    spin_par2 = {'quantum number' : 0.,
+                'gamma/2pi' : 0.}
     
     zeem_par = {'field magnitude' : 0.,
                 'theta_z' : 0.,
                 'phi_z' : 0.}
-    
+
     quad_par = {'coupling constant' : 0.,
                 'asymmetry parameter' : 0.,
                 'alpha_q' : 0.,
                 'beta_q' : 0.,
                 'gamma_q' : 0.}
+
+    quad_par2 = {'coupling constant' : 0.,
+                'asymmetry parameter' : 0.,
+                'alpha_q' : 0.,
+                'beta_q' : 0.,
+                'gamma_q' : 0.}
+
+    cs_par = {'delta_iso' : 0.}
+
+    D1_par = {'b_D' : 0.,
+              'theta' : 0.}
+
+    D2_par = {'b_D' : 0.,
+              'theta' : 0.}
+
+    hf_par = {'A' : 0.,
+              'B' : 0.}
+
+    J_sec_par = {'J' : 0.}
     
     nu_q = 0
     
@@ -173,7 +202,10 @@ class System_Parameters(FloatLayout):
             self.remove_widget(self.manual_dm)
                     
             self.d = int(Fraction(null_string(self.spin_qn.text))*2+1)
-        
+
+            if(null_string(self.spin_qn2.text) != 0.):
+                self.d = self.d + int(Fraction(null_string(self.spin_qn2.text))*2+1)
+
             if self.d <= 8: self.el_width = 40
             else: self.el_width = 30
         
@@ -229,7 +261,9 @@ class System_Parameters(FloatLayout):
             
             # Storage of the system's input parameters
             sim_man.spin_par['quantum number'] = float(Fraction(null_string(self.spin_qn.text)))
-            
+
+            sim_man.spin_par2['quantum number'] = float(Fraction(null_string(self.spin_qn.text)))
+
             n_s = int(2*sim_man.spin_par['quantum number']+1)
             
             sim_man.canonical_dm_0 = self.canonical_checkbox.active
@@ -241,6 +275,8 @@ class System_Parameters(FloatLayout):
             sim_man.spin_par['gamma/2pi'] = float(null_string(self.gyro.text))
             
             sim_man.zeem_par['field magnitude'] = float(null_string(self.field_mag.text))
+
+            sim_man.spin_par2['gamma/2pi'] = float(null_string(self.gyro2.text))
             
             sim_man.zeem_par['theta_z'] = (float(null_string(self.theta_z.text))*math.pi)/180
                         
@@ -255,6 +291,32 @@ class System_Parameters(FloatLayout):
             sim_man.quad_par['beta_q'] = (float(null_string(self.beta_q.text))*math.pi)/180
             
             sim_man.quad_par['gamma_q'] = (float(null_string(self.gamma_q.text))*math.pi)/180
+
+            sim_man.quad_par2['coupling constant'] = float(null_string(self.coupling2.text))
+
+            sim_man.quad_par2['asymmetry parameter'] = float(null_string(self.asymmetry2.text))
+
+            sim_man.quad_par2['alpha_q'] = (float(null_string(self.alpha_q2.text))*math.pi)/180
+
+            sim_man.quad_par2['beta_q'] = (float(null_string(self.beta_q2.text))*math.pi)/180
+
+            sim_man.quad_par2['gamma_q'] = (float(null_string(self.gamma_q2.text))*math.pi)/180
+
+            sim_man.cs_par['delta_iso'] = float(null_string(self.chemical_shift.text))
+
+            sim_man.D1_par['b_D'] = float(null_string(self.bd1.text))
+
+            sim_man.D1_par['theta'] = (float(null_string(self.bdtheta1.text))*math.pi)/180
+
+            sim_man.D2_par['b_D'] = float(null_string(self.bd2.text))
+
+            sim_man.D2_par['theta'] = (float(null_string(self.bdtheta2.text))*math.pi)/180
+
+            sim_man.hf_par['A'] = float(null_string(self.hfA.text))
+
+            sim_man.hf_par['B'] = float(null_string(self.hfB.text))
+
+            sim_man.J_sec_par['J'] = float(null_string(self.Jparam.text))
             
             if not np.isclose(sim_man.spin_par['quantum number'], 1/2, rtol=1e-10):
                 self.store_and_write_nu_q(sim_man)
@@ -264,12 +326,25 @@ class System_Parameters(FloatLayout):
             sim_man.temperature = float(null_string(self.temperature.text))
             
             self.manual_dm_elements = np.zeros((n_s, n_s), dtype=complex)
-            
+
+            spin_paramters = sim_man.spin_par
+            quad_paramters = sim_man.quad_par
+            if (null_string(self.spin_qn2.text) != 0.):
+                spin_paramters = [sim_man.spin_par, sim_man.spin_par2]
+                quad_paramters = [sim_man.quad_par, sim_man.quad_par2]
+
+
             if sim_man.canonical_dm_0:
                 sim_man.spin, sim_man.h_unperturbed, sim_man.dm[0] = \
-                nuclear_system_setup(sim_man.spin_par, \
-                                     sim_man.quad_par, \
+                nuclear_system_setup(spin_paramters, \
+                                     quad_paramters, \
                                      sim_man.zeem_par, \
+                                     None, \
+                                     sim_man.cs_par, \
+                                     sim_man.D1_par, \
+                                     sim_man.D2_par, \
+                                     sim_man.hf_par, \
+                                     sim_man.J_sec_par, \
                                      initial_state='canonical', \
                                      temperature=sim_man.temperature)
             
@@ -279,9 +354,15 @@ class System_Parameters(FloatLayout):
                         self.manual_dm_elements[i, j] = complex(null_string(self.dm_elements[i, j].text))
                         
                 sim_man.spin, sim_man.h_unperturbed, sim_man.dm[0] = \
-                nuclear_system_setup(sim_man.spin_par, \
-                                     sim_man.quad_par, \
+                nuclear_system_setup(spin_paramters, \
+                                     quad_paramters, \
                                      sim_man.zeem_par, \
+                                     None, \
+                                     sim_man.cs_par, \
+                                     sim_man.D1_par, \
+                                     sim_man.D2_par, \
+                                     sim_man.hf_par, \
+                                     sim_man.J_sec_par, \
                                      initial_state=self.manual_dm_elements, \
                                      temperature=300)
                         
@@ -352,13 +433,70 @@ class System_Parameters(FloatLayout):
         self.gyro_unit_label = Label(text='MHz/T', size=(10, 5), pos=(x_shift+220, y_shift-25), font_size='15sp')
         self.add_widget(self.gyro_unit_label)
 
+    def nuclear_spin_parameters2(self, x_shift, y_shift, sim_man):
+
+        # Nuclear species dropdown list
+        self.nuclear_species2 = Button(text='Nuclear species', size_hint=(0.15, 0.045), pos=(x_shift+50, y_shift+450))
+        self.add_widget(self.nuclear_species2)
+
+        self.nucleus_dd2 = DropDown()
+        # Displays the options when nuclear_species is pressed
+        self.nuclear_species2.bind(on_release=self.nucleus_dd2.open)
+
+        # Waits for the selection of an option in the list, then takes the text of the corresponding
+        # button and assigns it to the button nuclear_species
+        self.nucleus_dd2.bind(on_select=lambda instance, x: setattr(self.nuclear_species2, 'text', x))
+
+        # Reads the properties of various nuclear species from a JSON file
+        with open("nuclear_species.txt") as ns_file:
+             ns_data2 = json.load(ns_file)
+
+        ns_names2 = ns_data2.keys()
+
+        self.species_btn2 = {}
+
+        for name in ns_names2:
+
+            self.species_btn2[name] = Button(text=name, size_hint_y=None, height=25)
+            # When a button in the list is pressed, the on_select event is triggered and the text of
+            # the chosen button is passed as the argument x in the callback launched by nucleus_dd
+            self.species_btn2[name].bind(on_release=lambda btn: self.nucleus_dd2.select(btn.text))
+            self.nucleus_dd2.add_widget(self.species_btn2[name])
+
+        # Spin quantum number
+        self.spin_qn_label2 = Label(text='Spin quantum number', size=(10, 5), pos=(x_shift-130, y_shift-25), font_size='15sp')
+        self.add_widget(self.spin_qn_label2)
+
+        self.spin_qn2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+355, y_shift+460))
+        self.add_widget(self.spin_qn2)
+
+        # After the selection of one of the options in the dropdown list, the spin quantum number
+        # takes the corresponding value
+        for name in ns_names2:
+            self.species_btn2[name].bind(on_release=partial(clear_and_write_text, self.spin_qn2, \
+                                                           str(ns_data2[name]['spin quantum number'])))
+
+        # Gyromagnetic ratio
+        self.gyro_label2 = Label(text='\N{GREEK SMALL LETTER GAMMA}/2\N{GREEK SMALL LETTER PI}', size=(10, 5), pos=(x_shift+100, y_shift-25), font_size='15sp')
+        self.add_widget(self.gyro_label2)
+
+        self.gyro2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+530, y_shift+460))
+        self.add_widget(self.gyro2)
+
+        for name in ns_names2:
+            self.species_btn2[name].bind(on_release=partial(clear_and_write_text, self.gyro2, \
+                                                           str(ns_data2[name]['gamma/2pi'])))
+
+        self.gyro_unit_label2 = Label(text='MHz/T', size=(10, 5), pos=(x_shift+220, y_shift-25), font_size='15sp')
+        self.add_widget(self.gyro_unit_label2)
+
     def magnetic_field_parameters(self, x_shift, y_shift):
         
-        self.mag_field_label = Label(text='Magnetic field', size=(10, 5), pos=(x_shift-285, y_shift+100), font_size='20sp')
+        self.mag_field_label = Label(text='Magnetic field', size=(10, 5), pos=(x_shift-425, y_shift+50), font_size='20sp')
         self.add_widget(self.mag_field_label)
         
         # Field magnitude
-        self.field_mag_label = Label(text='Field magnitude', size=(10, 5), pos=(x_shift-296, y_shift+50), font_size='15sp')
+        self.field_mag_label = Label(text='Field magnitude', size=(10, 5), pos=(x_shift-286, y_shift+50), font_size='15sp')
         self.add_widget(self.field_mag_label)
         
         self.field_mag = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+170, y_shift+535))
@@ -388,54 +526,222 @@ class System_Parameters(FloatLayout):
         self.add_widget(self.phi_z_unit)
         
     def quadrupole_parameters(self, x_shift=0, y_shift=0):
-        self.quad_int = Label(text='Quadrupole interaction', size=(10, 5), pos=(x_shift-250, y_shift+90), font_size='20sp')
+        self.quad_int = Label(text='Quadrupolar 1st', size=(10, 5), pos=(x_shift-430, y_shift+90), font_size='20sp')
         self.add_widget(self.quad_int)
         
         # Coupling constant
-        self.coupling_label = Label(text='Coupling constant e\N{SUPERSCRIPT TWO}qQ', size=(10, 5), pos=(x_shift-271, y_shift+40), font_size='15sp')
+        self.coupling_label = Label(text='Coupling constant e\N{SUPERSCRIPT TWO}qQ', size=(10, 5), pos=(x_shift-271, y_shift+90), font_size='15sp')
         self.add_widget(self.coupling_label)
         
-        self.coupling = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+220, y_shift+525))
+        self.coupling = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+220, y_shift+575))
         self.add_widget(self.coupling)
         
-        self.coupling_unit = Label(text='MHz', size=(10, 5), pos=(x_shift-95, y_shift+40), font_size='15sp')
+        self.coupling_unit = Label(text='MHz', size=(10, 5), pos=(x_shift-95, y_shift+90), font_size='15sp')
         self.add_widget(self.coupling_unit)
         
         # Asymmetry parameter
-        self.asymmetry_label = Label(text='Asymmetry parameter', size=(10, 5), pos=(x_shift+25, y_shift+40), font_size='15sp')
+        self.asymmetry_label = Label(text='Asymmetry parameter', size=(10, 5), pos=(x_shift+25, y_shift+90), font_size='15sp')
+        self.asymmetry_label = Label(text='Asymmetry parameter', size=(10, 5), pos=(x_shift+25, y_shift+90), font_size='15sp')
         self.add_widget(self.asymmetry_label)
         
-        self.asymmetry = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+515, y_shift+525))
+        self.asymmetry = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+515, y_shift+575))
         self.add_widget(self.asymmetry)
         
         # Euler angles
-        self.alpha_q_label = Label(text='\N{GREEK SMALL LETTER ALPHA}Q', size=(10, 5), pos=(x_shift-341, y_shift-10), font_size='15sp')
+        self.alpha_q_label = Label(text='\N{GREEK SMALL LETTER ALPHA}Q', size=(10, 5), pos=(x_shift-341, y_shift+60), font_size='15sp')
         self.add_widget(self.alpha_q_label)
         
-        self.alpha_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+80, y_shift+475))
+        self.alpha_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+80, y_shift+545))
         self.add_widget(self.alpha_q)
         
-        self.alpha_q_unit = Label(text='°', size=(10, 5), pos=(x_shift-250, y_shift-10), font_size='15sp')
+        self.alpha_q_unit = Label(text='°', size=(10, 5), pos=(x_shift-250, y_shift+60), font_size='15sp')
         self.add_widget(self.alpha_q_unit)
         
-        self.beta_q_label = Label(text='\N{GREEK SMALL LETTER BETA}Q', size=(10, 5), pos=(x_shift-180, y_shift-10), font_size='15sp')
+        self.beta_q_label = Label(text='\N{GREEK SMALL LETTER BETA}Q', size=(10, 5), pos=(x_shift-180, y_shift+60), font_size='15sp')
         self.add_widget(self.beta_q_label)
         
-        self.beta_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+241, y_shift+475))
+        self.beta_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+241, y_shift+545))
         self.add_widget(self.beta_q)
         
-        self.beta_q_unit = Label(text='°', size=(10, 5), pos=(x_shift-89, y_shift-10), font_size='15sp')
+        self.beta_q_unit = Label(text='°', size=(10, 5), pos=(x_shift-89, y_shift+60), font_size='15sp')
         self.add_widget(self.beta_q_unit)
         
-        self.gamma_q_label = Label(text='\N{GREEK SMALL LETTER GAMMA}Q', size=(10, 5), pos=(x_shift-19, y_shift-10), font_size='15sp')
+        self.gamma_q_label = Label(text='\N{GREEK SMALL LETTER GAMMA}Q', size=(10, 5), pos=(x_shift-19, y_shift+60), font_size='15sp')
         self.add_widget(self.gamma_q_label)
         
-        self.gamma_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+402, y_shift+475))
+        self.gamma_q = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+402, y_shift+545))
         self.add_widget(self.gamma_q)
        
-        self.gamma_q_unit = Label(text='°', size=(10, 5), pos=(x_shift+73, y_shift-10), font_size='15sp')
+        self.gamma_q_unit = Label(text='°', size=(10, 5), pos=(x_shift+73, y_shift+60), font_size='15sp')
         self.add_widget(self.gamma_q_unit)
-        
+
+    def quadrupole_parameters1(self, x_shift=0, y_shift=0):
+        self.quad_int2 = Label(text='Quadrupolar 2nd', size=(10, 5), pos=(x_shift-430, y_shift+90), font_size='20sp')
+        self.add_widget(self.quad_int2)
+
+        # Coupling constant
+        self.coupling_label2 = Label(text='Coupling constant e\N{SUPERSCRIPT TWO}qQ', size=(10, 5), pos=(x_shift-271, y_shift+90), font_size='15sp')
+        self.add_widget(self.coupling_label2)
+
+        self.coupling2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+220, y_shift+575))
+        self.add_widget(self.coupling2)
+
+        self.coupling_unit2 = Label(text='MHz', size=(10, 5), pos=(x_shift-95, y_shift+90), font_size='15sp')
+        self.add_widget(self.coupling_unit2)
+
+        # Asymmetry parameter
+        self.asymmetry_label2 = Label(text='Asymmetry parameter', size=(10, 5), pos=(x_shift+25, y_shift+90), font_size='15sp')
+        self.asymmetry_label2 = Label(text='Asymmetry parameter', size=(10, 5), pos=(x_shift+25, y_shift+90), font_size='15sp')
+        self.add_widget(self.asymmetry_label2)
+
+        self.asymmetry2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+515, y_shift+575))
+        self.add_widget(self.asymmetry2)
+
+        # Euler angles
+        self.alpha_q_label2 = Label(text='\N{GREEK SMALL LETTER ALPHA}Q', size=(10, 5), pos=(x_shift-341, y_shift+60), font_size='15sp')
+        self.add_widget(self.alpha_q_label2)
+
+        self.alpha_q2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+80, y_shift+545))
+        self.add_widget(self.alpha_q2)
+
+        self.alpha_q_unit2 = Label(text='°', size=(10, 5), pos=(x_shift-250, y_shift+60), font_size='15sp')
+        self.add_widget(self.alpha_q_unit2)
+
+        self.beta_q_label2 = Label(text='\N{GREEK SMALL LETTER BETA}Q', size=(10, 5), pos=(x_shift-180, y_shift+60), font_size='15sp')
+        self.add_widget(self.beta_q_label2)
+
+        self.beta_q2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+241, y_shift+545))
+        self.add_widget(self.beta_q2)
+
+        self.beta_q_unit2 = Label(text='°', size=(10, 5), pos=(x_shift-89, y_shift+60), font_size='15sp')
+        self.add_widget(self.beta_q_unit2)
+
+        self.gamma_q_label2 = Label(text='\N{GREEK SMALL LETTER GAMMA}Q', size=(10, 5), pos=(x_shift-19, y_shift+60), font_size='15sp')
+        self.add_widget(self.gamma_q_label2)
+
+        self.gamma_q2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+402, y_shift+545))
+        self.add_widget(self.gamma_q2)
+
+        self.gamma_q_unit2 = Label(text='°', size=(10, 5), pos=(x_shift+73, y_shift+60), font_size='15sp')
+        self.add_widget(self.gamma_q_unit2)
+
+    def chemical_shift_parameters(self, x_shift=0, y_shift=0):
+        #Chemical shift
+        #title
+        self.chem_shiftLabel = Label(text='Chemical Shift', size=(10, 5), pos=(x_shift-320, y_shift+90), font_size='20sp')
+        self.add_widget(self.chem_shiftLabel)
+
+        self.chem_shiftLabel1 = Label(text='Isotropic chemical shift, \N{GREEK SMALL LETTER DELTA}=', size=(10, 5), pos=(x_shift-151, y_shift+90), font_size='15sp')
+        self.add_widget(self.chem_shiftLabel1)
+
+        self.chemical_shift = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+350, y_shift+575))
+        self.add_widget(self.chemical_shift)
+
+        self.chemical_shiftUnit = Label(text='MHz', size=(10, 5), pos=(x_shift+35, y_shift+90), font_size='15sp')
+        self.add_widget(self.chemical_shiftUnit)
+
+    def b1_parameters(self, x_shift=0, y_shift=0):
+        #D1
+        #title
+        self.dipolarLabel = Label(text='Dipolar, D1', size=(10, 5), pos=(x_shift-320, y_shift+90), font_size='20sp')
+        self.add_widget(self.dipolarLabel)
+
+        self.bd1label = Label(text='dipolar contant bD1', size=(10, 5), pos=(x_shift-151, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd1label)
+
+        self.bd1 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+330, y_shift+575))
+        self.add_widget(self.bd1)
+
+        self.bd1units = Label(text='MHz', size=(10, 5), pos=(x_shift+15, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd1units)
+
+        self.bd1label1 = Label(text='\N{GREEK SMALL LETTER THETA}', size=(10, 5), pos=(x_shift+125, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd1label1)
+
+        self.bdtheta1 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+530, y_shift+575))
+        self.add_widget(self.bdtheta1)
+
+        self.theta1units = Label(text='°', size=(10, 5), pos=(x_shift+200, y_shift+90), font_size='15sp')
+        self.add_widget(self.theta1units)
+
+    def b2_parameters(self, x_shift=0, y_shift=0):
+        #D2
+        #title
+        self.dipolar2Label = Label(text='Dipolar, D2', size=(10, 5), pos=(x_shift-320, y_shift+90), font_size='20sp')
+        self.add_widget(self.dipolar2Label)
+
+        self.bd2label = Label(text='dipolar contant bD2', size=(10, 5), pos=(x_shift-151, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd2label)
+
+        self.bd2= TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+330, y_shift+575))
+        self.add_widget(self.bd2)
+
+        self.bd2units = Label(text='MHz', size=(10, 5), pos=(x_shift+15, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd2units)
+
+        self.bd2label = Label(text='\N{GREEK SMALL LETTER THETA}', size=(10, 5), pos=(x_shift+125, y_shift+90), font_size='15sp')
+        self.add_widget(self.bd2label)
+
+        self.bdtheta2 = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+530, y_shift+575))
+        self.add_widget(self.bdtheta2)
+
+        self.theta2units = Label(text='°', size=(10, 5), pos=(x_shift+200, y_shift+90), font_size='15sp')
+        self.add_widget(self.theta2units)
+
+    def hf_parameters(self, x_shift=0, y_shift=0):
+        #secular Hyperfine interaction
+        #title
+        self.hfLabel = Label(text='Hyperfine ', size=(10, 5), pos=(x_shift-320, y_shift+90), font_size='20sp')
+        self.add_widget(self.hfLabel)
+
+        self.Alabel = Label(text='hyperfine constant A', size=(10, 5), pos=(x_shift-151, y_shift+90), font_size='15sp')
+        self.add_widget(self.Alabel)
+
+        self.hfA= TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+330, y_shift+575))
+        self.add_widget(self.hfA)
+
+        self.Aunits = Label(text='MHz', size=(10, 5), pos=(x_shift+15, y_shift+90), font_size='15sp')
+        self.add_widget(self.Aunits)
+
+        self.Blabel = Label(text='const B', size=(10, 5), pos=(x_shift+125, y_shift+90), font_size='15sp')
+        self.add_widget(self.Blabel)
+
+        self.hfB = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+560, y_shift+575))
+        self.add_widget(self.hfB)
+
+        self.Bunits = Label(text='MHz', size=(10, 5), pos=(x_shift+250, y_shift+90), font_size='15sp')
+        self.add_widget(self.Bunits)
+
+    def j_sec_param(self, x_shift=0, y_shift=0):
+        #Secular J-coupling interaction
+        #title
+        self.JLabel = Label(text='Secular J-coupling', size=(10, 5), pos=(x_shift-300, y_shift+90), font_size='20sp')
+        self.add_widget(self.JLabel)
+
+        self.JLabel1 = Label(text='J=', size=(10, 5), pos=(x_shift-61, y_shift+90), font_size='15sp')
+        self.add_widget(self.JLabel1)
+
+        self.Jparam = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+350, y_shift+575))
+        self.add_widget(self.Jparam)
+
+        self.JUnit = Label(text='MHz', size=(10, 5), pos=(x_shift+35, y_shift+90), font_size='15sp')
+        self.add_widget(self.JUnit)
+
+    def decoherence_param(self, x_shift=0, y_shift=0):
+        # Decoherence time of the system
+        self.decoherence_label = Label(text='Decoherence time', size=(10, 5), pos=(x_shift-285, y_shift+70), font_size='16sp')
+        self.add_widget(self.decoherence_label)
+
+        self.decoherence = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(x_shift+187.5, y_shift+555))
+        self.add_widget(self.decoherence)
+
+        self.decoherence_unit = Label(text='\N{GREEK SMALL LETTER MU}s', size=(10, 5), pos=(x_shift-135, y_shift+70), font_size='15sp')
+        self.add_widget(self.decoherence_unit)
+
+
+
+
+
     def initial_dm_parameters(self, x_shift, y_shift):
     
         self.initial_dm = Label(text='Initial density matrix', size=(10, 5), pos=(x_shift-260, y_shift+30), font_size='20sp')
@@ -475,35 +781,42 @@ class System_Parameters(FloatLayout):
     def __init__(self, sim_man, retrieve_config_btn, retrieve_config_name, **kwargs):
         super().__init__(**kwargs)
         
-        self.parameters = Label(text='System parameters', size=(10, 5), pos=(0, 450), font_size='30sp')
+        self.parameters = Label(text='System parameters', size=(10, 5), pos=(0, 480), font_size='30sp')
         self.add_widget(self.parameters)
         
-        self.nuclear_spin_parameters(0, 405, sim_man=sim_man)
+        self.nuclear_spin_parameters(-40, 475, sim_man=sim_man)
+
+        self.nuclear_spin_parameters2(-40, 435, sim_man=sim_man)
         
-        self.magnetic_field_parameters(0, 220)
+        self.magnetic_field_parameters(140, 320)
         
-        self.quadrupole_parameters(0, 130)
-        
-        # Decoherence time of the system
-        self.decoherence_label = Label(text='Decoherence time', size=(10, 5), pos=(-285, 70), font_size='16sp')
-        self.add_widget(self.decoherence_label)
-        
-        self.decoherence = TextInput(multiline=False, size_hint=(0.075, 0.03), pos=(187.5, 555))
-        self.add_widget(self.decoherence)
-        
-        self.decoherence_unit = Label(text='\N{GREEK SMALL LETTER MU}s', size=(10, 5), pos=(-135, 70), font_size='15sp')
-        self.add_widget(self.decoherence_unit)
-        
-        self.initial_dm_parameters(0, -5)
-        
+        self.quadrupole_parameters(100, 250)
+
+        self.quadrupole_parameters1(100, 190)
+
+        self.chemical_shift_parameters(0, 125)
+
+        self.b1_parameters(0, 90)
+
+        self.b2_parameters(0, 60)
+
+        self.hf_parameters(0, 25)
+
+        self.j_sec_param(0, -10)
+
+        self.decoherence_param(0, -30)
+
+        self.initial_dm_parameters(0, -25)
+
         self.set_up_system = Button(text='Set up the system', font_size='16sp', size_hint_y=None, height=40, size_hint_x=None, width=200, pos=(525, 50))
         self.set_up_system.bind(on_release=partial(self.build_system, sim_man))
-        
+
         self.add_widget(self.set_up_system)
-        
+
         # Button and TextInput which allow to retrieve all the values of the inputs of a previous simulation saved in a JSON file
         self.add_widget(retrieve_config_btn)
         self.add_widget(retrieve_config_name)
+
 
         
 # Class of the page of the software which lists the parameters of the pulse sequence
@@ -905,23 +1218,61 @@ class Evolution_Results(FloatLayout):
                                          RRF_par=sim_man.RRF_par[i])
             
             # Recap of the input parameters
-            print("Spin quantum number = " + str(sim_man.spin_par['quantum number']))
-            print("gamma/2pi = " + str(sim_man.spin_par['gamma/2pi']) + " MHz" )
-            
-            print('\n')
-            
+
             print("Field magnitude = " + str(sim_man.zeem_par['field magnitude']) + " T")
             print("theta_z = " + str(sim_man.zeem_par['theta_z']) + " rad")
             print("phi_z = " + str(sim_man.zeem_par['phi_z']) + " rad")
-            
+
             print('\n')
-            
+
+            print("First Spin:")
+
+            print("Spin quantum number = " + str(sim_man.spin_par['quantum number']))
+            print("gamma/2pi = " + str(sim_man.spin_par['gamma/2pi']) + " MHz" )
+
             print("e2qQ = " + str(sim_man.quad_par['coupling constant']) + " MHz")
             print("Asymmetry = " + str(sim_man.quad_par['asymmetry parameter']))
             print("alpha_q = " + str(sim_man.quad_par['alpha_q']) + " rad")
             print("beta_q = " + str(sim_man.quad_par['beta_q']) + " rad")
             print("gamma_q = " + str(sim_man.quad_par['gamma_q']) + " rad")
             
+            print('\n')
+
+            print("*******")
+
+            print("Second Spin:")
+            print("Spin quantum number = " + str(sim_man.spin_par2['quantum number']))
+            print("gamma/2pi = " + str(sim_man.spin_par2['gamma/2pi']) + " MHz" )
+
+            print("e2qQ = " + str(sim_man.quad_par2['coupling constant']) + " MHz")
+            print("Asymmetry = " + str(sim_man.quad_par2['asymmetry parameter']))
+            print("alpha_q = " + str(sim_man.quad_par2['alpha_q']) + " rad")
+            print("beta_q = " + str(sim_man.quad_par2['beta_q']) + " rad")
+            print("gamma_q = " + str(sim_man.quad_par2['gamma_q']) + " rad")
+
+            print('\n')
+
+            print("chemical_shift, delta_iso = " + str(sim_man.cs_par['delta_iso']) + " MHz")
+
+            print('\n')
+
+            print("b_D1 = " + str(sim_man.D1_par['b_D']) + " MHz")
+            print("theta_bD1 = " + str(sim_man.D1_par['theta']) + " rad")
+
+            print('\n')
+
+            print("b_D2 = " + str(sim_man.D2_par['b_D']) + " MHz")
+            print("theta_bD2 = " + str(sim_man.D2_par['theta']) + " rad")
+
+            print('\n')
+
+            print("A_hf = " + str(sim_man.hf_par['A']) + " MHz")
+            print("B_hf = " + str(sim_man.hf_par['B']) + " rad")
+
+            print('\n')
+
+            print("J_secular = " + str(sim_man.J_sec_par['J']) + " MHz")
+
             print('\n')
             
             print("# pulses = " + str(sim_man.n_pulses))
@@ -1321,6 +1672,10 @@ class Panels(TabbedPanel):
 
             p1.gyro.text = configuration['spin_par']['gamma/2pi']
 
+            p1.spin_qn2.text = configuration['spin_par2']['quantum number']
+
+            p1.gyro2.text = configuration['spin_par2']['gamma/2pi']
+
             p1.field_mag.text = configuration['zeem_par']['field magnitude']
 
             p1.theta_z.text = configuration['zeem_par']['theta_z']
@@ -1336,6 +1691,32 @@ class Panels(TabbedPanel):
             p1.beta_q.text = configuration['quad_par']['beta_q']
 
             p1.gamma_q.text = configuration['quad_par']['gamma_q']
+
+            p1.coupling2.text = configuration['quad_par2']['coupling constant']
+
+            p1.asymmetry2.text = configuration['quad_par2']['asymmetry parameter']
+
+            p1.alpha_q2.text = configuration['quad_par2']['alpha_q']
+
+            p1.beta_q2.text = configuration['quad_par2']['beta_q']
+
+            p1.gamma_q2.text = configuration['quad_par2']['gamma_q']
+
+            p1.chemical_shift.text = configuration['cs_par']['delta_iso' ]
+
+            p1.bd1.text = configuration['D1_par']['b_D']
+
+            p1.bdtheta1.text = configuration['D1_par']['theta']
+
+            p1.bd2.text = configuration['D2_par']['b_D']
+
+            p1.bdtheta2.text = configuration['D2_par']['theta']
+
+            p1.hfA.text = configuration['hf_par']['A']
+
+            p1.hfB.text = configuration['hf_par']['B']
+
+            p1.Jparam.text = configuration['J_sec_par']['J']
 
             p1.remove_widget(p1.nu_q_label)
 
@@ -1442,6 +1823,9 @@ class Panels(TabbedPanel):
             configuration['spin_par'] = {'quantum number' : p1.spin_qn.text, \
                                          'gamma/2pi' : p1.gyro.text}
 
+            configuration['spin_par2'] = {'quantum number' : p1.spin_qn2.text, \
+                                         'gamma/2pi' : p1.gyro2.text}
+
             configuration['zeem_par'] = {'field magnitude' : p1.field_mag.text,
                                          'theta_z' : p1.theta_z.text, 
                                          'phi_z' : p1.phi_z.text}
@@ -1451,6 +1835,25 @@ class Panels(TabbedPanel):
                                          'alpha_q' : p1.alpha_q.text,
                                          'beta_q' : p1.beta_q.text, 
                                          'gamma_q' : p1.gamma_q.text}
+
+            configuration['quad_par2'] = {'coupling constant' : p1.coupling2.text,
+                                         'asymmetry parameter' : p1.asymmetry2.text,
+                                         'alpha_q' : p1.alpha_q2.text,
+                                         'beta_q' : p1.beta_q2.text,
+                                         'gamma_q' : p1.gamma_q2.text}
+
+            configuration['cs_par'] = {'delta_iso' : p1.chemical_shift.text}
+
+            configuration['D1_par'] = {'b_D' : p1.bd1.text,
+                                       'theta' : p1.bdtheta1.text}
+
+            configuration['D2_par'] = {'b_D' : p1.bd2.text,
+                                       'theta' : p1.bdtheta2.text}
+
+            configuration['hf_par'] = {'A' : p1.hfA.text,
+                                       'B' : p1.hfB.text}
+
+            configuration['J_sec_par'] = {'J' : p1.Jparam.text}
 
             configuration['decoherence time'] = p1.decoherence.text
 
@@ -1532,11 +1935,11 @@ class Panels(TabbedPanel):
     def __init__(self, sim_man, **kwargs):
         super().__init__(**kwargs)
         
-        self.retrieve_config_btn = Button(text='Retrieve configuration', size_hint=(0.23, 0.03), pos=(565, 945), bold=True, background_color=(2.07, 0, 0.15, 1), font_size='15')
+        self.retrieve_config_btn = Button(text='Retrieve configuration', size_hint=(0.23, 0.03), pos=(610, 965), bold=True, background_color=(2.07, 0, 0.15, 1), font_size='15')
         
         self.retrieve_config_btn.bind(on_release=partial(self.retrieve_config, sim_man))
                 
-        self.retrieve_config_name = TextInput(multiline=False, size_hint=(0.23, 0.03), pos=(565, 915))
+        self.retrieve_config_name = TextInput(multiline=False, size_hint=(0.23, 0.03), pos=(610, 935))
         
         self.tab_sys_par = TabbedPanelItem(text='System')
         self.scroll_window =  ScrollView(size_hint=(1, None), size=(Window.width, 500))
