@@ -29,7 +29,7 @@ from Hamiltonians import h_zeeman, h_quadrupole, \
                          h_HF_secular, h_j_secular
     
 
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, D1initial_state='canonical', temperature=1e-4):
+def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, initial_state='canonical', temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing the spin (either a single one or a multiple spins' system), the unperturbed Hamiltonian (made up of the Zeeman, quadrupolar and J-coupling contributions) and the initial state of the system.
 
@@ -70,8 +70,8 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
       coordinate system to the system of the principal axes of the EFG tensor
       (PAS) (to be expressed in radians).
     
-      When it is None, the quadrupolar interaction of all the spins in the system is not taken into account.
-      Default value is None.
+      When it is None, the quadrupolar interaction of all the spins in the
+      system is not taken into account.  Default value is None.
     
     - zeem_par: dict
        
@@ -158,7 +158,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
       When it is None, the hyperfine interaction in the secular approximation between two spins is not taken into account.      
       Default value is None.
       
-    - hf_param: dict
+    - j_sec_param: dict
     
      Map containing information about the J-couping in the secular approximation. The keys and values required to this argument are shown in the table below:
      
@@ -856,10 +856,13 @@ def plot_real_part_FID_signal(times, FID, show=True, save=False, name='FIDSignal
 
 def fourier_transform_signal(times, signal, frequency_start, frequency_stop, opposite_frequency=False):
     """
-    Computes the Fourier transform of the passed time-dependent signal over the frequency interval [frequency_start, frequency_stop]. The implemented Fourier transform operation is
+    Computes the Fourier transform of the passed time-dependent signal over the
+    frequency interval [frequency_start, frequency_stop]. The implemented
+    Fourier transform operation is
     
-    where S is the original signal and T is its duration. In order to have a reliable Fourier transform, the signal should be very small beyond time T.
-
+    where S is the original signal and T is its duration. In order to have a
+    reliable Fourier transform, the signal should be very small beyond time T.
+    
     Parameters
     ----------
     - times: array-like
