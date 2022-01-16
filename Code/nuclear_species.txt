@@ -1,1 +1,0 @@
-{"Cl": {"spin quantum number": 1.5, "gamma/2pi": 4.00}, "Na": {"spin quantum number": 1.5, "gamma/2pi": 11.26}}

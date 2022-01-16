@@ -96,12 +96,12 @@ Below, the content and usage of these modules is reported briefly:
   The classes and subclasses defined in `Operators` belong to the following inheritance tree
   
   * `Operator`
-    * `Density_Matrix(Operator)`
+    * `DensityMatrix(Operator)`
     * `Observable(Operator)`
     
   Class `Operator` defines the properties of a generic linear application acting in the Hilbert space of a finite-dimensional quantum system. Its main attribute is `matrix`, a square array of complex numbers which gives the matrix representation of the operator in a certain basis. The methods of this class implement the basic algebraic operations and other common actions involving operators, such as the change of basis.
   
-  Class `Density_Matrix` characterizes the operators which represent the state (pure or mixed) of the quantum system. It is defined by three fundamental properties:
+  Class `DensityMatrix` characterizes the operators which represent the state (pure or mixed) of the quantum system. It is defined by three fundamental properties:
   1. hermitianity
   1. unit trace
   1. positivity
@@ -126,13 +126,13 @@ Below, the content and usage of these modules is reported briefly:
     Takes an operator acting on the Hilbert space of a many-particle system and extracts its partial trace over the specified subspace.
 
 
-* `Nuclear_Spin`
+* `NuclearSpin`
 
   In this module, the objects defined in `Operators` are employed to build up the class which represents the spin of an atomic nucleus or a system of nuclei.
   
-  Class `Nuclear_Spin` is characterized by a quantum number, a gyromagnetic ratio and a set of methods which return the spherical and cartesian components of the spin vector operator.
+  Class `NuclearSpin` is characterized by a quantum number, a gyromagnetic ratio and a set of methods which return the spherical and cartesian components of the spin vector operator.
   
-  The subclass `Many_Spins` contains the `Nuclear_Spin` objects representing the individual spins in a system of many nuclei, as well as a method for the calculation of the operators of the total spin.
+  The subclass `ManySpins` contains the `NuclearSpin` objects representing the individual spins in a system of many nuclei, as well as a method for the calculation of the operators of the total spin.
 
 
 * `Hamiltonians`
