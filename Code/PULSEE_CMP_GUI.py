@@ -39,7 +39,11 @@ from kivy.uix.checkbox import CheckBox
 from kivy.uix.slider import Slider
 from kivy.uix.popup import Popup
 
-from kivy.garden.matplotlib import FigureCanvasKivyAgg
+try:
+    from kivy.garden.matplotlib import FigureCanvasKivyAgg
+except ImportError as e:
+    print("Locally imported FigureCanvasKivy")
+    from backend_kivyagg import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
 from Operators import Operator, Density_Matrix, Observable
@@ -1575,7 +1579,7 @@ class Panels(TabbedPanel):
 
 
 # Class of the application and main class of the program
-class PULSEE(App):
+class PULSEE_CMP(App):
     
     sim_man = Simulation_Manager()
     
@@ -1583,4 +1587,4 @@ class PULSEE(App):
                 
         return Panels(size=(500, 500), do_default_tab=False, tab_pos='top_mid', sim_man=self.sim_man)
     
-PULSEE().run()
+PULSEE_CMP().run()
