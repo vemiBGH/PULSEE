@@ -283,25 +283,33 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
 
 def h_j_coupling(spins, j_matrix):
     """
-    Returns the term of the Hamiltonian describing the J-coupling between the spins of a system of many nuclei.  
-  
+    Returns the term of the Hamiltonian describing the J-coupling between the
+    spins of a system of many nuclei.  
+    
     Parameters
     ----------
     - spins: Many_Spins
              Spins' system under study;
              
     - j_matrix: np.ndarray
-                Array storing the coefficients Jmn which enter the formula for the computation of the Hamiltonian for the j-coupling.
-                Remark: j_matrix doesn't have to be symmetric, since the function reads only those elements located in the upper half with respect to the diagonal. This means that the elements j_matrix[m, n] which matter are those for which m<n.
+                Array storing the coefficients Jmn which enter the formula for
+                the computation of the Hamiltonian for the j-coupling.  Remark:
+                j_matrix doesn't have to be symmetric, since the function reads
+                only those elements located in the upper half with respect to
+                the diagonal. This means that the elements j_matrix[m, n] which
+                matter are those for which m<n.
                 
     Returns
     -------
-    Observable object acting on the full Hilbert space of the spins' system representing the Hamiltonian of the J-coupling between the spins.
+    Observable object acting on the full Hilbert space of the spins' system
+    representing the Hamiltonian of the J-coupling between the spins.  
     """
     ### NOTE: This can be used for any coupling that has a tensor interaction, such as the full checmical shift, and full dipolar interaction, where the appropriate matrix is passed. ### 
     h_j = Operator(spins.d)*0
     
+    # row 
     for m in range(j_matrix.shape[0]):
+        # column 
         for n in range(m):            
             term_nm = j_matrix[n, m]*spins.spin[n].I['z']
             for l in range(n):
@@ -431,5 +439,38 @@ def h_j_secular(spins,  J):
     """
     h_j = 2*np.pi*J*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z'])
     return Observable(h_j.matrix)
+
+def h_tensor_coupling(spins, tensor):
+    """
+    Yields Hamiltonian representing an interaction of the form I_1 A I_2 where
+    I_i are spin operators and A is a rank-2 tensor. Could for example be used 
+    to obtain [hyperfine interaction Hamiltonian.](https://epr.ethz.ch/education/basic-concepts-of-epr/int--with-nucl--spins/hyperfine-interaction.html)
+    Author: Lucas Brito
+
+    Params
+    ------
+    - spins: 2-spin system under study 
+    - tensor: a numpy ndarray representing the interaction tensor of this 
+              Hamiltonian. 
+    
+    Returns
+    ------
+    Observable object acting on full Hilbert space of the 2-spin system 
+    representing the Hamiltonian of this interaction. 
+    """ 
+    i_1 = spins.spin[0].cartesian_operator()
+    i_2 = spins.spin[1].cartesian_operator()
+
+    # Initialize empty operator of appropriate dimension as base case for 
+    # for loop. 
+    h = Operator(spins.d) * 0 
+
+    for m in range(len(i_1)):
+        for n in range(len(i_2)):
+            h += tensor[m, n] * (tensor_product(i_1[m], i_2[n]))
+
+    return h 
+
+
 
 

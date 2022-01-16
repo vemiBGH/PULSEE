@@ -1,4 +1,5 @@
 import sys
+
 sys.path.insert(1, '../Code')
 
 import math
@@ -11,7 +12,7 @@ from hypothesis import given, note
 from Operators import Operator, Density_Matrix, Observable, \
                       random_operator, random_density_matrix, random_observable
 
-from Many_Body import tensor_product_operator, partial_trace
+from Many_Body import tensor_product, partial_trace
 
 from Nuclear_Spin import Nuclear_Spin, Many_Spins
 
@@ -20,7 +21,7 @@ from Hamiltonians import h_zeeman, h_quadrupole, \
                          h_single_mode_pulse, \
                          h_multiple_mode_pulse, \
                          h_changed_picture, \
-                         h_j_coupling
+                         h_j_coupling, h_tensor_coupling
 
 @given(par = st.lists(st.floats(min_value=0, max_value=20), min_size=3, max_size=3))
 def test_zeeman_hamiltonian_changes_sign_when_magnetic_field_is_flipped(par):
@@ -115,6 +116,22 @@ def test_partial_trace_j_coupling_hamiltonian_over_non_interacting_spins_subspac
     
     assert np.all(np.isclose(h_j_2.matrix, 0*Operator(27).matrix, rtol = 1e-10))
     
+def test_h_tensor_j_coupling_two_half_spin_system():
+    spins = Many_Spins([Nuclear_Spin(0.5), Nuclear_Spin(0.5)])
+
+    # https://www.weizmann.ac.il/chembiophys/assaf_tal/sites/chemphys.assaf_tal/files/uploads/lecture_ii_-_nmr_interactions.pdf
+    j_coeff = 275
+    j = 2 * np.pi * j_coeff * np.eye(3) # Hz
+    computed_h_j_coupling = h_tensor_coupling(spins, j).matrix
+    expected_h_j_coupling = np.array([[j_coeff * np.pi / 2, 0, 0, 0],
+                                      [0, - np.pi * j_coeff / 2, np.pi * j_coeff, 0],
+                                      [0, np.pi * j_coeff, - np.pi * j_coeff / 2, 0], 
+                                     [0, 0, 0, np.pi * j_coeff / 2]])
+    assert np.array_equal(computed_h_j_coupling, expected_h_j_coupling)
+
+    
+
+
     
     
     
