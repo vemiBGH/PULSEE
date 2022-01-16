@@ -5,4 +5,5 @@ tests/
 tests/.pytest_cache
 notes/
 .vscode/
-Code/Correlated_Simulations.py
+.hypothesis/
+.pytest_cache/
