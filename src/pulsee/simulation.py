@@ -26,10 +26,21 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
                          h_changed_picture, \
                          h_j_coupling, \
                          h_CS_isotropic, h_D1, h_D2,\
-                         h_HF_secular, h_j_secular
+                         h_HF_secular, h_j_secular, h_tensor_coupling
     
 
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, cs_param=None, D1_param=None, D2_param=None, hf_param=None, j_sec_param=None, initial_state='canonical', temperature=1e-4):
+def nuclear_system_setup(spin_par, 
+                         quad_par=None,
+                         zeem_par=None, 
+                         j_matrix=None, 
+                         cs_param=None, 
+                         D1_param=None, 
+                         D2_param=None, 
+                         hf_param=None, 
+                         h_tensor_inter=None,
+                         j_sec_param=None, 
+                         initial_state='canonical', 
+                         temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing the spin (either a single one or a multiple spins' system), the unperturbed Hamiltonian (made up of the Zeeman, quadrupolar and J-coupling contributions) and the initial state of the system.
 
@@ -170,6 +181,16 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
       
       When it is None, the J-couping in the secular approximation is not taken into account.      
       Default value is None.
+    
+    - h_tensor_inter: numpy.ndarray 
+      
+      Rank-2 tensor describing a two-spin interaction of the form 
+      $\mathbf{I}_1 J \mathbf{I}_2$ where $J$ is the tensor and $\mathbf{I}_i$
+      are vector spin operators
+
+      When it is None, the interaction is not taken into account. 
+
+      Default value is None.
       
     - initial_state: either string or numpy.ndarray
   
@@ -291,6 +312,9 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None, 
         else:
             h_j = h_j_secular(spin_system, j_sec_param['J'])
             h_unperturbed = h_unperturbed + h_j
+
+    if h_tensor_inter is not None:
+        h_unperturbed = h_tensor_coupling(spin_system, h_tensor_coupling)
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(h_unperturbed, temperature)
