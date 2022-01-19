@@ -129,6 +129,19 @@ class CompositeQubitSpace:
         add_bit(1, [])
         return matrices
 
+    def onb(self): 
+        
+        """
+        Obtain the orthonormal basis of this qubit space as `QubitState` 
+        objects.
+
+        Returns
+        ------
+        A list containing the orthonormal basis.
+        """
+        return [QubitState(self, m) for m in self.onb_matrices()]
+         
+
     def __eq__(self, other):
         if isinstance(other, CompositeQubitSpace):
             return self.n == other.n 
@@ -137,6 +150,27 @@ class CompositeQubitSpace:
     @property
     def n(self): 
         return self._n
+
+
+def n_gate(op):
+    """
+    Converts an operator to an NGate
+
+    Params
+    ------
+    - op: an `Operator` object.
+
+    Returns
+    ------
+    An `NGate` object     
+    """
+    if np.shape(op.matrix)[0] != np.shape(op.matrix)[0] \
+        or np.log2(np.shape(op.matrix)[0]) % 1 != 0 \
+        or np.log2(np.shape(op.matrix))[0] % 1 != 0: 
+        raise MatrixRepresentationError()
+    
+    qs = CompositeQubitSpace(int(np.log2(np.shape(op.matrix)[0])))
+    return NGate(op.matrix, qs)
 
 
 class NGate(Operator):

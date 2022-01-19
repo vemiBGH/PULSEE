@@ -314,7 +314,7 @@ def nuclear_system_setup(spin_par,
             h_unperturbed = h_unperturbed + h_j
 
     if h_tensor_inter is not None:
-        h_unperturbed = h_tensor_coupling(spin_system, h_tensor_coupling)
+        h_unperturbed = h_tensor_coupling(spin_system, h_tensor_inter)
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(h_unperturbed, temperature)
