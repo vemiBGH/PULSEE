@@ -206,6 +206,11 @@ class NGate(Operator):
         
         return QubitState(self._qubit_space, np.matmul(self.matrix, state.matrix))
 
+    @property
+    def n(self):
+        return self._n
+    
+
 
 class QubitState:
     def __init__(self, qubit_space: CompositeQubitSpace, matrix):
@@ -377,16 +382,56 @@ def tensor_product(q1, q2):
     """
     # Find number of qubit spaces that this composite qubit's qubit space is 
     # comprised of 
-    n = q1.n + q2.n 
+    n = q1.qn + q2.n 
 
     # Make matrix representation of tensor product. 
     prod = np.kron(q1.matrix, q2.matrix)
     return QubitState(CompositeQubitSpace(n), prod)
 
 
+def gate_tensor_product(g1, g2): 
+    """
+    Take the tensor product of two NGates.     
+
+    Params
+    ------
+    - `g1`, `g2`: two NGates
+    
+    Returns
+    ------
+    An NGate object representing the tensor product of `g1` and `g2`.     
+    """
+    n = g1.n + g2.n
+    prod = np.kron(g1.matrix, g2.matrix)
+    return NGate(prod, CompositeQubitSpace(n))
+
+
+def gate_tensor_pow(g, pow): 
+    """
+    Take the tensor product of an NGate `pow` times. 
+
+    Params
+    ------
+    - `q`: an NGate 
+    - `pow`: an integer 
+
+    Returns
+    -------
+    The tensor product of `q` with itself `pow` times. 
+    """
+    i = 0 
+    prod = g
+    while i < pow - 1: 
+        prod = gate_tensor_product(g, prod)
+        i += 1 
+    return prod 
+
+
 # Define quantum gates.
+identity = NGate(np.eye(2), QubitSpace())
 hadamard = NGate((1 / np.sqrt(2)) * np.array([[1, 1], [1, -1]]), 
                         QubitSpace())
+not_gate = NGate(np.array([[0, 1], [1, 0]]), QubitSpace())
 cnot = NGate(np.array([[1, 0, 0, 0], 
                        [0, 1, 0, 0], 
                        [0, 0, 0, 1], 
@@ -397,4 +442,21 @@ pauli_y = NGate(np.array([[0, -1j], [1j, 0]]), QubitSpace())
 pauli_z = NGate(np.array([[1, 0], [0, -1]]), QubitSpace())
 phase = NGate(np.array([[1, 0], [0, 1j]]), QubitSpace())
 pi_8 = NGate(np.array([[1, 0], [0, np.exp(1j* np.pi / 4)]]), QubitSpace())
+toffoli = NGate(np.array([[1, 0, 0, 0, 0, 0, 0, 0],
+                          [0, 1, 0, 0, 0, 0, 0, 0],
+                          [0, 0, 1, 0, 0, 0, 0, 0],
+                          [0, 0, 0, 1, 0, 0, 0, 0],
+                          [0, 0, 0, 0, 1, 0, 0, 0],
+                          [0, 0, 0, 0, 0, 1, 0, 0],
+                          [0, 0, 0, 0, 0, 0, 0, 1],
+                          [0, 0, 0, 0, 0, 0, 1, 0]]), CompositeQubitSpace(3))
+
+cnotnot = NGate([[1, 0, 0, 0, 0, 0, 0, 0],
+					 [0, 1, 0, 0, 0, 0, 0, 0],
+					 [0, 0, 1, 0, 0, 0, 0, 0],
+					 [0, 0, 0, 1, 0, 0, 0, 0],
+					 [0, 0, 0, 0, 0, 0, 0, 1],
+					 [0, 0, 0, 0, 0, 0, 1, 0],
+					 [0, 0, 0, 0, 0, 1, 0, 0],
+					 [0, 0, 0, 0, 1, 0, 0, 0]], CompositeQubitSpace(3))
 
