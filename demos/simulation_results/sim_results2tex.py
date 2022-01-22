@@ -1,9 +1,10 @@
 import os 
+import argparse
 import json 
 import numpy as np 
 
 TEX_FILENAME = 'gen_slides.tex'
-SIM_DIR = './spin1-2'
+SIM_DIR = './test/'
 
 INITIAL_DM_FILENAME = 'initial_dm.csv'
 EVOLVED_DM_FILENAME = 'evolved_dm.csv'
@@ -18,9 +19,9 @@ TEX_PREAMBLE = '''
 
 \\title{Simulation Results}
 \\author{Ilija Nikolov, Lucas Z. Brito}
-\institute{}
+\\institute{}
 \date{2021}
-
+\setlength{\\arraycolsep}{1pt}
 \setbeamersize{text margin left=0.4cm, text margin right=0.4cm}
 \\begin{document}
 
@@ -55,16 +56,16 @@ def make_slide(dir):
 			H += '+ b_D \\big(3\\cos^2\\theta-1\\big)I_{1z}I_{2z}.'
 			h_params = params['hamiltonian_args']['D2_param']
 			for k in h_params.keys(): 
-				addtn_args += f'${k}\\approx{np.round(h_params[k], 3)}$'
+				addtn_args += f',${k}\\approx{np.round(h_params[k], 3)}$'
 		
 		if 'h_tensor_inter' in params['hamiltonian_args'].keys(): 
 			H += '+ \\hat{S}\\tilde{A}\\hat{I}'
 			h_params = params['hamiltonian_args']['h_tensor_inter']
-			addtn_args += f'$A={h_params}$,'
+			addtn_args += f'$,A={h_params}$,'
 		
 
-		params_str = f"Spin: {params['quantum_number']}," \
-			+ f"$B_0= {params['B_0']}$, $\\gamma/2\\pi = {params['gamma_2pi']}$,"\
+		params_str = f"Spin: {params['quantum_numbers']}," \
+			+ f"$B_0= {params['B_0']}$, $\\gamma/2\\pi = {params['gamma_2pis']}$,"\
 			+ f"$\\mathcal{{H}}={H}$" + addtn_args
 
 		initial_dm_file = os.path.join(dir, INITIAL_DM_FILENAME)
@@ -82,7 +83,7 @@ def make_slide(dir):
 {params_str}
 \\begin{{columns}}[T]
 \\begin{{column}}{{.5\\textwidth}}
-\\begin{{align*}}
+\\tiny\\begin{{align*}}
 \\rho_{{\\text{{initial}}}}\\doteq
 {tex_initial_dm}
 \\\\
@@ -90,10 +91,10 @@ def make_slide(dir):
 {tex_evolved_dm}
 \\end{{align*}}
 \\begin{{column}}{{.5\\textwidth}}
-\\includegraphics[width=1.5\\textwidth]{{{os.path.join(dir, INITIAL_DM_FIG_FILENAME)}}}
+\\includegraphics[width=1.3\\textwidth]{{{os.path.join(dir, INITIAL_DM_FIG_FILENAME)}}}
 \\end{{column}}
 \\begin{{column}}{{.5\\textwidth}}
-\\includegraphics[width=1.5\\textwidth]{{{os.path.join(dir, EVOLVED_DM_FIG_FILENAME)}}}
+\\includegraphics[width=1.3\\textwidth]{{{os.path.join(dir, EVOLVED_DM_FIG_FILENAME)}}}
 \\end{{column}}
 \\end{{column}}
 \\begin{{column}}{{.5\\textwidth}}
@@ -104,22 +105,26 @@ def make_slide(dir):
 \\end{{frame}}
 '''
 
-def main():
+def main(sim_dir, tex_filename):
 	tex = TEX_PREAMBLE
-	for dir in os.listdir(SIM_DIR): 
-		if not os.path.isdir(os.path.join(SIM_DIR, dir)):
+	for dir in os.listdir(sim_dir): 
+		if not os.path.isdir(os.path.join(sim_dir, dir)):
 			continue  
 		
-		tex += make_slide(os.path.join(SIM_DIR, dir))
+		tex += make_slide(os.path.join(sim_dir, dir))
 	
 	tex += '\n\\end{document}'
-	f = open(TEX_FILENAME, 'w')
+	f = open(tex_filename, 'w')
 	f.write(tex)
 	f.close()
 
-
 if __name__ == '__main__':
-	print('WARNING: this script outdates; in params.json `quantum_number` and '\
-			+ '`gamma/2pi` have different keys.')
-	main()
+	parser = argparse.ArgumentParser(description='Convert the given directory' \
+										+ 'of simulation results into a TeX' \
+										+ 'Beamer file.')
+
+	parser.add_argument('dir')
+	parser.add_argument('--name', default=TEX_FILENAME)
+	args = parser.parse_args()
+	main(args.dir, args.name)
 		

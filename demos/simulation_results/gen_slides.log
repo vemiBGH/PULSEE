@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.7.21)  20 JAN 2022 20:13
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.7.21)  22 JAN 2022 01:38
 entering extended mode
 **/home/lzawbrito/PythonProjects/PULSEE/demos/simulation_results/gen_slides.tex
 (/home/lzawbrito/PythonProjects/PULSEE/demos/simulation_results/gen_slides.tex
@@ -669,549 +669,59 @@ Dictionary: translator-theorem-dictionary, Language: English
 ) (gen_slides.nav) [1
 
 {/home/lzawbrito/.miktex/texmfs/data/pdftex/config/pdftex.map}]
-LaTeX Font Info:    Trying to load font information for U+msa on input line 47.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 55.
  (/home/lzawbrito/.miktex/texmfs/install/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 47.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 55.
  (/home/lzawbrito/.miktex/texmfs/install/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 )
-LaTeX Font Info:    Trying to load font information for OT1+mathkerncmss on input line 47.
+LaTeX Font Info:    Trying to load font information for OT1+mathkerncmss on input line 55.
  (/home/lzawbrito/.miktex/texmfs/install/tex/latex/sansmathaccent/ot1mathkerncmss.fd
 File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/mathkerncmss.
 )
-<./spin1-2/42correlated_mixed_dipD2/InitialRealPartDensityMatrix.png, id=42, 433.62pt x 289.08pt>
-File: ./spin1-2/42correlated_mixed_dipD2/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/42correlated_mixed_dipD2/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/42correlated_mixed_dipD2/InitialRealPartDensityMatrix.png  used on input line 47.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
+Overfull \hbox (21.71815pt too wide) detected at line 55
+[]
+ []
 
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 47--47
+<./test/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png, id=41, 433.62pt x 289.08pt>
+File: ./test/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png Graphic file (type png)
+<use ./test/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png>
+Package pdftex.def Info: ./test/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png  used on input line 55.
+(pdftex.def)             Requested size: 110.96613pt x 73.97687pt.
+
+Overfull \hbox (25.60776pt too wide) in paragraph at lines 55--55
 [][]  
  []
 
-<./spin1-2/42correlated_mixed_dipD2/EvolvedRealPartDensityMatrix.png, id=44, 433.62pt x 289.08pt>
-File: ./spin1-2/42correlated_mixed_dipD2/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/42correlated_mixed_dipD2/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/42correlated_mixed_dipD2/EvolvedRealPartDensityMatrix.png  used on input line 47.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
+<./test/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png, id=43, 433.62pt x 289.08pt>
+File: ./test/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png Graphic file (type png)
+<use ./test/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png>
+Package pdftex.def Info: ./test/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png  used on input line 55.
+(pdftex.def)             Requested size: 110.96613pt x 73.97687pt.
 
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 47--47
+Overfull \hbox (25.60776pt too wide) in paragraph at lines 55--55
 [][]  
  []
 
-<./spin1-2/42correlated_mixed_dipD2/FIDSignal.png, id=45, 433.62pt x 289.08pt>
-File: ./spin1-2/42correlated_mixed_dipD2/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/42correlated_mixed_dipD2/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/42correlated_mixed_dipD2/FIDSignal.png  used on input line 47.
+<./test/11uncorrelated_mixed_no_interactions/FIDSignal.png, id=44, 433.62pt x 289.08pt>
+File: ./test/11uncorrelated_mixed_no_interactions/FIDSignal.png Graphic file (type png)
+<use ./test/11uncorrelated_mixed_no_interactions/FIDSignal.png>
+Package pdftex.def Info: ./test/11uncorrelated_mixed_no_interactions/FIDSignal.png  used on input line 55.
 (pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/42correlated_mixed_dipD2/FTSignal.png, id=46, 433.62pt x 289.08pt>
-File: ./spin1-2/42correlated_mixed_dipD2/FTSignal.png Graphic file (type png)
-<use ./spin1-2/42correlated_mixed_dipD2/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/42correlated_mixed_dipD2/FTSignal.png  used on input line 47.
+<./test/11uncorrelated_mixed_no_interactions/FTSignal.png, id=45, 433.62pt x 289.08pt>
+File: ./test/11uncorrelated_mixed_no_interactions/FTSignal.png Graphic file (type png)
+<use ./test/11uncorrelated_mixed_no_interactions/FTSignal.png>
+Package pdftex.def Info: ./test/11uncorrelated_mixed_no_interactions/FTSignal.png  used on input line 55.
 (pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
 
-Overfull \vbox (13.67015pt too high) detected at line 47
+Overfull \vbox (1.67015pt too high) detected at line 55
  []
 
 [2
 
- <./spin1-2/42correlated_mixed_dipD2/InitialRealPartDensityMatrix.png> <./spin1-2/42correlated_mixed_dipD2/EvolvedRealPartDensityMatrix.png> <./spin1-2/42correlated_mixed_dipD2/FIDSignal.png> <./spin1-2/42correlated_mixed_dipD2/FTSignal.png>]
-Overfull \hbox (35.2056pt too wide) detected at line 82
-[]
- []
-
-<./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/InitialRealPartDensityMatrix.png, id=82, 433.62pt x 289.08pt>
-File: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/InitialRealPartDensityMatrix.png  used on input line 82.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 82--82
-[][]  
- []
-
-<./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png, id=83, 433.62pt x 289.08pt>
-File: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png  used on input line 82.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 82--82
-[][]  
- []
-
-<./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FIDSignal.png, id=84, 433.62pt x 289.08pt>
-File: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FIDSignal.png  used on input line 82.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FTSignal.png, id=85, 433.62pt x 289.08pt>
-File: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FTSignal.png Graphic file (type png)
-<use ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FTSignal.png  used on input line 82.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \hbox (12.44374pt too wide) detected at line 82
-[][][] [][][][][][][][][] [][][][][][][] 
- []
-
-
-Overfull \vbox (1.67015pt too high) detected at line 82
- []
-
-[3
-
- <./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/InitialRealPartDensityMatrix.png> <./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png> <./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FIDSignal.png> <./spin1-2/14uncorrelated_mixed_hyperfineAnisotrop/FTSignal.png>]
-<./spin1-2/22uncorrelated_pure_dipD2/InitialRealPartDensityMatrix.png, id=115, 433.62pt x 289.08pt>
-File: ./spin1-2/22uncorrelated_pure_dipD2/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/22uncorrelated_pure_dipD2/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/22uncorrelated_pure_dipD2/InitialRealPartDensityMatrix.png  used on input line 117.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 117--117
-[][]  
- []
-
-<./spin1-2/22uncorrelated_pure_dipD2/EvolvedRealPartDensityMatrix.png, id=116, 433.62pt x 289.08pt>
-File: ./spin1-2/22uncorrelated_pure_dipD2/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/22uncorrelated_pure_dipD2/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/22uncorrelated_pure_dipD2/EvolvedRealPartDensityMatrix.png  used on input line 117.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 117--117
-[][]  
- []
-
-<./spin1-2/22uncorrelated_pure_dipD2/FIDSignal.png, id=117, 433.62pt x 289.08pt>
-File: ./spin1-2/22uncorrelated_pure_dipD2/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/22uncorrelated_pure_dipD2/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/22uncorrelated_pure_dipD2/FIDSignal.png  used on input line 117.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/22uncorrelated_pure_dipD2/FTSignal.png, id=118, 433.62pt x 289.08pt>
-File: ./spin1-2/22uncorrelated_pure_dipD2/FTSignal.png Graphic file (type png)
-<use ./spin1-2/22uncorrelated_pure_dipD2/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/22uncorrelated_pure_dipD2/FTSignal.png  used on input line 117.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (13.67015pt too high) detected at line 117
- []
-
-[4
-
- <./spin1-2/22uncorrelated_pure_dipD2/InitialRealPartDensityMatrix.png> <./spin1-2/22uncorrelated_pure_dipD2/EvolvedRealPartDensityMatrix.png> <./spin1-2/22uncorrelated_pure_dipD2/FIDSignal.png> <./spin1-2/22uncorrelated_pure_dipD2/FTSignal.png>]
-<./spin1-2/12uncorrelated_mixed_dipD2/InitialRealPartDensityMatrix.png, id=148, 433.62pt x 289.08pt>
-File: ./spin1-2/12uncorrelated_mixed_dipD2/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/12uncorrelated_mixed_dipD2/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/12uncorrelated_mixed_dipD2/InitialRealPartDensityMatrix.png  used on input line 152.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 152--152
-[][]  
- []
-
-<./spin1-2/12uncorrelated_mixed_dipD2/EvolvedRealPartDensityMatrix.png, id=149, 433.62pt x 289.08pt>
-File: ./spin1-2/12uncorrelated_mixed_dipD2/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/12uncorrelated_mixed_dipD2/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/12uncorrelated_mixed_dipD2/EvolvedRealPartDensityMatrix.png  used on input line 152.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 152--152
-[][]  
- []
-
-<./spin1-2/12uncorrelated_mixed_dipD2/FIDSignal.png, id=150, 433.62pt x 289.08pt>
-File: ./spin1-2/12uncorrelated_mixed_dipD2/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/12uncorrelated_mixed_dipD2/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/12uncorrelated_mixed_dipD2/FIDSignal.png  used on input line 152.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/12uncorrelated_mixed_dipD2/FTSignal.png, id=151, 433.62pt x 289.08pt>
-File: ./spin1-2/12uncorrelated_mixed_dipD2/FTSignal.png Graphic file (type png)
-<use ./spin1-2/12uncorrelated_mixed_dipD2/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/12uncorrelated_mixed_dipD2/FTSignal.png  used on input line 152.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (13.67015pt too high) detected at line 152
- []
-
-[5
-
- <./spin1-2/12uncorrelated_mixed_dipD2/InitialRealPartDensityMatrix.png> <./spin1-2/12uncorrelated_mixed_dipD2/EvolvedRealPartDensityMatrix.png> <./spin1-2/12uncorrelated_mixed_dipD2/FIDSignal.png> <./spin1-2/12uncorrelated_mixed_dipD2/FTSignal.png>]
-Overfull \hbox (19.65pt too wide) detected at line 187
-[]
- []
-
-<./spin1-2/13uncorrelated_mixed_hyperfine/InitialRealPartDensityMatrix.png, id=181, 433.62pt x 289.08pt>
-File: ./spin1-2/13uncorrelated_mixed_hyperfine/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/13uncorrelated_mixed_hyperfine/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/13uncorrelated_mixed_hyperfine/InitialRealPartDensityMatrix.png  used on input line 187.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 187--187
-[][]  
- []
-
-<./spin1-2/13uncorrelated_mixed_hyperfine/EvolvedRealPartDensityMatrix.png, id=182, 433.62pt x 289.08pt>
-File: ./spin1-2/13uncorrelated_mixed_hyperfine/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/13uncorrelated_mixed_hyperfine/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/13uncorrelated_mixed_hyperfine/EvolvedRealPartDensityMatrix.png  used on input line 187.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 187--187
-[][]  
- []
-
-<./spin1-2/13uncorrelated_mixed_hyperfine/FIDSignal.png, id=183, 433.62pt x 289.08pt>
-File: ./spin1-2/13uncorrelated_mixed_hyperfine/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/13uncorrelated_mixed_hyperfine/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/13uncorrelated_mixed_hyperfine/FIDSignal.png  used on input line 187.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/13uncorrelated_mixed_hyperfine/FTSignal.png, id=184, 433.62pt x 289.08pt>
-File: ./spin1-2/13uncorrelated_mixed_hyperfine/FTSignal.png Graphic file (type png)
-<use ./spin1-2/13uncorrelated_mixed_hyperfine/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/13uncorrelated_mixed_hyperfine/FTSignal.png  used on input line 187.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 187
- []
-
-[6
-
- <./spin1-2/13uncorrelated_mixed_hyperfine/InitialRealPartDensityMatrix.png> <./spin1-2/13uncorrelated_mixed_hyperfine/EvolvedRealPartDensityMatrix.png> <./spin1-2/13uncorrelated_mixed_hyperfine/FIDSignal.png> <./spin1-2/13uncorrelated_mixed_hyperfine/FTSignal.png>]
-<./spin1-2/31correlated_pure_no_interactions/InitialRealPartDensityMatrix.png, id=214, 433.62pt x 289.08pt>
-File: ./spin1-2/31correlated_pure_no_interactions/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/31correlated_pure_no_interactions/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/31correlated_pure_no_interactions/InitialRealPartDensityMatrix.png  used on input line 222.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 222--222
-[][]  
- []
-
-<./spin1-2/31correlated_pure_no_interactions/EvolvedRealPartDensityMatrix.png, id=215, 433.62pt x 289.08pt>
-File: ./spin1-2/31correlated_pure_no_interactions/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/31correlated_pure_no_interactions/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/31correlated_pure_no_interactions/EvolvedRealPartDensityMatrix.png  used on input line 222.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 222--222
-[][]  
- []
-
-<./spin1-2/31correlated_pure_no_interactions/FIDSignal.png, id=216, 433.62pt x 289.08pt>
-File: ./spin1-2/31correlated_pure_no_interactions/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/31correlated_pure_no_interactions/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/31correlated_pure_no_interactions/FIDSignal.png  used on input line 222.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/31correlated_pure_no_interactions/FTSignal.png, id=217, 433.62pt x 289.08pt>
-File: ./spin1-2/31correlated_pure_no_interactions/FTSignal.png Graphic file (type png)
-<use ./spin1-2/31correlated_pure_no_interactions/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/31correlated_pure_no_interactions/FTSignal.png  used on input line 222.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 222
- []
-
-[7
-
- <./spin1-2/31correlated_pure_no_interactions/InitialRealPartDensityMatrix.png> <./spin1-2/31correlated_pure_no_interactions/EvolvedRealPartDensityMatrix.png> <./spin1-2/31correlated_pure_no_interactions/FIDSignal.png> <./spin1-2/31correlated_pure_no_interactions/FTSignal.png>]
-<./spin1-2/33correlated_pure_hyperfine/InitialRealPartDensityMatrix.png, id=248, 433.62pt x 289.08pt>
-File: ./spin1-2/33correlated_pure_hyperfine/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/33correlated_pure_hyperfine/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/33correlated_pure_hyperfine/InitialRealPartDensityMatrix.png  used on input line 257.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 257--257
-[][]  
- []
-
-<./spin1-2/33correlated_pure_hyperfine/EvolvedRealPartDensityMatrix.png, id=249, 433.62pt x 289.08pt>
-File: ./spin1-2/33correlated_pure_hyperfine/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/33correlated_pure_hyperfine/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/33correlated_pure_hyperfine/EvolvedRealPartDensityMatrix.png  used on input line 257.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 257--257
-[][]  
- []
-
-<./spin1-2/33correlated_pure_hyperfine/FIDSignal.png, id=250, 433.62pt x 289.08pt>
-File: ./spin1-2/33correlated_pure_hyperfine/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/33correlated_pure_hyperfine/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/33correlated_pure_hyperfine/FIDSignal.png  used on input line 257.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/33correlated_pure_hyperfine/FTSignal.png, id=251, 433.62pt x 289.08pt>
-File: ./spin1-2/33correlated_pure_hyperfine/FTSignal.png Graphic file (type png)
-<use ./spin1-2/33correlated_pure_hyperfine/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/33correlated_pure_hyperfine/FTSignal.png  used on input line 257.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 257
- []
-
-[8
-
- <./spin1-2/33correlated_pure_hyperfine/InitialRealPartDensityMatrix.png> <./spin1-2/33correlated_pure_hyperfine/EvolvedRealPartDensityMatrix.png> <./spin1-2/33correlated_pure_hyperfine/FIDSignal.png> <./spin1-2/33correlated_pure_hyperfine/FTSignal.png>]
-<./spin1-2/32correlated_pure_dipD2/InitialRealPartDensityMatrix.png, id=281, 433.62pt x 289.08pt>
-File: ./spin1-2/32correlated_pure_dipD2/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/32correlated_pure_dipD2/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/32correlated_pure_dipD2/InitialRealPartDensityMatrix.png  used on input line 292.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 292--292
-[][]  
- []
-
-<./spin1-2/32correlated_pure_dipD2/EvolvedRealPartDensityMatrix.png, id=282, 433.62pt x 289.08pt>
-File: ./spin1-2/32correlated_pure_dipD2/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/32correlated_pure_dipD2/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/32correlated_pure_dipD2/EvolvedRealPartDensityMatrix.png  used on input line 292.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 292--292
-[][]  
- []
-
-<./spin1-2/32correlated_pure_dipD2/FIDSignal.png, id=283, 433.62pt x 289.08pt>
-File: ./spin1-2/32correlated_pure_dipD2/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/32correlated_pure_dipD2/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/32correlated_pure_dipD2/FIDSignal.png  used on input line 292.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/32correlated_pure_dipD2/FTSignal.png, id=284, 433.62pt x 289.08pt>
-File: ./spin1-2/32correlated_pure_dipD2/FTSignal.png Graphic file (type png)
-<use ./spin1-2/32correlated_pure_dipD2/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/32correlated_pure_dipD2/FTSignal.png  used on input line 292.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (13.67015pt too high) detected at line 292
- []
-
-[9
-
- <./spin1-2/32correlated_pure_dipD2/InitialRealPartDensityMatrix.png> <./spin1-2/32correlated_pure_dipD2/EvolvedRealPartDensityMatrix.png> <./spin1-2/32correlated_pure_dipD2/FIDSignal.png> <./spin1-2/32correlated_pure_dipD2/FTSignal.png>]
-<./spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png, id=314, 433.62pt x 289.08pt>
-File: ./spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png  used on input line 327.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 327--327
-[][]  
- []
-
-<./spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png, id=315, 433.62pt x 289.08pt>
-File: ./spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png  used on input line 327.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 327--327
-[][]  
- []
-
-<./spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png, id=316, 433.62pt x 289.08pt>
-File: ./spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png  used on input line 327.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png, id=317, 433.62pt x 289.08pt>
-File: ./spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png Graphic file (type png)
-<use ./spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png  used on input line 327.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 327
- []
-
-[10
-
- <./spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png> <./spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png> <./spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png> <./spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png>]
-<./spin1-2/41correlated_mixed_no_interaction/InitialRealPartDensityMatrix.png, id=347, 433.62pt x 289.08pt>
-File: ./spin1-2/41correlated_mixed_no_interaction/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/41correlated_mixed_no_interaction/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/41correlated_mixed_no_interaction/InitialRealPartDensityMatrix.png  used on input line 362.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 362--362
-[][]  
- []
-
-<./spin1-2/41correlated_mixed_no_interaction/EvolvedRealPartDensityMatrix.png, id=348, 433.62pt x 289.08pt>
-File: ./spin1-2/41correlated_mixed_no_interaction/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/41correlated_mixed_no_interaction/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/41correlated_mixed_no_interaction/EvolvedRealPartDensityMatrix.png  used on input line 362.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 362--362
-[][]  
- []
-
-<./spin1-2/41correlated_mixed_no_interaction/FIDSignal.png, id=349, 433.62pt x 289.08pt>
-File: ./spin1-2/41correlated_mixed_no_interaction/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/41correlated_mixed_no_interaction/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/41correlated_mixed_no_interaction/FIDSignal.png  used on input line 362.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/41correlated_mixed_no_interaction/FTSignal.png, id=350, 433.62pt x 289.08pt>
-File: ./spin1-2/41correlated_mixed_no_interaction/FTSignal.png Graphic file (type png)
-<use ./spin1-2/41correlated_mixed_no_interaction/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/41correlated_mixed_no_interaction/FTSignal.png  used on input line 362.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 362
- []
-
-[11
-
- <./spin1-2/41correlated_mixed_no_interaction/InitialRealPartDensityMatrix.png> <./spin1-2/41correlated_mixed_no_interaction/EvolvedRealPartDensityMatrix.png> <./spin1-2/41correlated_mixed_no_interaction/FIDSignal.png> <./spin1-2/41correlated_mixed_no_interaction/FTSignal.png>]
-<./spin1-2/21uncorrelated_pure_no_interactions/InitialRealPartDensityMatrix.png, id=380, 433.62pt x 289.08pt>
-File: ./spin1-2/21uncorrelated_pure_no_interactions/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/21uncorrelated_pure_no_interactions/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/21uncorrelated_pure_no_interactions/InitialRealPartDensityMatrix.png  used on input line 397.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 397--397
-[][]  
- []
-
-<./spin1-2/21uncorrelated_pure_no_interactions/EvolvedRealPartDensityMatrix.png, id=381, 433.62pt x 289.08pt>
-File: ./spin1-2/21uncorrelated_pure_no_interactions/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/21uncorrelated_pure_no_interactions/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/21uncorrelated_pure_no_interactions/EvolvedRealPartDensityMatrix.png  used on input line 397.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 397--397
-[][]  
- []
-
-<./spin1-2/21uncorrelated_pure_no_interactions/FIDSignal.png, id=382, 433.62pt x 289.08pt>
-File: ./spin1-2/21uncorrelated_pure_no_interactions/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/21uncorrelated_pure_no_interactions/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/21uncorrelated_pure_no_interactions/FIDSignal.png  used on input line 397.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/21uncorrelated_pure_no_interactions/FTSignal.png, id=383, 433.62pt x 289.08pt>
-File: ./spin1-2/21uncorrelated_pure_no_interactions/FTSignal.png Graphic file (type png)
-<use ./spin1-2/21uncorrelated_pure_no_interactions/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/21uncorrelated_pure_no_interactions/FTSignal.png  used on input line 397.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 397
- []
-
-[12
-
- <./spin1-2/21uncorrelated_pure_no_interactions/InitialRealPartDensityMatrix.png> <./spin1-2/21uncorrelated_pure_no_interactions/EvolvedRealPartDensityMatrix.png> <./spin1-2/21uncorrelated_pure_no_interactions/FIDSignal.png> <./spin1-2/21uncorrelated_pure_no_interactions/FTSignal.png>]
-<./spin1-2/34correlated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png, id=413, 433.62pt x 289.08pt>
-File: ./spin1-2/34correlated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/34correlated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/34correlated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png  used on input line 432.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 432--432
-[][]  
- []
-
-<./spin1-2/34correlated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png, id=414, 433.62pt x 289.08pt>
-File: ./spin1-2/34correlated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/34correlated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/34correlated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png  used on input line 432.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 432--432
-[][]  
- []
-
-<./spin1-2/34correlated_pure_hyperfineAnisotrop/FIDSignal.png, id=415, 433.62pt x 289.08pt>
-File: ./spin1-2/34correlated_pure_hyperfineAnisotrop/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/34correlated_pure_hyperfineAnisotrop/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/34correlated_pure_hyperfineAnisotrop/FIDSignal.png  used on input line 432.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/34correlated_pure_hyperfineAnisotrop/FTSignal.png, id=416, 433.62pt x 289.08pt>
-File: ./spin1-2/34correlated_pure_hyperfineAnisotrop/FTSignal.png Graphic file (type png)
-<use ./spin1-2/34correlated_pure_hyperfineAnisotrop/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/34correlated_pure_hyperfineAnisotrop/FTSignal.png  used on input line 432.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 432
- []
-
-[13
-
- <./spin1-2/34correlated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png> <./spin1-2/34correlated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png> <./spin1-2/34correlated_pure_hyperfineAnisotrop/FIDSignal.png> <./spin1-2/34correlated_pure_hyperfineAnisotrop/FTSignal.png>]
-<./spin1-2/23uncorrelated_pure_hyperfine/InitialRealPartDensityMatrix.png, id=447, 433.62pt x 289.08pt>
-File: ./spin1-2/23uncorrelated_pure_hyperfine/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/23uncorrelated_pure_hyperfine/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/23uncorrelated_pure_hyperfine/InitialRealPartDensityMatrix.png  used on input line 467.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 467--467
-[][]  
- []
-
-<./spin1-2/23uncorrelated_pure_hyperfine/EvolvedRealPartDensityMatrix.png, id=448, 433.62pt x 289.08pt>
-File: ./spin1-2/23uncorrelated_pure_hyperfine/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/23uncorrelated_pure_hyperfine/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/23uncorrelated_pure_hyperfine/EvolvedRealPartDensityMatrix.png  used on input line 467.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 467--467
-[][]  
- []
-
-<./spin1-2/23uncorrelated_pure_hyperfine/FIDSignal.png, id=449, 433.62pt x 289.08pt>
-File: ./spin1-2/23uncorrelated_pure_hyperfine/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/23uncorrelated_pure_hyperfine/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/23uncorrelated_pure_hyperfine/FIDSignal.png  used on input line 467.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/23uncorrelated_pure_hyperfine/FTSignal.png, id=450, 433.62pt x 289.08pt>
-File: ./spin1-2/23uncorrelated_pure_hyperfine/FTSignal.png Graphic file (type png)
-<use ./spin1-2/23uncorrelated_pure_hyperfine/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/23uncorrelated_pure_hyperfine/FTSignal.png  used on input line 467.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 467
- []
-
-[14
-
- <./spin1-2/23uncorrelated_pure_hyperfine/InitialRealPartDensityMatrix.png> <./spin1-2/23uncorrelated_pure_hyperfine/EvolvedRealPartDensityMatrix.png> <./spin1-2/23uncorrelated_pure_hyperfine/FIDSignal.png> <./spin1-2/23uncorrelated_pure_hyperfine/FTSignal.png>]
-<./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png, id=480, 433.62pt x 289.08pt>
-File: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png  used on input line 502.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 502--502
-[][]  
- []
-
-<./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png, id=481, 433.62pt x 289.08pt>
-File: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png Graphic file (type png)
-<use ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png>
-Package pdftex.def Info: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png  used on input line 502.
-(pdftex.def)             Requested size: 128.03755pt x 85.35725pt.
-
-Overfull \hbox (42.67918pt too wide) in paragraph at lines 502--502
-[][]  
- []
-
-<./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FIDSignal.png, id=482, 433.62pt x 289.08pt>
-File: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FIDSignal.png Graphic file (type png)
-<use ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FIDSignal.png>
-Package pdftex.def Info: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FIDSignal.png  used on input line 502.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FTSignal.png, id=483, 433.62pt x 289.08pt>
-File: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FTSignal.png Graphic file (type png)
-<use ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FTSignal.png>
-Package pdftex.def Info: ./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FTSignal.png  used on input line 502.
-(pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-
-Overfull \vbox (1.67015pt too high) detected at line 502
- []
-
-[15
-
- <./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/InitialRealPartDensityMatrix.png> <./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/EvolvedRealPartDensityMatrix.png> <./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FIDSignal.png> <./spin1-2/24uncorrelated_pure_hyperfineAnisotrop/FTSignal.png>]
+ <./test/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png> <./test/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png> <./test/11uncorrelated_mixed_no_interactions/FIDSignal.png> <./test/11uncorrelated_mixed_no_interactions/FTSignal.png>]
 \tf@nav=\write6
 \openout6 = `gen_slides.nav'.
 
@@ -1226,21 +736,17 @@ Package rerunfilecheck Info: File `gen_slides.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 20947 strings out of 480807
- 408500 string characters out of 2900329
- 678949 words of memory out of 3000000
- 38137 multiletter control sequences out of 15000+600000
+ 20568 strings out of 480807
+ 385673 string characters out of 2900329
+ 690782 words of memory out of 3000000
+ 37799 multiletter control sequences out of 15000+600000
  407831 words of font info for 43 fonts, out of 8000000 for 9000
  0 hyphenation exceptions out of 8191
- 128i,18n,124p,478b,623s stack positions out of 5000i,500n,10000p,200000b,80000s
-pdfTeX warning (dest): name{Navigation16} has been referenced but does not exist, replaced by a fixed one
-
-pdfTeX warning (dest): name{Navigation17} has been referenced but does not exist, replaced by a fixed one
-
-</home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmex10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmmi10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss12.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss8.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmssi10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmssi8.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmsy10.pfb>
-Output written on gen_slides.pdf (15 pages, 998661 bytes).
+ 128i,18n,124p,478b,649s stack positions out of 5000i,500n,10000p,200000b,80000s
+</home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cmextra/cmex7.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmmi10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmmi5.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss12.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmss8.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmssi10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmssi8.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmsy10.pfb></home/lzawbrito/.miktex/texmfs/install/fonts/type1/public/amsfonts/cm/cmsy5.pfb>
+Output written on gen_slides.pdf (2 pages, 187999 bytes).
 PDF statistics:
- 555 PDF objects out of 1000 (max. 8388607)
- 33 named destinations out of 1000 (max. 500000)
- 323 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 125 PDF objects out of 1000 (max. 8388607)
+ 5 named destinations out of 1000 (max. 500000)
+ 63 words of extra memory for PDF output out of 10000 (max. 10000000)
 

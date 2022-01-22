@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.7.21)  20 JAN 2022 19:45
+This is pdfTeX, Version 3.141592653-2.6-1.40.22 (MiKTeX 21.6) (preloaded format=pdflatex 2021.7.21)  22 JAN 2022 01:02
 entering extended mode
 **/home/lzawbrito/PythonProjects/PULSEE/demos/slides.tex
 (/home/lzawbrito/PythonProjects/PULSEE/demos/slides.tex
@@ -513,8 +513,7 @@ Package: amsthm 2020/05/29 v2.20.6
 File: l3backend-pdftex.def 2021-07-12 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count326
 \l__pdf_internal_box=\box75
-)
-No file slides.aux.
+) (slides.aux)
 \openout1 = `slides.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 9.
@@ -535,6 +534,7 @@ LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
 LaTeX Font Info:    Checking defaults for PU/pdf/m/n on input line 9.
 LaTeX Font Info:    ... okay on input line 9.
+
 *geometry* driver: auto-detecting
 *geometry* detected driver: pdftex
 *geometry* verbose mode - [ preamble ] result:
@@ -601,6 +601,7 @@ Package: gettitlestring 2019/12/15 v1.6 Cleanup title references (HO)
 LaTeX Info: Redefining \ref on input line 9.
 LaTeX Info: Redefining \pageref on input line 9.
 LaTeX Info: Redefining \nameref on input line 9.
+ (slides.out) (slides.out)
 \@outlinefile=\write5
 \openout5 = `slides.out'.
 
@@ -665,9 +666,7 @@ Dictionary: translator-months-dictionary, Language: English
 Dictionary: translator-numbers-dictionary, Language: English 
 ) (/home/lzawbrito/.miktex/texmfs/install/tex/latex/translator/translator-theorem-dictionary-English.dict
 Dictionary: translator-theorem-dictionary, Language: English 
-)
-No file slides.nav.
-[1
+) (slides.nav) [1
 
 {/home/lzawbrito/.miktex/texmfs/data/pdftex/config/pdftex.map}]
 LaTeX Font Info:    Trying to load font information for U+msa on input line 47.
@@ -682,7 +681,7 @@ LaTeX Font Info:    Trying to load font information for OT1+mathkerncmss on inpu
  (/home/lzawbrito/.miktex/texmfs/install/tex/latex/sansmathaccent/ot1mathkerncmss.fd
 File: ot1mathkerncmss.fd 2020/01/31 Fontinst v1.933 font definitions for OT1/mathkerncmss.
 )
-<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png, id=40, 433.62pt x 289.08pt>
+<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png, id=41, 433.62pt x 289.08pt>
 File: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png Graphic file (type png)
 <use simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png>
 Package pdftex.def Info: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/InitialRealPartDensityMatrix.png  used on input line 47.
@@ -692,7 +691,7 @@ Overfull \hbox (42.67918pt too wide) in paragraph at lines 47--47
 [][]  
  []
 
-<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png, id=42, 433.62pt x 289.08pt>
+<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png, id=43, 433.62pt x 289.08pt>
 File: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png Graphic file (type png)
 <use simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png>
 Package pdftex.def Info: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/EvolvedRealPartDensityMatrix.png  used on input line 47.
@@ -702,12 +701,12 @@ Overfull \hbox (42.67918pt too wide) in paragraph at lines 47--47
 [][]  
  []
 
-<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png, id=43, 433.62pt x 289.08pt>
+<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png, id=44, 433.62pt x 289.08pt>
 File: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png Graphic file (type png)
 <use simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png>
 Package pdftex.def Info: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FIDSignal.png  used on input line 47.
 (pdftex.def)             Requested size: 170.71675pt x 113.8126pt.
-<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png, id=44, 433.62pt x 289.08pt>
+<simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png, id=45, 433.62pt x 289.08pt>
 File: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png Graphic file (type png)
 <use simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png>
 Package pdftex.def Info: simulation_results/spin1-2/11uncorrelated_mixed_no_interactions/FTSignal.png  used on input line 47.
@@ -729,20 +728,14 @@ Overfull \vbox (1.67015pt too high) detected at line 47
 \openout8 = `slides.snm'.
 
  (slides.aux)
-
-Package rerunfilecheck Warning: File `slides.out' has changed.
-(rerunfilecheck)                Rerun to get outlines right
-(rerunfilecheck)                or use package `bookmark'.
-
-Package rerunfilecheck Info: Checksums for `slides.out':
-(rerunfilecheck)             Before: <no file>
-(rerunfilecheck)             After:  D41D8CD98F00B204E9800998ECF8427E;0.
+Package rerunfilecheck Info: File `slides.out' has not changed.
+(rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
  ) 
 Here is how much of TeX's memory you used:
- 20551 strings out of 480807
- 385614 string characters out of 2900329
- 673281 words of memory out of 3000000
- 37790 multiletter control sequences out of 15000+600000
+ 20568 strings out of 480807
+ 385933 string characters out of 2900329
+ 673435 words of memory out of 3000000
+ 37799 multiletter control sequences out of 15000+600000
  407831 words of font info for 43 fonts, out of 8000000 for 9000
  0 hyphenation exceptions out of 8191
  128i,18n,124p,455b,623s stack positions out of 5000i,500n,10000p,200000b,80000s

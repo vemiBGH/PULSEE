@@ -1,0 +1,24 @@
+{
+    "correlated_state": true,
+    "mixed": true,
+    "quantum_numbers": [
+        1.5,
+        0.5
+    ],
+    "gamma_2pis": [
+        4.0,
+        0
+    ],
+    "B_0": 10,
+    "pulse_params": {
+        "amplitude": 0.2,
+        "frequency": 40.0,
+        "phase": 0,
+        "theta_p": 1.5707963267948966,
+        "phi_p": 0,
+        "pulse_time": 0.00625
+    },
+    "acquisition_time": 1000,
+    "t2": 100,
+    "hamiltonian_args": {}
+}
