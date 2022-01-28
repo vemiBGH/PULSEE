@@ -4,16 +4,19 @@
 
 PULSEE is an open-source software for the simulation of typical nuclear quadrupole/magnetic resonance experiments on a solid-state sample, describing the dynamics of nuclear spins in condensed matter under the effect of external magnetic fields and reproducing the traditional results observed in laboratory.
 
-* [Physics background](#physics-background)
-  + [Unit standard of the software](#unit-standard-of-the-software)
-* [Software](#software)
-  + [Prerequisites](#prerequisites)
-  + [Modules of the software](#modules-of-the-software)
-  + [Examples of execution](#examples-of-execution)
-    - [Pure Zeeman experiment](#pure-zeeman-experiment)
-    - [Perturbed Zeeman experiment](#perturbed-zeeman-experiment)
-    - [Pure NQR experiment](#pure-nqr-experiment)
-* [Acknowledgements](#acknowledgements)
+- [PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)](#pulsee-program-for-the-simulation-of-nuclear-spin-ensemble-evolution)
+  - [Author: Davide Candoli (Università di Bologna)](#author-davide-candoli-università-di-bologna)
+  - [Physics background](#physics-background)
+    - [Unit standard of the software](#unit-standard-of-the-software)
+  - [Software](#software)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Modules of the software](#modules-of-the-software)
+    - [Examples of execution](#examples-of-execution)
+      - [Pure Zeeman experiment](#pure-zeeman-experiment)
+      - [Perturbed Zeeman experiment](#perturbed-zeeman-experiment)
+      - [Pure NQR experiment](#pure-nqr-experiment)
+  - [Acknowledgements](#acknowledgements)
 
 ## Physics background
 
@@ -81,6 +84,12 @@ In order to run the GUI, it is required the additional installation of the modul
 
 `garden.matplotlib.backend_kivy` -> https://github.com/kivy-garden/garden.matplotlib/blob/master/backend_kivy.py
 
+### Installation 
+The development version of the package may be installed by navigating to the 
+directory `PULSEE` (where the file `setup.py` is located) and running 
+
+`$ pip install -e .`
+
 ### Modules of the software
 
 PULSEE is made up by 6 modules. Each of them is described in full detail in the wiki page of the repository of GitHub which hosts the project:
@@ -89,11 +98,11 @@ https://github.com/DavideCandoli/NQR-NMRSimulationSoftware/wiki
 
 Below, the content and usage of these modules is reported briefly:
 
-* `Operators`
+* `operators`
 
-  This module, together with `Many_Body`, is to be considered a sort of toolkit for the simulations of generic quantum systems. It contains the definitions of classes and functions representing the basic mathematical objects employed in the treatment of a quantum system. `Operators` focuses on the properties of a single system, while the functions in `Many_Body` allow to build up systems made up of several particles.
+  This module, together with `many_body`, is to be considered a sort of toolkit for the simulations of generic quantum systems. It contains the definitions of classes and functions representing the basic mathematical objects employed in the treatment of a quantum system. `operators` focuses on the properties of a single system, while the functions in `many_body` allow to build up systems made up of several particles.
 
-  The classes and subclasses defined in `Operators` belong to the following inheritance tree
+  The classes and subclasses defined in `operators` belong to the following inheritance tree
   
   * `Operator`
     * `DensityMatrix(Operator)`
@@ -113,7 +122,7 @@ Below, the content and usage of these modules is reported briefly:
   * the calculation of the canonical density matrix representing the thermal equilibrium state of a system at the specified temperature.
 
 
-* `Many_Body`
+* `many_body`
 
   This module defines two functions which allow to pass from a single particle Hilbert space to a many particle space and viceversa.
   
@@ -126,16 +135,16 @@ Below, the content and usage of these modules is reported briefly:
     Takes an operator acting on the Hilbert space of a many-particle system and extracts its partial trace over the specified subspace.
 
 
-* `NuclearSpin`
+* `nuclear_spin`
 
-  In this module, the objects defined in `Operators` are employed to build up the class which represents the spin of an atomic nucleus or a system of nuclei.
+  In this module, the objects defined in `operators` are employed to build up the class which represents the spin of an atomic nucleus or a system of nuclei.
   
   Class `NuclearSpin` is characterized by a quantum number, a gyromagnetic ratio and a set of methods which return the spherical and cartesian components of the spin vector operator.
   
   The subclass `ManySpins` contains the `NuclearSpin` objects representing the individual spins in a system of many nuclei, as well as a method for the calculation of the operators of the total spin.
 
 
-* `Hamiltonians`
+* `hamiltonians`
 
   This file is dedicated to the definitions of the functions which compute the terms of the Hamiltonian of a nuclear spin system in a NMR/NQR experiment.
   
@@ -158,11 +167,11 @@ Below, the content and usage of these modules is reported briefly:
     In turn, `h_multiple_mode_pulse` is called inside `h_changed_picture`, which, in the given instant of time, evaluates the full Hamiltonian of the system (comprised of the Zeeman, quadrupole and time-dependent contributions) and returns the same Hamiltonian expressed in a different dynamical picture. This passage is required by the implementation of the evolution of the system, which is described later.
 
 
-* `Simulation`
+* `simulation`
 
   This module provides the definition of the functions which implement the various tasks of the simulation. A user whose aim is to perform simulations of the kind of the examples which follow just needs to learn how to use the functions in this module. More sophisticated simulations are feasible, but they require a deeper knowledge of the features of the program, as the user should deal directly with the definitions in the other modules.
   
-  The order in which the definitions in `Simulation` appear suggests the ideal progression of the various steps of the simulation.
+  The order in which the definitions in `simulation` appear suggests the ideal progression of the various steps of the simulation.
 
   1. `nuclear_system_setup`
   
@@ -190,9 +199,18 @@ Below, the content and usage of these modules is reported briefly:
     
   Besides these functions, which execute the main passages of the simulation, this module contains the functions for the plot and visualization of the results.
   
-* `PULSEE_GUI`
 
-  Graphical user interface of the program. The execution of the following command from the terminal
+* `quantum_computing`
+  This module contains implementations of fundamental components of quantum 
+  circuits, including several relevant quantum gates and `Qubit` objects 
+  gates may act on, in principle allowing the user to construct elementary quantum
+  circuits and extract relevant information such the density matrix of the compound
+  qubit state. 
+  
+* `PULSEE_CMP_GUI` and `PULSEE_CHEM_GUI`
+
+  Graphical user interfaces of the program specialized for condensed matter 
+  physics and chemistry respectively. The execution of the following command from the terminal
   
   `$ python PULSEE_GUI.py`
   
@@ -201,21 +219,24 @@ Below, the content and usage of these modules is reported briefly:
   In the application, most of the features of the software are available, but not all of them (for instance, power absorption spectra are not included). An in-depth description of the GUI can be found in the related page of the wiki:
   
   https://github.com/DavideCandoli/PULSEE/wiki/GUI
-    
+
 ### Examples of execution
 
-Any simulation can be implemented using only the functions defined in the module Simulation. Therefore, the imports required by a generic simulation code are the following:
+Any simulation can be implemented using only the functions defined in the module
+`simulation`. Therefore, the imports required by a generic simulation code are
+the following: 
+
 ```
-from Simulation import nuclear_system_setup, \
-                       evolve, \
-                       power_absorption_spectrum, \
-                       plot_power_absorption_spectrum, \
-                       plot_real_part_density_matrix, \
-                       FID_signal, \
-                       plot_real_part_FID_signal, \
-                       fourier_transform_signal, \
-                       fourier_phase_shift, \
-                       plot_fourier_transform
+from pulsee.simulation import nuclear_system_setup, \
+                              evolve, \
+                              power_absorption_spectrum, \
+                              plot_power_absorption_spectrum, \
+                              plot_real_part_density_matrix, \
+                              FID_signal, \
+                              plot_real_part_FID_signal, \
+                              fourier_transform_signal, \
+                              fourier_phase_shift, \
+                              plot_fourier_transform
 ```
 
 #### Pure Zeeman experiment
