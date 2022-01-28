@@ -212,7 +212,7 @@ Below, the content and usage of these modules is reported briefly:
   Graphical user interfaces of the program specialized for condensed matter 
   physics and chemistry respectively. The execution of the following command from the terminal
   
-  `$ python PULSEE_GUI.py`
+  `$ python PULSEE_CMP_GUI.py`
   
   launches the application. This has been developed using the tools provided by the library Kivy.
   
