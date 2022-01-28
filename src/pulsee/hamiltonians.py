@@ -304,7 +304,6 @@ def h_j_coupling(spins, j_matrix):
     Observable object acting on the full Hilbert space of the spins' system
     representing the Hamiltonian of the J-coupling between the spins.  
     """
-    ### NOTE: This can be used for any coupling that has a tensor interaction, such as the full checmical shift, and full dipolar interaction, where the appropriate matrix is passed. ### 
     h_j = Operator(spins.d)*0
     
     # row 
@@ -447,6 +446,8 @@ def h_tensor_coupling(spins, tensor):
     to obtain [hyperfine interaction Hamiltonian.](https://epr.ethz.ch/education/basic-concepts-of-epr/int--with-nucl--spins/hyperfine-interaction.html)
     Author: Lucas Brito
 
+     ### NOTE: This can be used for any coupling that has a tensor interaction, such as the full checmical shift, and full dipolar interaction, where the appropriate matrix is passed. ###
+
     Params
     ------
     - spins: 2-spin system under study 
@@ -457,7 +458,8 @@ def h_tensor_coupling(spins, tensor):
     ------
     Observable object acting on full Hilbert space of the 2-spin system 
     representing the Hamiltonian of this interaction. 
-    """ 
+    """
+
     i_1 = spins.spin[0].cartesian_operator()
     i_2 = spins.spin[1].cartesian_operator()
 
