@@ -125,12 +125,4 @@ def test_h_tensor_j_coupling_two_half_spin_system():
                                      [0, 0, 0, np.pi * j_coeff / 2]])
     assert np.array_equal(computed_h_j_coupling, expected_h_j_coupling)
 
-    
 
-
-    
-    
-    
-    
-    
-    
