@@ -182,7 +182,7 @@ def nuclear_system_setup(spin_par,
       When it is None, the J-couping in the secular approximation is not taken into account.      
       Default value is None.
     
-    - h_tensor_inter: numpy.ndarray 
+    - h_tensor_inter: numpy.ndarray  or [numpy.ndarray, numpy.ndarray, ...]
       
       Rank-2 tensor describing a two-spin interaction of the form 
       $\mathbf{I}_1 J \mathbf{I}_2$ where $J$ is the tensor and $\mathbf{I}_i$
@@ -227,7 +227,7 @@ def nuclear_system_setup(spin_par,
            The density matrix representing the state of the system at time t=0,
            initialised according to initial_state.
     """
-    
+
     if not isinstance(spin_par, list):
         spin_par = [spin_par]
     if quad_par is not None and not isinstance(quad_par, list):
@@ -314,7 +314,11 @@ def nuclear_system_setup(spin_par,
             h_unperturbed = h_unperturbed + h_j
 
     if h_tensor_inter is not None:
-        h_unperturbed += h_tensor_coupling(spin_system, h_tensor_inter)
+        if type(h_tensor_inter) != list:
+            h_unperturbed += h_tensor_coupling(spin_system, h_tensor_inter)
+        else:
+            for hyp_ten in h_tensor_inter:
+                h_unperturbed += h_tensor_coupling(spin_system, hyp_ten)
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(h_unperturbed, temperature)
@@ -754,7 +758,7 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save
     return fig
 
 
-def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0, reference_frequency=0, n_points=10):
+def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0, reference_frequency=0, n_points=100):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off of the electromagnetic pulse, once the evolved density matrix of the system, the time interval of acquisition, the relaxation time T2 and the direction of the detection coils are given.
   
@@ -960,7 +964,7 @@ def fourier_transform_signal(times, signal, frequency_start, frequency_stop, opp
 
 # Finds out the phase responsible for the displacement of the real and imaginary parts of the Fourier
 # spectrum of the FID with respect to the ideal absorptive/dispersive lorentzian shapes
-def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=0.5):
+def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=.5):
     """
     Computes the phase factor which must multiply the Fourier spectrum (`fourier`) in order to have the real and imaginary part of the adjusted spectrum showing the conventional dispersive/absorptive shapes at the peak specified by `peak_frequency`.
 
@@ -990,7 +994,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
   
                         Width of the domain (centered at peak_frequency) where the real and imaginary parts of the Fourier spectrum will be integrated.
     
-                        Default value is 0.5.
+                        Default value is .5.
 
     Action
     ------  

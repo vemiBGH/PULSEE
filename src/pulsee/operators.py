@@ -257,7 +257,7 @@ class Operator:
 
     def unit_trace(self):
         """
-        Returns a boolean which expresses whether the trace of the operator is equal to 1, within a relative error tolerance of 10<sup>-10</sup>.
+        Returns a boolean which expresses whether the trace of the operator is equal to 1, within a relative error tolerance of 10<sup>-6</sup>.
   
         Returns
         -------
@@ -265,7 +265,7 @@ class Operator:
         
         False, when unit trace is not verified.
         """
-        return np.isclose(self.trace(), 1, rtol=1e-10)
+        return np.isclose(self.trace(), 1, rtol=1e-6)
 
     def positivity(self):
         """

@@ -305,7 +305,6 @@ def h_j_coupling(spins, j_matrix):
     representing the Hamiltonian of the J-coupling between the spins.  
     """
     h_j = Operator(spins.d)*0
-    
     # row 
     for m in range(j_matrix.shape[0]):
         # column 
