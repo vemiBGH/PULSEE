@@ -466,7 +466,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, save=Fal
     plt.xlabel("\N{GREEK SMALL LETTER NU} (MHz)")    
     plt.ylabel("Power absorption (a. u.)")
     
-    if save: plt.savefig(destination + name)
+    if save: plt.savefig(destination + name, dpi=1200)
     
     if show: plt.show()
     
@@ -499,8 +499,19 @@ def evolve(spin, h_unperturbed, dm_initial, \
 
     - mode: pandas.DataFrame
   
-            Table of the parameters of each electromagnetic mode in the pulse. See the description of the same-named argument of the function h_multiple_mode_pulse in page Hamiltonians for the details on the tabular organisation of these data.
-            
+            Table of the parameters of each electromagnetic mode in the pulse.
+            It is organised according to the following template:
+
+    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
+    | ----- | ------------- | ------------- | --------- | ----------- | --------- |
+    |       |     (MHz)     |      (T)      |   (rad)   |    (rad)    |   (rad)   |
+    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |
+    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |
+    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
+    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |
+
+    where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
+
             When it is None, the evolution of the system is performed for the given time duration without any applied pulse.
             
             The default value is None.
@@ -619,7 +630,7 @@ def RRF_operator(spin, RRF_par):
     return Observable(RRF_o.matrix)
 
 
-def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save=False, name='RealPartDensityMatrix', destination=''):
+def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save=False, show_legend = True, name='RealPartDensityMatrix', destination=''):
     """
     Generates a 3D histogram displaying the real part of the elements of the passed density matrix.
   
@@ -746,11 +757,11 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save
     
     legend_elements = [Patch(facecolor='tab:blue', label='<m|\N{GREEK SMALL LETTER RHO}|m> > 0'), \
                        Patch(facecolor='tab:red', label='<m|\N{GREEK SMALL LETTER RHO}|m> < 0')]
-    
-    ax.legend(handles=legend_elements, loc='upper left')
+    if(show_legend):
+        ax.legend(handles=legend_elements, loc='upper left')
     
     if save:
-        plt.savefig(destination + name)
+        plt.savefig(destination + name, dpi=1200)
     
     if show:
         plt.show()
@@ -888,7 +899,7 @@ def plot_real_part_FID_signal(times, FID, show=True, save=False, name='FIDSignal
     plt.xlabel("time (\N{GREEK SMALL LETTER MU}s)")    
     plt.ylabel("Re(FID) (a. u.)")
     
-    if save: plt.savefig(destination + name)
+    if save: plt.savefig(destination + name, dpi=1200)
     
     if show: plt.show()
     
@@ -1132,7 +1143,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         ax[i].set_xlabel("frequency (MHz)")    
         ax[i].set_ylabel("FT signal (a. u.)")  
          
-    if save: plt.savefig(destination + name)
+    if save: plt.savefig(destination + name, dpi=1200)
         
     if show: plt.show()
         
