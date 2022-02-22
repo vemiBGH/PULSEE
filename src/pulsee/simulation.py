@@ -4,6 +4,8 @@ import math
 from fractions import Fraction
 
 import matplotlib.pylab as plt
+from matplotlib import colors as clrs
+from matplotlib import colorbar as clrbar
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.pyplot import xticks, yticks
 from matplotlib.axes import Axes
@@ -413,7 +415,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True, save=False, name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi = 1200, save=False, name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding frequencies.
   
@@ -432,7 +434,11 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, save=Fal
             When False, the graph constructed by the function will not be displayed.
     
             Default value is True.
-    
+
+    - fig_dpi: int
+
+            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
+
     - save: bool
   
             When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
@@ -466,7 +472,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, save=Fal
     plt.xlabel("\N{GREEK SMALL LETTER NU} (MHz)")    
     plt.ylabel("Power absorption (a. u.)")
     
-    if save: plt.savefig(destination + name, dpi=1200)
+    if save: plt.savefig(destination + name, dpi= fig_dpi)
     
     if show: plt.show()
     
@@ -630,7 +636,7 @@ def RRF_operator(spin, RRF_par):
     return Observable(RRF_o.matrix)
 
 
-def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save=False, show_legend = True, name='RealPartDensityMatrix', destination=''):
+def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_dpi = 1200, save=False, show_legend = True, name='RealPartDensityMatrix', destination=''):
     """
     Generates a 3D histogram displaying the real part of the elements of the passed density matrix.
   
@@ -650,7 +656,10 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save
             When False, the graph constructed by the function will not be displayed.
     
             Default value is True.
-    
+
+    - fig_dpi: int
+
+            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
     - save: bool
   
             When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
@@ -679,7 +688,10 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save
 
     """    
     real_part = np.vectorize(np.real)
-    data_array = real_part(dm.matrix)
+    if isinstance(dm, Operator):
+        data_array = real_part(dm.matrix)
+    else:
+        data_array = real_part(dm)
     
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
@@ -761,12 +773,209 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, save
         ax.legend(handles=legend_elements, loc='upper left')
     
     if save:
-        plt.savefig(destination + name, dpi=1200)
+        plt.savefig(destination + name, dpi=fig_dpi)
     
     if show:
         plt.show()
         
     return fig
+
+def complex_phase_cmap():
+    """
+    Create a cyclic colormap for representing the phase of complex variables
+
+    From QuTiP 4.0
+    https://qutip.org.
+
+    Returns
+    -------
+    cmap :
+        A matplotlib linear segmented colormap.
+    """
+    cdict = {'blue': ((0.00, 0.0, 0.0),
+                      (0.25, 0.0, 0.0),
+                      (0.50, 1.0, 1.0),
+                      (0.75, 1.0, 1.0),
+                      (1.00, 0.0, 0.0)),
+             'green': ((0.00, 0.0, 0.0),
+                       (0.25, 1.0, 1.0),
+                       (0.50, 0.0, 0.0),
+                       (0.75, 1.0, 1.0),
+                       (1.00, 0.0, 0.0)),
+             'red': ((0.00, 1.0, 1.0),
+                     (0.25, 0.5, 0.5),
+                     (0.50, 0.0, 0.0),
+                     (0.75, 0.0, 0.0),
+                     (1.00, 1.0, 1.0))}
+
+    cmap = clrs.LinearSegmentedColormap('phase_colormap', cdict, 256)
+
+    return cmap
+
+def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 1200, save=False, name='RealPartDensityMatrix', destination=''):
+    """
+    Generates a 3D histogram displaying the amplitude and phase (with colors)
+    of the elements of the passed density matrix.
+
+    Inspired by QuTiP 4.0's matrix_histogram_complex function.
+    https://qutip.org
+
+    Parameters
+    ----------
+    - dm: DensityMatrix
+
+          Density matrix to be plotted.
+
+    - many_spin_indexing: either None or list
+
+                          If it is different from None, the density matrix dm is interpreted as the state of a many spins' system, and this parameter provides the list of the dimensions of the subspaces of the full Hilbert space related to the individual nuclei of the system. The ordering of the elements of many_spin_indexing should match that of the single spins' density matrices in their tensor product resulting in dm.
+                          Default value is None.
+
+    - show: bool
+
+            When False, the graph constructed by the function will not be displayed.
+
+            Default value is True.
+
+    - phase_limits: list/array with two float numbers
+
+        The phase-axis (colorbar) limits [min, max] (optional)
+
+    - phi_label: str
+
+            Label for the legend for the angle of the complex number.
+
+    - show_legend: bool
+
+            Show the legend for the complex angle.
+
+    - fig_dpi: int
+
+            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
+
+    - save: bool
+
+            When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
+
+            Default value is False.
+
+    - name: string
+
+            Name with which the graph will be saved.
+
+            Default value is 'RealPartDensityMatrix'.
+
+    - destination: string
+
+                   Path of the directory where the graph will be saved (starting from the current directory). The name of the directory must be terminated with a slash /.
+
+                   Default value is the empty string (current directory).
+
+    Action
+    ------
+    If show=True, draws a histogram on a 2-dimensional grid representing the density matrix, with phase sentivit data.
+
+    Returns
+    -------
+    An object of the class matplotlib.figure.Figure representing the figure built up by the function.
+
+    """
+    if isinstance(dm, Operator):
+        data_array = dm.matrix
+    else:
+        data_array = dm
+
+    # Create a figure for plotting the data as a 3D histogram.
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Create an X-Y mesh of the same dimension as the 2D data
+    # You can think of this as the floor of the plot
+    x_data, y_data = np.meshgrid(np.arange(data_array.shape[1])+0.25,
+                                 np.arange(data_array.shape[0])+0.25)
+
+    # Set width of the vertical bars
+    dx = dy = 0.5
+
+    # Flatten out the arrays so that they may be passed to "ax.bar3d".
+    # Basically, ax.bar3d expects three one-dimensional arrays: x_data, y_data, z_data. The following
+    # call boils down to picking one entry from each array and plotting a bar from (x_data[i],
+    # y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
+    x_data = x_data.flatten()
+    y_data = y_data.flatten()
+    z_data = data_array.flatten()
+
+    if phase_limits:  # check that limits is a list type
+        phase_min = phase_limits[0]
+        phase_max = phase_limits[1]
+    else:
+        phase_min = -np.pi
+        phase_max = np.pi
+
+    norm = clrs.Normalize(phase_min, phase_max)
+    cmap = complex_phase_cmap()
+
+    colors = cmap(norm(np.angle(z_data)))
+
+    ax.bar3d(x_data,
+             y_data,
+             np.zeros(len(z_data)),
+             dx, dy, np.absolute(z_data), color=colors)
+
+    d = data_array.shape[0]
+    tick_label = []
+
+    if many_spin_indexing is None:
+        for i in range(d):
+            tick_label.append('|' + str(Fraction((d-1)/2-i)) + '>')
+
+    else:
+        d_sub = many_spin_indexing
+        n_sub = len(d_sub)
+        m_dict = []
+
+        for i in range(n_sub):
+            m_dict.append({})
+            for j in range(d_sub[i]):
+                m_dict[i][j] = str(Fraction((d_sub[i]-1)/2-j))
+
+        for i in range(d):
+            tick_label.append('>')
+
+        for i in range(n_sub)[::-1]:
+            d_downhill = int(np.prod(d_sub[i+1:n_sub]))
+            d_uphill = int(np.prod(d_sub[0:i]))
+
+            for j in range(d_uphill):
+                for k in range(d_sub[i]):
+                    for l in range(d_downhill):
+                        tick_label[j*d_sub[i]*d_downhill + k*d_downhill + l] = m_dict[i][k] + \
+                            ', ' + tick_label[j*d_sub[i]*d_downhill + k*d_downhill + l]
+
+        for i in range(d):
+            tick_label[i] = '|' + tick_label[i]
+
+        ax.tick_params(axis='both', which='major', labelsize=6)
+
+    xticks(np.arange(start=0.5, stop=data_array.shape[0]+0.5), tick_label)
+    yticks(np.arange(start=1., stop=data_array.shape[0]+1.), tick_label)
+
+    if(show_legend):
+        cax, kw = clrbar.make_axes(ax, location = 'right', shrink=.75, pad=.06)
+        cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
+        cb.set_ticks([-np.pi, -np.pi/2, 0, np.pi/2, np.pi])
+        cb.set_ticklabels(
+            (r'$-\pi$', r'$-\pi/2$', r'$0$', r'$\pi/2$', r'$\pi$'))
+        cb.set_label(phi_label)
+
+    if save:
+        plt.savefig(destination + name, dpi=fig_dpi)
+
+    if show:
+        plt.show()
+
+    return fig
+
 
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0, reference_frequency=0, n_points=100):
@@ -846,7 +1055,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     return times, np.array(FID)
 
 
-def plot_real_part_FID_signal(times, FID, show=True, save=False, name='FIDSignal', destination=''):
+def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 1200, save=False, name='FIDSignal', destination=''):
     """
     Plots the real part of the FID signal as a function of time.
   
@@ -865,7 +1074,11 @@ def plot_real_part_FID_signal(times, FID, show=True, save=False, name='FIDSignal
             When False, the graph constructed by the function will not be displayed.
     
             Default value is True.
-    
+
+    - fig_dpi: int
+
+            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
+
     - save: bool
   
             When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
@@ -899,7 +1112,7 @@ def plot_real_part_FID_signal(times, FID, show=True, save=False, name='FIDSignal
     plt.xlabel("time (\N{GREEK SMALL LETTER MU}s)")    
     plt.ylabel("Re(FID) (a. u.)")
     
-    if save: plt.savefig(destination + name, dpi=1200)
+    if save: plt.savefig(destination + name, dpi=fig_dpi)
     
     if show: plt.show()
     
@@ -1049,7 +1262,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, 
-                           scaling_factor=None, show=True, save=False, name='FTSignal', destination=''):
+                           scaling_factor=None, fig_dpi = 1200, show=True, save=False, name='FTSignal', destination=''):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
   
@@ -1076,7 +1289,11 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     - scaling_factor: float
     
                       When it is not None, it specifies the scaling factor which multiplies the data to be plotted. It applies simultaneously to all the plots in the resulting figure.
-    
+
+    - fig_dpi: int
+
+            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
+
     - show: bool
   
             When False, the graph constructed by the function will not be displayed.
@@ -1143,7 +1360,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         ax[i].set_xlabel("frequency (MHz)")    
         ax[i].set_ylabel("FT signal (a. u.)")  
          
-    if save: plt.savefig(destination + name, dpi=1200)
+    if save: plt.savefig(destination + name, dpi=fig_dpi)
         
     if show: plt.show()
         
