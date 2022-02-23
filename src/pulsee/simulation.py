@@ -812,7 +812,7 @@ def complex_phase_cmap():
 
     return cmap
 
-def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 1200, save=False, name='RealPartDensityMatrix', destination=''):
+def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 1200, save=False, name='ComplexDensityMatrix', destination=''):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
