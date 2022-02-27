@@ -474,7 +474,6 @@ def h_tensor_coupling(spins, tensor):
     for m in range(len(i_1)):
         for n in range(len(i_2)):
             h += tensor[m, n] * (tensor_product(i_1[m], i_2[n]))
-    print(h.matrix)
     return h
 
 def h_userDefined(matrix):
