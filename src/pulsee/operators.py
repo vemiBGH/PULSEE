@@ -399,8 +399,9 @@ class DensityMatrix(Operator):
 class Observable(Operator):
     
     """
-    Observables are the measurable properties of a physical system, and in quantum mechanics are represented by hermitian operators.
-
+    Observables are the measurable properties of a physical system, and in
+    quantum mechanics are represented by hermitian operators.
+    
 The expectation value of an observable of a quantum system in a certain state is conventionally computed as the bra-operator-ket product of the observable's operator in between the state vector. Alternatively, one can exploit the density matrix representation of the state and find the expectation value as the trace of the product of the density matrix and the observable's operator.
     """
     
