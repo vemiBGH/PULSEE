@@ -3,6 +3,7 @@ import pandas as pd
 import math
 from fractions import Fraction
 
+from qutip import Qobj
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
 from matplotlib import colorbar as clrbar
@@ -219,7 +220,7 @@ def nuclear_system_setup(spin_par,
     
            The single spin/spin system subject to the NMR/NQR experiment.
 
-    - [1]: Observable
+    - [1]: List[Qobj]
   
            The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar
            and J-coupling terms (expressed in MHz).
@@ -242,7 +243,7 @@ def nuclear_system_setup(spin_par,
     h_q = []
     h_z = []        
     
-    h_unperturbed = 0
+    h_unperturbed = []
     
     for i in range(len(spin_par)):
         spins.append(NuclearSpin(spin_par[i]['quantum number'], \
@@ -265,12 +266,12 @@ def nuclear_system_setup(spin_par,
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
         
         if cs_param is not None:
-            if cs_param != 0.0 :
+            if cs_param != 0.0:
                 h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], zeem_par['field magnitude']))
     
     spin_system = ManySpins(spins)
     
-    h_unperturbed = Operator(spin_system.d)*0
+    h_unperturbed = []
     
     for i in range(spin_system.n_spins):
         h_i = h_q[i] + h_z[i]
@@ -278,11 +279,11 @@ def nuclear_system_setup(spin_par,
             h_i = tensor_product(Operator(spin_system.spin[j].d), h_i)
         for k in range(spin_system.n_spins)[i+1:]:
             h_i = tensor_product(h_i, Operator(spin_system.spin[k].d))
-        h_unperturbed = h_unperturbed + h_i
+        h_unperturbed = h_unperturbed + [Qobj(h_i.matrix)]
     
     if j_matrix is not None:
         h_j = h_j_coupling(spin_system, j_matrix)
-        h_unperturbed = h_unperturbed + h_j
+        h_unperturbed = h_unperturbed + [Qobj(h_j.matrix)]
         
     if D1_param is not None:
         if ((D1_param['b_D'] == 0.) and (D1_param['theta'] ==0.)):
@@ -290,7 +291,7 @@ def nuclear_system_setup(spin_par,
         else:
             h_d1 = h_D1(spin_system, D1_param['b_D'], \
                                      D1_param['theta'])
-            h_unperturbed = h_unperturbed + h_d1
+            h_unperturbed = h_unperturbed + [Qobj(h_d1.matrix)]
     
     if D2_param is not None:
         if ((D2_param['b_D'] == 0.) and (D2_param['theta'] ==0.)):
@@ -298,7 +299,7 @@ def nuclear_system_setup(spin_par,
         else:
             h_d2 = h_D2(spin_system, D2_param['b_D'], \
                                      D2_param['theta'])
-            h_unperturbed = h_unperturbed + h_d2
+            h_unperturbed = h_unperturbed + [Qobj(h_d2.matrix)]
     
     if hf_param is not None:
         if ((hf_param['A'] == 0.) and (hf_param['B'] ==0.)):
@@ -306,31 +307,34 @@ def nuclear_system_setup(spin_par,
         else:
             h_hf = h_HF_secular(spin_system, hf_param['A'], \
                                      hf_param['B'])
-            h_unperturbed = h_unperturbed + h_hf
+            h_unperturbed = h_unperturbed + [Qobj(h_hf.matrix)]
         
     if j_sec_param is not None:
         if (j_sec_param['J']==0.0):
                 pass
         else:
             h_j = h_j_secular(spin_system, j_sec_param['J'])
-            h_unperturbed = h_unperturbed + h_j
+            h_unperturbed = h_unperturbed + [Qobj(h_j.matrix)]
 
     if h_tensor_inter is not None:
         if type(h_tensor_inter) != list:
-            h_unperturbed += h_tensor_coupling(spin_system, h_tensor_inter)
+            h_unperturbed += [Qobj(h_tensor_coupling(spin_system, 
+                                                     h_tensor_inter).matrix)]
         else:
             for hyp_ten in h_tensor_inter:
-                h_unperturbed += h_tensor_coupling(spin_system, hyp_ten)
+                h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten) \
+                                                .matrix)]
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
-        dm_initial = canonical_density_matrix(h_unperturbed, temperature)
+        dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
+                                                temperature)
     else:
         dm_initial = DensityMatrix(initial_state)
     
     if len(spins) == 1:
-        return spins[0], Observable(h_unperturbed.matrix), dm_initial
+        return spins[0], h_unperturbed, dm_initial
     else:
-        return spin_system, Observable(h_unperturbed.matrix), dm_initial
+        return spin_system, h_unperturbed, dm_initial
 
 
 def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=None):
@@ -479,12 +483,12 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
     return fig
 
 
-def evolve(spin, h_unperturbed, dm_initial, \
+def evolve(spin, h_unperturbed, dm_initial, solution_method, \
            mode=None, pulse_time=0, \
            picture='RRF', RRF_par={'nu_RRF': 0,
                                    'theta_RRF': 0,
                                    'phi_RRF': 0}, \
-           n_points=10, order=2):
+           n_points=10):
     
     """
     Simulates the evolution of the density matrix of a nuclear spin under the action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -495,13 +499,18 @@ def evolve(spin, h_unperturbed, dm_initial, \
   
             Spin under study.
     
-    - h_unperturbed: Operator
+    - h_unperturbed: List[Qobj or (Qobj, function)]
   
                      Hamiltonian of the nucleus at equilibrium (in MHz).
     
     - dm_initial: DensityMatrix
   
                   Density matrix of the system at time t=0, just before the application of the pulse.
+
+    - solver: function
+
+              Qutip solver (i.e., solution method) to be used when calculating 
+              time evolution of state. 
 
     - mode: pandas.DataFrame
   
@@ -516,7 +525,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
     |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
     |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |
 
-    where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
+            where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
 
             When it is None, the evolution of the system is performed for the given time duration without any applied pulse.
             
@@ -547,12 +556,6 @@ def evolve(spin, h_unperturbed, dm_initial, \
                 Counts the number of points in which the time interval [0, pulse_time] is sampled in the discrete approximation of the time-dependent Hamiltonian of the system.
     
                 Default value is 10.
-    
-    - order : int
-  
-              Specifies at which order the Magnus expansion of the Hamiltonian is to be truncated. Anyway, for all the values greater than 3 the program will take into account only the 1st, 2nd and 3rd-order terms.
-    
-              Default value is 2.
   
     Action
     ------
@@ -569,7 +572,8 @@ def evolve(spin, h_unperturbed, dm_initial, \
     The DensityMatrix object representing the state of the system (in the Schroedinger picture) evolved through a time pulse_time under the action of the specified pulse.
     """
     
-    if pulse_time == 0 or np.all(np.absolute((dm_initial-Operator(spin.d)).matrix)<1e-10):
+    if pulse_time == 0 or np.all(np.absolute((dm_initial \
+                                    - Operator(spin.d)).matrix) < 1e-10):
         return dm_initial
     
     if picture == 'IP':
@@ -581,22 +585,18 @@ def evolve(spin, h_unperturbed, dm_initial, \
         mode = pd.DataFrame([(0., 0., 0., 0., 0)], 
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
-    times, time_step = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
-    h_new_picture = []
-    for t in times:
-        h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
+    # times, time_step = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
+    # h_new_picture = []
+    # for t in times:
+    #     h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
     
-    magnus_exp = magnus_expansion_1st_term(h_new_picture, time_step)
-    if order>1:
-        magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_new_picture, time_step)
-        if order>2:
-            magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_new_picture, time_step)
-        
-    dm_evolved_new_picture = dm_initial.sim_trans(-magnus_exp, exp=True)
+
+    
+    # dm_evolved_new_picture = ...
             
-    dm_evolved = dm_evolved_new_picture.changed_picture(o_change_of_picture, pulse_time, invert=True)
+    # dm_evolved = dm_evolved_new_picture.changed_picture(o_change_of_picture, pulse_time, invert=True)
         
-    return DensityMatrix(dm_evolved.matrix)
+    return None
 
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame

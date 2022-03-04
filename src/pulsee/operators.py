@@ -1,7 +1,8 @@
 import math
 import numpy as np
 from numpy.linalg import LinAlgError
-from scipy.linalg import expm, eig
+from scipy.linalg import eig 
+from scipy import linalg
 from scipy.constants import Planck, Boltzmann
 from scipy.integrate import quad
 
@@ -170,7 +171,7 @@ class Operator:
         Returns a new Operator object representing the exponential of the operator.
         The program exploits the Padè approximation for the calculation of matrix exponentials.
         """
-        exp_matrix = expm(self.matrix)
+        exp_matrix = linalg.expm(self.matrix)
         return Operator(exp_matrix)
     
     def diagonalisation(self):
@@ -619,7 +620,7 @@ def canonical_density_matrix(hamiltonian, temperature):
         raise ValueError("The temperature must take a positive value")
     
     exponent = -(Planck*hamiltonian*1e6)/(Boltzmann*temperature)
-    numerator = exponent.exp()
+    numerator = exponent.expm()
     canonical_partition_function = numerator.trace()
     canonical_dm = numerator/canonical_partition_function
     return DensityMatrix(canonical_dm.matrix)
