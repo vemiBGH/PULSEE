@@ -145,7 +145,15 @@ class Qobj(QutipQobj):
 
     *Implemented by PULSEE wrapper.
     """
-
+    def __init__(self, inpt=None, dims=None, shape=None,
+                 type=None, isherm=None, copy=True,
+                 fast=False, superrep=None, isunitary=None):
+        """
+        Qobj constructor.
+        """
+        super().__init__(inpt, dims, shape, type, isherm, copy, fast, superrep,
+                            isunitary)
+        
     @property
     def positivity(self):
         """
@@ -163,20 +171,10 @@ class Qobj(QutipQobj):
         """
         eigenvalues = eig(self)[0]
         return np.all(np.real(eigenvalues) >= -1e-10)
-
-    @property
-    def trace(self):
-        """
-        Returns the trace of the operator (which is a complex number).
-        """
-        trace = 0
-        for i in range(self.shape[0]):
-            trace = trace + self[i, i]
-        return trace
     
     @property
     def isdm(self): 
-        return self.isherm and self.positivity and self.trace == 1
+        return self.isherm and self.positivity and self.tr() == 1
 
 
 

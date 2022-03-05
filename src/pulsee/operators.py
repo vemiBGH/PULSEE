@@ -166,7 +166,7 @@ class Operator:
         """
         return Operator(np.linalg.matrix_power(self.matrix, exponent))
     
-    def exp(self):
+    def expm(self):
         """
         Returns a new Operator object representing the exponential of the operator.
         The program exploits the Padè approximation for the calculation of matrix exponentials.
@@ -206,7 +206,7 @@ class Operator:
             new_basis_operator = (change_of_basis_operator**(-1))*self*change_of_basis_operator
         return new_basis_operator
 
-    def trace(self):
+    def tr(self):
         """
         Returns the trace of the operator (which is a complex number).
         """
@@ -266,7 +266,7 @@ class Operator:
         
         False, when unit trace is not verified.
         """
-        return np.isclose(self.trace(), 1, rtol=1e-6)
+        return np.isclose(self.tr(), 1, rtol=1e-6)
 
     def positivity(self):
         """
@@ -445,7 +445,7 @@ The expectation value of an observable of a quantum system in a certain state is
         In general, a complex number representing the expectation value of the observable for the given density matrix. When the imaginary part of this number is smaller than 10^(-10) (in absolute value), only the real part is retained.
         """
         dm = DensityMatrix.cast_to_density_matrix()
-        exp_val = (self*dm).trace()
+        exp_val = (self*dm).tr()
         if np.absolute(np.imag(exp_val)) < 1e-10: exp_val = np.real(exp_val)
         return exp_val
 
@@ -620,9 +620,10 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
     
+
     exponent = -(Planck*hamiltonian*1e6)/(Boltzmann*temperature)
     numerator = exponent.expm()
-    canonical_partition_function = numerator.trace()
+    canonical_partition_function = numerator.tr()
     canonical_dm = numerator/canonical_partition_function
     return DensityMatrix(canonical_dm.matrix)
 

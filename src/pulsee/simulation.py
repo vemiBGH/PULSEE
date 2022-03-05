@@ -3,7 +3,8 @@ import pandas as pd
 import math
 from fractions import Fraction
 
-from qutip import Qobj
+from .qobj import Qobj
+from qutip import Options
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
 from matplotlib import colorbar as clrbar
@@ -326,7 +327,7 @@ def nuclear_system_setup(spin_par,
                                                 .matrix)]
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
-        dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
+        dm_initial = canonical_density_matrix(Operator(np.sum(h_unperturbed, axis=0)), 
                                                 temperature)
     else:
         dm_initial = DensityMatrix(initial_state)
@@ -483,7 +484,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
     return fig
 
 
-def evolve(spin, h_unperturbed, dm_initial, solution_method, \
+def evolve(spin, h_unperturbed, dm_initial, solver, \
            mode=None, pulse_time=0, \
            picture='RRF', RRF_par={'nu_RRF': 0,
                                    'theta_RRF': 0,
@@ -585,18 +586,16 @@ def evolve(spin, h_unperturbed, dm_initial, solution_method, \
         mode = pd.DataFrame([(0., 0., 0., 0., 0)], 
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
-    # times, time_step = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
-    # h_new_picture = []
-    # for t in times:
-    #     h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
-    
+    times, time_step = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
 
-    
-    # dm_evolved_new_picture = ...
-            
-    # dm_evolved = dm_evolved_new_picture.changed_picture(o_change_of_picture, pulse_time, invert=True)
+    # Split into operator and time-dependent coefficient as per QuTiP scheme.
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0,
+                                            factor_t_dependence=True)
+
+    h = h_unperturbed + h_perturbation
+    result = solver(h, Qobj(dm_initial.matrix), times, options=Options(nsteps=1500))
         
-    return None
+    return result.states[:-1] # return last time step of density matrix evolution.
 
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame

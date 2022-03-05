@@ -1,9 +1,8 @@
-import sys
-sys.path.insert(1, '../Code')
-
 import numpy as np
 import pandas as pd
 import math
+
+from qutip import mcsolve, Qobj
 
 import matplotlib.pylab as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -43,7 +42,8 @@ def test_null_zeeman_contribution_for_0_gyromagnetic_ratio():
                 'beta_q' : 0,
                 'gamma_q' : 0}
     
-    h_unperturbed = nuclear_system_setup(spin_par, quad_par, zeem_par)[1]
+    h_unperturbed = Operator(np.sum(nuclear_system_setup(spin_par, quad_par, 
+                                zeem_par)[1], axis=0))
     
     null_matrix = np.zeros((4, 4))
     
@@ -68,7 +68,8 @@ def test_correct_number_lines_power_absorption_spectrum(s):
     
     spin, h_unperturbed, dm_0 = nuclear_system_setup(spin_par, quad_par, zeem_par)
     
-    f, p = power_absorption_spectrum(spin, h_unperturbed, normalized=False, dm_initial=dm_0)
+    f, p = power_absorption_spectrum(spin, Operator(np.sum(h_unperturbed, axis=0)), 
+                        normalized=False, dm_initial=dm_0)
     
     assert len(f)==(spin.d)*(spin.d-1)/2
     
@@ -96,10 +97,10 @@ def test_pi_pulse_yields_population_inversion():
     mode = pd.DataFrame([(10., 1., 0., math.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
-    dm_evolved = evolve(spin, h_unperturbed, dm_initial, \
-                        mode, pulse_time=1, \
-                        picture='IP')
-        
+    # For now test using mesolve master equation solverA
+    dm_evolved = evolve(spin, h_unperturbed, dm_initial, solver=mcsolve,
+                                    mode=mode, pulse_time=1, picture='IP')
+    
     assert np.all(np.isclose(dm_evolved.matrix[5, 5], 1, rtol=1e-1))
     
 

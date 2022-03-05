@@ -2,6 +2,7 @@ import math
 from cmath import exp
 import numpy as np
 import pandas as pd
+from qutip import Qobj
 
 from .operators import Operator, DensityMatrix, Observable
 
@@ -27,9 +28,9 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
     Returns
     -------
     An Observable object which represents the Zeeman Hamiltonian in the laboratory reference frame (expressed in MHz).
-    
     Raises
     ------
+    
     ValueError, when the passed B_0 is a negative number.
     """
     if B_0<0: raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
@@ -171,7 +172,53 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
          )
     return v2
 
-def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t):
+
+def pulse_time_dep_coeff(frequency, phase):
+    """
+    Return the time-dependent coefficient of a pulse Hamiltonian. 
+
+    Parameters
+    ----------
+    - frequency: non-negative float
+                 Frequency of the monochromatic wave (expressed in MHz).
+    - phase: float
+             Inital phase of the wave (at t=0) (expressed in radians).
+
+    Returns
+    -------
+    Function with signature f(t: float) -> float
+    """
+    def time_dependence_function(t, args):
+        return math.cos(2 * math.pi * frequency * t - phase)
+    return time_dependence_function
+
+
+def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
+    """
+    Computes the time-independent portion of the Hamiltonian interaction with a
+    monochromatic and linearly polarized electromagnetic pulse.
+    
+    Parameters
+    ----------
+    - spin: NuclearSpin
+            Spin under study.
+    - frequency: non-negative float
+                 Frequency of the monochromatic wave (expressed in MHz).
+    - phase: float
+             Inital phase of the wave (at t=0) (expressed in radians).
+    - B_1: non-negative float
+           Maximum amplitude of the oscillating magnetic field (expressed in tesla).
+    - theta_1, phi_1: float
+                      Polar and azimuthal angles of the direction of polarization of the magnetic wave in the LAB frame (expressed in radians);
+    """
+    return - spin.gyro_ratio_over_2pi * B_1 \
+            * (math.sin(theta_1) * math.cos(phi_1) * spin.I['x'] \
+                + math.sin(theta_1) * math.sin(phi_1) * spin.I['y'] \
+                + math.cos(theta_1) * spin.I['z'])
+
+
+def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
+                        factor_t_dependence=False):
     """
     Computes the term of the Hamiltonian describing the interaction with a monochromatic and linearly polarized electromagnetic pulse.
     
@@ -189,6 +236,10 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t):
                       Polar and azimuthal angles of the direction of polarization of the magnetic wave in the LAB frame (expressed in radians);
     - t: float
          Time of evaluation of the Hamiltonian (expressed in microseconds).
+    - factor_t_dependence: bool
+                           If true, return tuple (H, f(t)) where f(t) is the 
+                           time-dependence of the Hamiltonian as a function.
+                           Does not evaluate f(t) at the given time.
     
     Returns
     -------
@@ -202,15 +253,16 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t):
     """
     if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave must be a positive quantity")
     if B_1 < 0: raise ValueError("The amplitude of the electromagnetic wave must be a positive quantity")
-    h_pulse = -spin.gyro_ratio_over_2pi*B_1*\
-              (math.sin(theta_1)*math.cos(phi_1)*spin.I['x'] +\
-               math.sin(theta_1)*math.sin(phi_1)*spin.I['y'] +\
-               math.cos(theta_1)*spin.I['z']
-               )*\
-               math.cos(2*math.pi*frequency*t-phase)
-    return Observable(h_pulse.matrix)
+    # Notice the following does not depend on spin
+    t_dependence = pulse_time_dep_coeff(frequency, phase)
+    h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
+    if factor_t_dependence: 
+        return Qobj(h_t_independent.matrix), t_dependence
+    else:
+        return Observable((t_dependence * h_t_independent(t)).matrix)
 
-def h_multiple_mode_pulse(spin, mode, t):
+
+def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     """
     Computes the term of the Hamiltonian describing the interaction with a superposition of single-mode electromagnetic pulses. If the passed argument spin is a NuclearSpin object, the returned Hamiltonian will describe the interaction between the pulse of radiation and the single spin; if it is a ManySpins object, it will represent the interaction with the whole system of many spins.
     
@@ -220,6 +272,10 @@ def h_multiple_mode_pulse(spin, mode, t):
             Spin or spin system under study;
     - mode: pandas.DataFrame
             Table of the parameters of each electromagnetic mode in the superposition. It is organised according to the following template:
+    - factor_t_dependence: bool
+                           If true, return tuple (H, f(t)) where f(t) is the 
+                           time-dependence of the Hamiltonian as a function.
+                           Does not evaluate f(t) at the given time.
   
     | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
     | ----- | ------------- | ------------- | --------- | ----------- | --------- |
@@ -236,7 +292,10 @@ def h_multiple_mode_pulse(spin, mode, t):
          
     Returns
     -------
-    An Observable object which represents the Hamiltonian of the coupling with the superposition of the given modes evaluated at time t (expressed in MHz).
+    An Observable object which represents the Hamiltonian of the coupling with
+    the superposition of the given modes evaluated at time t (expressed in MHz).
+    OR 
+    A list of tuples of the form (H_m, f_m(t)) for each mode m. 
     """
     h_pulse = Operator(spin.d)*0
     omega = mode['frequency']
@@ -244,20 +303,51 @@ def h_multiple_mode_pulse(spin, mode, t):
     phase = mode['phase']
     theta = mode['theta_p']
     phi = mode['phi_p']
-    if isinstance(spin, ManySpins):
-        for i in mode.index:
-            h_pulse = Operator(spin.d)*0
-            for n in range(spin.n_spins):
-                term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i], phase[i], theta[i], phi[i], t)
-                for m in range(spin.n_spins)[:n]:
-                    term_n = tensor_product(Operator(spin.spin[m].d), term_n)
-                for l in range(spin.n_spins)[n+1:]:
-                    term_n = tensor_product(term_n, Operator(spin.spin[l].d))
-                h_pulse = h_pulse + term_n
-    elif isinstance(spin, NuclearSpin):
-        for i in mode.index:
-            h_pulse = h_pulse + h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t)
-    return Observable(h_pulse.matrix)
+    if factor_t_dependence:
+        # Create list of hamiltonians with unique time dependences
+        mode_hamiltonians = []
+        if isinstance(spin, ManySpins):
+            for i in mode.index:
+                t_dependence = pulse_time_dep_coeff(omega[i], phase[i])
+                h_t_independent = Operator(spin.d) * 0 
+
+                # Construct tensor product of operators acting on each spin.
+                # Take a tensor product where every operator except the nth 
+                # is the identity, add those together
+                for n in range(spin.n_spins):
+                    term_n = pulse_t_independent_op(spin.spin[n], B[i], 
+                                                    theta[i], phi[i])
+                    for m in range(spin.n_spins)[:n]:
+                        term_n = tensor_product(Operator(spin.spin[m].d), term_n)
+                    for l in range(spin.n_spins)[n+1:]:
+                        term_n = tensor_product(term_n, Operator(spin.spin[l].d))
+                    h_t_independent += term_n
+
+                # Append total hamiltonian for this mode to mode_hamiltonians
+                mode_hamiltonians.append([Qobj(h_t_independent.matrix), t_dependence])
+        elif isinstance(spin, NuclearSpin):
+            mode_hamiltonians = [h_single_mode_pulse(spin, omega[i], B[i],
+                    phase[i], theta[i], phi[i], t, factor_t_dependence=True)
+                        for i in mode.index]
+            
+        return mode_hamiltonians
+
+    else:
+        if isinstance(spin, ManySpins):
+            for i in mode.index:
+                h_pulse = Operator(spin.d)*0
+                for n in range(spin.n_spins):
+                    term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i], phase[i], theta[i], phi[i], t)
+                    for m in range(spin.n_spins)[:n]:
+                        term_n = tensor_product(Operator(spin.spin[m].d), term_n)
+                    for l in range(spin.n_spins)[n+1:]:
+                        term_n = tensor_product(term_n, Operator(spin.spin[l].d))
+                    h_pulse = h_pulse + term_n
+        elif isinstance(spin, NuclearSpin):
+            for i in mode.index:
+                h_pulse = h_pulse + h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t)
+
+        return Observable(h_pulse.matrix)
 
 # Global Hamiltonian of the system (stationary term + pulse term) cast in the picture generated by
 # the Operator h_change_of_picture
@@ -276,7 +366,7 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
     Returns
     -------
     Observable object representing the Hamiltonian of the pulse evaluated at time t in the new picture (in MHz).
-    """
+    # """
     h_cp = (h_unperturbed + h_multiple_mode_pulse(spin, mode, t) - \
             h_change_of_picture).changed_picture(h_change_of_picture, t)
     return Observable(h_cp.matrix)
@@ -462,6 +552,7 @@ def h_tensor_coupling(spins, tensor):
     i_1 = spins.spin[0].cartesian_operator()
     i_2 = spins.spin[1].cartesian_operator()
 
+
     # Initialize empty operator of appropriate dimension as base case for 
     # for loop. 
     h = Operator(spins.d) * 0 
@@ -471,7 +562,6 @@ def h_tensor_coupling(spins, tensor):
             h += tensor[m, n] * (tensor_product(i_1[m], i_2[n]))
 
     return h 
-
 
 
 
