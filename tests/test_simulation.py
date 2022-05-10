@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 import math
 
-from qutip import mcsolve, Qobj
+from qutip import mesolve, Qobj, rand_dm, tensor
 
 import matplotlib.pylab as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -11,10 +11,7 @@ from matplotlib.pyplot import xticks, yticks
 import hypothesis.strategies as st
 from hypothesis import given, assume
 
-from pulsee.operators import Operator, DensityMatrix, Observable, \
-                      random_density_matrix
-
-from pulsee.many_body import tensor_product
+from pulsee.operators import random_density_matrix, changed_picture
 
 from pulsee.nuclear_spin import NuclearSpin
 
@@ -30,8 +27,7 @@ from pulsee.simulation import nuclear_system_setup, \
 
 def test_null_zeeman_contribution_for_0_gyromagnetic_ratio():
     spin_par = {'quantum number' : 3/2,
-                'gamma/2pi' : 0.}
-    
+                'gamma/2pi' : 0.}    
     zeem_par = {'field magnitude' : 10.,
                 'theta_z' : 0,
                 'phi_z' : 0}
@@ -42,12 +38,14 @@ def test_null_zeeman_contribution_for_0_gyromagnetic_ratio():
                 'beta_q' : 0,
                 'gamma_q' : 0}
     
-    h_unperturbed = Operator(np.sum(nuclear_system_setup(spin_par, quad_par, 
+    nuclear_system_setup(spin_par, quad_par, zeem_par)
+
+    h_unperturbed = Qobj(np.sum(nuclear_system_setup(spin_par, quad_par, 
                                 zeem_par)[1], axis=0))
     
     null_matrix = np.zeros((4, 4))
     
-    assert np.all(np.isclose(h_unperturbed.matrix, null_matrix, rtol=1e-10))
+    assert np.all(np.isclose(h_unperturbed, null_matrix, rtol=1e-10))
     
     
 @given(s = st.integers(min_value=1, max_value=14))
@@ -55,7 +53,7 @@ def test_correct_number_lines_power_absorption_spectrum(s):
     
     spin_par = {'quantum number' : s/2,
                 'gamma/2pi' : 1.}
-    
+
     zeem_par = {'field magnitude' : 10.,
                 'theta_z' : math.pi/4,
                 'phi_z' : 0}
@@ -68,7 +66,7 @@ def test_correct_number_lines_power_absorption_spectrum(s):
     
     spin, h_unperturbed, dm_0 = nuclear_system_setup(spin_par, quad_par, zeem_par)
     
-    f, p = power_absorption_spectrum(spin, Operator(np.sum(h_unperturbed, axis=0)), 
+    f, p = power_absorption_spectrum(spin, Qobj(np.sum(h_unperturbed, axis=0)), 
                         normalized=False, dm_initial=dm_0)
     
     assert len(f)==(spin.d)*(spin.d-1)/2
@@ -97,11 +95,13 @@ def test_pi_pulse_yields_population_inversion():
     mode = pd.DataFrame([(10., 1., 0., math.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
-    # For now test using mesolve master equation solverA
-    dm_evolved = evolve(spin, h_unperturbed, dm_initial, solver=mcsolve,
-                                    mode=mode, pulse_time=1, picture='IP')
+    # For now test using mesolve master equation solver
+    # TODO test fails because evolved density matrix has one eigenvalue JUST 
+    # below positivity thresh. consider more forgiving threshold.
+    dm_evolved = evolve(spin, h_unperturbed, dm_initial,
+                                    mode=mode, pulse_time=2 * np.pi, picture='IP')
     
-    assert np.all(np.isclose(dm_evolved.matrix[5, 5], 1, rtol=1e-1))
+    assert np.all(np.isclose(dm_evolved[5, 5], 1, rtol=1e-1))
     
 
 def test_evolution_goes_fine_for_low_pulse_duration():
@@ -124,7 +124,7 @@ def test_evolution_goes_fine_for_low_pulse_duration():
     mode = pd.DataFrame([(10., 1., 0., math.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
-    dm_evolved = evolve(spin, h_unperturbed, dm_initial, \
+    dm_evolved = evolve(spin, h_unperturbed, dm_initial,
                         mode, pulse_time=0.01, \
                         picture='IP')
     
@@ -142,19 +142,19 @@ def test_j_coupling_refocusing_sequence():
     
     initial_state1 = random_density_matrix(2)
     initial_state2 = random_density_matrix(2)
-    initial_state = tensor_product(initial_state1, initial_state2)
+    initial_state = tensor(initial_state1, initial_state2)
     
     spins, h_zeeman, initial_dm = nuclear_system_setup([spin_par1, spin_par2], \
                                                        None, \
                                                        zeem_par, \
-                                                       initial_state=initial_state.matrix)
+                                                       initial_state=initial_state)
     
     j_matrix = np.zeros((2, 2))
     j_matrix[0, 1] = 0.1
     
     h_j = h_j_coupling(spins, j_matrix)
     
-    h_unperturbed = h_zeeman + h_j
+    h_unperturbed = h_zeeman + [Qobj(h_j)]
     
     #no_pulse = pd.DataFrame([(0., 0., 0., 0., 0.)], 
     #                        columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
@@ -162,25 +162,25 @@ def test_j_coupling_refocusing_sequence():
     pulse_mode = pd.DataFrame([(25., 2., 0., math.pi/2, 0)], 
                               columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
-    dm_1 = evolve(spins, h_unperturbed, initial_dm, \
+    dm_1 = evolve(spins, h_unperturbed, initial_dm, 
                   None, pulse_time=1, \
                   picture='IP')
         
-    dm_2 = evolve(spins, h_unperturbed, dm_1, \
+    dm_2 = evolve(spins, h_unperturbed, dm_1, 
                   pulse_mode, pulse_time=0.1, \
                   picture='IP')
         
-    dm_3 = evolve(spins, h_unperturbed, dm_2, \
+    dm_3 = evolve(spins, h_unperturbed, dm_2, 
                   None, pulse_time=1, \
                   picture='IP')
         
-    final_dm = evolve(spins, h_unperturbed, dm_3, \
+    final_dm = evolve(spins, h_unperturbed, dm_3, 
                       pulse_mode, pulse_time=0.1, \
                       picture='IP')
         
-    j_evolved_dm = final_dm.changed_picture(h_zeeman, 2.2)
+    j_evolved_dm = changed_picture(final_dm, Qobj(np.array(h_zeeman[0])), 2.2)
         
-    assert np.all(np.isclose(initial_dm.matrix, j_evolved_dm.matrix, rtol=1, atol=5e-2))
+    assert np.all(np.isclose(initial_dm.full(), j_evolved_dm.full(), rtol=1, atol=5e-2))
 
 
 def test_RRF_operator_proportional_to_Iz_for_theta_0():
@@ -193,8 +193,8 @@ def test_RRF_operator_proportional_to_Iz_for_theta_0():
     
     RRF_o = RRF_operator(spin, RRF_par)
     
-    RRF_matrix = RRF_o.matrix
-    Iz_matrix = spin.I['z'].matrix
+    RRF_matrix = RRF_o
+    Iz_matrix = spin.I['z']
     
     c = RRF_matrix[0, 0]/Iz_matrix[0, 0]
     
@@ -224,12 +224,16 @@ def test_FID_signal_decays_fast_for_small_relaxation_time():
     mode = pd.DataFrame([(10., 1., 0., math.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
-    dm_evolved = evolve(spin, h_unperturbed, dm_0, \
+    dm_evolved = evolve(spin, h_unperturbed, dm_0, 
                         mode, pulse_time=math.pi, \
                         picture='IP', \
                         n_points=10)
     
-    t, signal = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=100, T2=1)
+    h_unperturbed_op = Qobj(np.array(h_unperturbed[0]))
+    for i in h_unperturbed[1:]:
+        i += Qobj(np.array(h_unperturbed_op))
+
+    t, signal = FID_signal(spin, [h_unperturbed_op], dm_evolved, acquisition_time=100, T2=1)
     
     assert np.absolute(signal[-1])<1e-10
     

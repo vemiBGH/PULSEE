@@ -1,11 +1,10 @@
-from .operators import Observable, Operator, DensityMatrix
 import numpy as np 
 from typing import Iterable
+from qutip import Qobj
 
 
 class MatrixRepresentationError(Exception):
     pass 
-
 
 def adjoint(a):
     """
@@ -20,7 +19,7 @@ def adjoint(a):
     - the conjugate transpose of a.
     """
 
-    return np.array(np.matrix(a).getH())
+    return np.array(a).transpose().conjugate()
 
 
 def normalize(a):
@@ -164,16 +163,16 @@ def n_gate(op):
     ------
     An `NGate` object     
     """
-    if np.shape(op.matrix)[0] != np.shape(op.matrix)[0] \
-        or np.log2(np.shape(op.matrix)[0]) % 1 != 0 \
-        or np.log2(np.shape(op.matrix))[0] % 1 != 0: 
+    if np.shape(op)[0] != np.shape(op)[0] \
+        or np.log2(np.shape(op)[0]) % 1 != 0 \
+        or np.log2(np.shape(op))[0] % 1 != 0: 
         raise MatrixRepresentationError()
     
-    qs = CompositeQubitSpace(int(np.log2(np.shape(op.matrix)[0])))
-    return NGate(op.matrix, qs)
+    qs = CompositeQubitSpace(int(np.log2(np.shape(op)[0])))
+    return NGate(op, qs)
 
 
-class NGate(Operator):
+class NGate(Qobj):
     """
     Quantum n-gate as defined in Scherer pg. 169: a unitary operator U: H^n → 
     H^n. If n = 1, one has a unary gate; if n = 2, one has a binary gate. 
@@ -204,7 +203,7 @@ class NGate(Operator):
             raise MatrixRepresentationError(f'Dimension {self._n} of gate ' + \
                                 f'does not match dimension {state.n} of state.')
         
-        return QubitState(self._qubit_space, np.matmul(self.matrix, state.matrix))
+        return QubitState(self._qubit_space, np.matmul(self, state))
 
     @property
     def n(self):
@@ -239,8 +238,8 @@ class QubitState:
         ------
         This instance's density matrix as a DensityMatrix object.
         """
-        density_matrix = np.outer(self.matrix, self.matrix)
-        return DensityMatrix(density_matrix)
+        density_matrix = np.outer(self, self)
+        return Qobj(density_matrix)
 
     @property
     def density_matrix(self): 
@@ -275,7 +274,7 @@ class QubitState:
             raise MatrixRepresentationError('Reduced density matrix currently ' + \
                                         'unsupported for n > 2.')
 
-        density_matrix = self.density_matrix.matrix
+        density_matrix = self.density_matrix
         reduced_density_matrix = np.zeros((2, 2), dtype="complex_")
 
         # https://physics.stackexchange.com/questions/179671/how-to-take-partial-trace
@@ -297,13 +296,13 @@ class QubitState:
         if self.n != other.n: 
             raise MatrixRepresentationError(f'Cannot cast qubit with n = {self.n}' + \
                 f' to qubit with n = {other.n}.')
-        return QubitState(self.qubit_space, normalize(self.matrix + other.matrix))
+        return QubitState(self.qubit_space, normalize(self + other))
 
     def __sub__(self, other):
         if self.n != other.n: 
             raise MatrixRepresentationError(f'Cannot cast qubit with n = {self.n}' + \
                 f' to qubit with n = {other.n}.')
-        return QubitState(self.qubit_space, normalize(self.matrix - other.matrix))
+        return QubitState(self.qubit_space, normalize(self - other))
 
 
 
@@ -320,8 +319,8 @@ class QubitSpace(CompositeQubitSpace):
         self._base_one = super().basis_from_indices([1])
 
 
-    # Defined observable for this qubit
-    _observable = Observable(np.array([[1, 0], [0, -1]]))
+    # Define observable for this qubit
+    _observable = Qobj(np.array([[1, 0], [0, -1]]))
 
     def make_state(self, azimuthal=None, polar=None, coeffs: Iterable[float]=None):
         """
@@ -385,7 +384,7 @@ def tensor_product(q1, q2):
     n = q1.qn + q2.n 
 
     # Make matrix representation of tensor product. 
-    prod = np.kron(q1.matrix, q2.matrix)
+    prod = np.kron(q1, q2)
     return QubitState(CompositeQubitSpace(n), prod)
 
 
@@ -402,7 +401,7 @@ def gate_tensor_product(g1, g2):
     An NGate object representing the tensor product of `g1` and `g2`.     
     """
     n = g1.n + g2.n
-    prod = np.kron(g1.matrix, g2.matrix)
+    prod = np.kron(g1, g2)
     return NGate(prod, CompositeQubitSpace(n))
 
 

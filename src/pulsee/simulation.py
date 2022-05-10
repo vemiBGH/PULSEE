@@ -3,8 +3,8 @@ import pandas as pd
 import math
 from fractions import Fraction
 
-from .qobj import Qobj
-from qutip import Options
+from qutip import Options, mesolve, Qobj, tensor 
+
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
 from matplotlib import colorbar as clrbar
@@ -13,13 +13,11 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
-from .operators import Operator, DensityMatrix, Observable, \
-                      magnus_expansion_1st_term, \
-                      magnus_expansion_2nd_term, \
-                      magnus_expansion_3rd_term, \
-                      canonical_density_matrix
-
-from .many_body import tensor_product
+from .operators import magnus_expansion_1st_term, \
+                       magnus_expansion_2nd_term, \
+                       magnus_expansion_3rd_term, \
+                       canonical_density_matrix, \
+                       free_evolution
 
 from .nuclear_spin import NuclearSpin, ManySpins
 
@@ -55,6 +53,7 @@ def nuclear_system_setup(spin_par,
       Map/list of maps containing information about the nuclear spin/spins under
       consideration. The keys and values required to each dictionary in this
       argument are shown in the table below.
+
       
       |           key          |         value        |
       |           ---          |         -----        |
@@ -63,13 +62,15 @@ def nuclear_system_setup(spin_par,
     
       The second item is the gyromagnetic ratio over 2 pi, measured in MHz/T.
 
+      E.g., spin_par = {'quantum number': 1 / 2, 'gamma2/pi': 1}
+
     - quad_par: dict / list of dict
     
       Map/maps containing information about the quadrupolar interaction between
       the electric quadrupole moment and the EFG for each nucleus in the system.
       The keys and values required to each dictionary in this argument are shown
       in the table below:
-      
+                                           
       |           key           |       value        |
       |           ---           |       -----        |
       |   'coupling constant'   |       float        |
@@ -277,14 +278,14 @@ def nuclear_system_setup(spin_par,
     for i in range(spin_system.n_spins):
         h_i = h_q[i] + h_z[i]
         for j in range(i):
-            h_i = tensor_product(Operator(spin_system.spin[j].d), h_i)
+            h_i = tensor(Qobj(np.eye(spin_system.spin[j].d)), h_i)
         for k in range(spin_system.n_spins)[i+1:]:
-            h_i = tensor_product(h_i, Operator(spin_system.spin[k].d))
-        h_unperturbed = h_unperturbed + [Qobj(h_i.matrix)]
+            h_i = tensor(h_i, Qobj(np.eye(spin_system.spin[k].d)))
+        h_unperturbed = h_unperturbed + [Qobj(h_i)]
     
     if j_matrix is not None:
         h_j = h_j_coupling(spin_system, j_matrix)
-        h_unperturbed = h_unperturbed + [Qobj(h_j.matrix)]
+        h_unperturbed = h_unperturbed + [Qobj(h_j)]
         
     if D1_param is not None:
         if ((D1_param['b_D'] == 0.) and (D1_param['theta'] ==0.)):
@@ -292,7 +293,7 @@ def nuclear_system_setup(spin_par,
         else:
             h_d1 = h_D1(spin_system, D1_param['b_D'], \
                                      D1_param['theta'])
-            h_unperturbed = h_unperturbed + [Qobj(h_d1.matrix)]
+            h_unperturbed = h_unperturbed + [Qobj(h_d1)]
     
     if D2_param is not None:
         if ((D2_param['b_D'] == 0.) and (D2_param['theta'] ==0.)):
@@ -300,7 +301,7 @@ def nuclear_system_setup(spin_par,
         else:
             h_d2 = h_D2(spin_system, D2_param['b_D'], \
                                      D2_param['theta'])
-            h_unperturbed = h_unperturbed + [Qobj(h_d2.matrix)]
+            h_unperturbed = h_unperturbed + [Qobj(h_d2)]
     
     if hf_param is not None:
         if ((hf_param['A'] == 0.) and (hf_param['B'] ==0.)):
@@ -308,29 +309,29 @@ def nuclear_system_setup(spin_par,
         else:
             h_hf = h_HF_secular(spin_system, hf_param['A'], \
                                      hf_param['B'])
-            h_unperturbed = h_unperturbed + [Qobj(h_hf.matrix)]
+            h_unperturbed = h_unperturbed + [Qobj(h_hf)]
         
     if j_sec_param is not None:
         if (j_sec_param['J']==0.0):
                 pass
         else:
             h_j = h_j_secular(spin_system, j_sec_param['J'])
-            h_unperturbed = h_unperturbed + [Qobj(h_j.matrix)]
+            h_unperturbed = h_unperturbed + [Qobj(h_j)]
 
     if h_tensor_inter is not None:
         if type(h_tensor_inter) != list:
             h_unperturbed += [Qobj(h_tensor_coupling(spin_system, 
-                                                     h_tensor_inter).matrix)]
+                                                     h_tensor_inter))]
         else:
             for hyp_ten in h_tensor_inter:
                 h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten) \
-                                                .matrix)]
+                                                )]
     
     if isinstance(initial_state, str) and initial_state == 'canonical':
-        dm_initial = canonical_density_matrix(Operator(np.sum(h_unperturbed, axis=0)), 
+        dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
                                                 temperature)
     else:
-        dm_initial = DensityMatrix(initial_state)
+        dm_initial = Qobj(initial_state)
     
     if len(spins) == 1:
         return spins[0], h_unperturbed, dm_initial
@@ -370,34 +371,34 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
   
     Then, it determines the relative proportions of the power absorption for different lines applying the formula derived from Fermi golden rule (taking or not taking into account the states' populations, according to the value of normalized).
   
-    Returns
+    Returns:
     -------
     [0]: The list of the frequencies of transition between the eigenstates of h_unperturbed (in MHz);
     
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
-    energies, o_change_of_basis = h_unperturbed.diagonalisation()
+    energies, o_change_of_basis = h_unperturbed.eigenstates()
     
     transition_frequency = []
     
     transition_intensity = []
     
-    d = h_unperturbed.dimension()
+    d = h_unperturbed.dims[0][0] # assume that this Hamiltonian is a rank-1 tensor
     
     # Operator of the magnetic moment of the spin system
     if isinstance(spin,  ManySpins):
-        magnetic_moment = Operator(spin.d)*0
+        magnetic_moment = Qobj(np.eye(spin.d))*0
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi*spin.spin[i].I['x']
             for j in range(i):
-                mm_i = tensor_product(Operator(spin.spin[j].d), mm_i)
+                mm_i = tensor(Qobj(np.eye(spin.spin[j].d)), mm_i)
             for k in range(spin.n_spins)[i+1:]:
-                mm_i = tensor_product(mm_i, Operator(spin.spin[k].d))
+                mm_i = tensor(mm_i, Qobj(np.eye(spin.spin[k].d)))
             magnetic_moment = magnetic_moment + mm_i
     else:
         magnetic_moment = spin.gyro_ratio_over_2pi*spin.I['x']
     
-    mm_in_basis_of_eigenstates = magnetic_moment.sim_trans(o_change_of_basis)
+    mm_in_basis_of_eigenstates = magnetic_moment.transform(o_change_of_basis)
     
     for i in range(d):
         for j in range(d):
@@ -406,11 +407,11 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
                 
                 intensity_nu = nu*\
-                    (np.absolute(mm_in_basis_of_eigenstates.matrix[j, i]))**2
+                    (np.absolute(mm_in_basis_of_eigenstates[j, i]))**2
                 
                 if not normalized:
-                    p_i = dm_initial.matrix[i, i]
-                    p_j = dm_initial.matrix[j, j]
+                    p_i = dm_initial[i, i]
+                    p_j = dm_initial[j, j]
                     intensity_nu = np.absolute(p_i-p_j)*intensity_nu
                     
                 transition_intensity.append(intensity_nu)
@@ -484,12 +485,12 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
     return fig
 
 
-def evolve(spin, h_unperturbed, dm_initial, solver, \
+def evolve(spin, h_unperturbed, dm_initial, \
            mode=None, pulse_time=0, \
            picture='RRF', RRF_par={'nu_RRF': 0,
                                    'theta_RRF': 0,
                                    'phi_RRF': 0}, \
-           n_points=10):
+           n_points=100):
     
     """
     Simulates the evolution of the density matrix of a nuclear spin under the action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -573,8 +574,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver, \
     The DensityMatrix object representing the state of the system (in the Schroedinger picture) evolved through a time pulse_time under the action of the specified pulse.
     """
     
-    if pulse_time == 0 or np.all(np.absolute((dm_initial \
-                                    - Operator(spin.d)).matrix) < 1e-10):
+    if pulse_time == 0 or np.all(np.absolute((dm_initial.full() \
+                                    - np.eye(spin.d))) < 1e-10):
         return dm_initial
     
     if picture == 'IP':
@@ -592,10 +593,12 @@ def evolve(spin, h_unperturbed, dm_initial, solver, \
     h_perturbation = h_multiple_mode_pulse(spin, mode, t=0,
                                             factor_t_dependence=True)
 
+    # match tolerance to operators.posititivity tolerance.
+    opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
     h = h_unperturbed + h_perturbation
-    result = solver(h, Qobj(dm_initial.matrix), times, options=Options(nsteps=1500))
-        
-    return result.states[:-1] # return last time step of density matrix evolution.
+    result = mesolve(h, Qobj(dm_initial), times, options=opts)
+    final_state = result.states[-1]
+    return final_state # return last time step of density matrix evolution.
 
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame
@@ -632,7 +635,7 @@ def RRF_operator(spin, RRF_par):
     RRF_o = nu*(spin.I['z']*math.cos(theta) + \
                 spin.I['x']*math.sin(theta)*math.cos(phi) + \
                 spin.I['y']*math.sin(theta)*math.sin(phi))
-    return Observable(RRF_o.matrix)
+    return Qobj(RRF_o)
 
 
 def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_dpi = 1200, save=False, show_legend = True, name='RealPartDensityMatrix', destination=''):
@@ -687,8 +690,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_
 
     """    
     real_part = np.vectorize(np.real)
-    if isinstance(dm, Operator):
-        data_array = real_part(dm.matrix)
+    if isinstance(dm, Qobj):
+        data_array = real_part(dm)
     else:
         data_array = real_part(dm)
     
@@ -879,8 +882,8 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
     An object of the class matplotlib.figure.Figure representing the figure built up by the function.
 
     """
-    if isinstance(dm, Operator):
-        data_array = dm.matrix
+    if isinstance(dm, Qobj):
+        data_array = dm
     else:
         data_array = dm
 
@@ -1046,10 +1049,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
     Iy = spin.I['y']
-    I_plus_rotated = (1j*phi*Iz).exp()*(1j*theta*Iy).exp()*spin.I['+']*(-1j*theta*Iy).exp()*(-1j*phi*Iz).exp()
+    I_plus_rotated = (1j * phi * Iz).expm() * (1j * theta * Iy).expm() \
+            * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
     for t in times:
-        dm_t = dm.free_evolution(h_unperturbed, t)
-        FID.append((dm_t*I_plus_rotated*np.exp(-t/T2)*np.exp(-1j*2*math.pi*reference_frequency*t)).trace())
+        dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
+        FID.append((dm_t*I_plus_rotated*np.exp(-t/T2)*np.exp(-1j*2*math.pi*reference_frequency*t)).tr())
     
     return times, np.array(FID)
 

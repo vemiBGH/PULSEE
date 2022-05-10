@@ -2,13 +2,10 @@ import math
 from cmath import exp
 import numpy as np
 import pandas as pd
-from qutip import Qobj
-
-from .operators import Operator, DensityMatrix, Observable
-
-from .many_body import tensor_product
+from qutip import Qobj, tensor
 
 from .nuclear_spin import NuclearSpin, ManySpins
+from .operators import changed_picture
 
 def h_zeeman(spin, theta_z, phi_z, B_0):
     """
@@ -38,7 +35,7 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
           (math.sin(theta_z)*math.cos(phi_z)*spin.I['x'] + \
            math.sin(theta_z)*math.sin(phi_z)*spin.I['y'] + \
            math.cos(theta_z)*spin.I['z'])
-    return Observable(h_z.matrix)
+    return Qobj(h_z)
 
 def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
     """
@@ -62,20 +59,20 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
 
     """
     if math.isclose(spin.quantum_number, 1/2, rel_tol=1e-10):
-        return Observable(spin.d)*0
+        return Qobj(spin.d)*0
     I = spin.quantum_number
-    h_q = (e2qQ/(I*(2*I-1)))* \
-          ((1/2)*(3*(spin.I['z']**2) - Operator(spin.d)*I*(I+1))*v0_EFG(eta, alpha_q, beta_q, gamma_q)+\
-           (math.sqrt(6)/4)*
-           ((spin.I['z']*spin.I['+'] + spin.I['+']*spin.I['z'])*\
+    h_q = (e2qQ/(I * (2 * I-1))) *  \
+          ((1/2) * (3 * (spin.I['z'] ** 2) - Qobj(np.eye(spin.d)) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q) + \
+           (math.sqrt(6)/4) *
+           ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) * \
                              v1_EFG(-1, eta, alpha_q, beta_q, gamma_q) + \
-            (spin.I['z']*spin.I['-'] + spin.I['-']*spin.I['z'])*\
+            (spin.I['z'] * spin.I['-'] + spin.I['-'] * spin.I['z']) * \
                              v1_EFG(+1, eta, alpha_q, beta_q, gamma_q) + \
-            (spin.I['+']**2)*\
+            (spin.I['+'] ** 2) * \
             v2_EFG(-2, eta, alpha_q, beta_q, gamma_q) + \
-            (spin.I['-']**2)*\
+            (spin.I['-'] ** 2) * \
             v2_EFG(2, eta, alpha_q, beta_q, gamma_q)))
-    return Observable(h_q.matrix)
+    return Qobj(h_q)
 
 def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     """
@@ -96,7 +93,7 @@ def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     ValueError, when the passed eta is not in the interval [0, 1].
     """
     if eta<0 or eta>1: raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
-    v0 = (1/2)*(((3*(math.cos(beta_q))**2-1)/2) - (eta*(math.sin(beta_q))**2)*(math.cos(2*gamma_q))/2)
+    v0 = (1/2) * (((3 * (math.cos(beta_q)) ** 2 - 1) / 2) - (eta * (math.sin(beta_q)) ** 2) * (math.cos(2 * gamma_q)) / 2)
     return v0
 
 def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
@@ -123,17 +120,12 @@ def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     ------
     ValueError, when the passed eta is not in the interval [0, 1].
     """
-    if eta<0 or eta>1: raise ValueError("The asymmetry parameter must fall within the interval [0, 1]")
+    if eta < 0 or eta > 1: raise ValueError("The asymmetry parameter must fall within the interval [0, 1]")
     sign = np.sign(sign)
-    v1 = (1/2)*\
-         (
-          -1j*sign*math.sqrt(3/8)*math.sin(2*beta_q)*exp(sign*1j*alpha_q)+\
-          1j*(eta/(math.sqrt(6)))*math.sin(beta_q)*\
-          (
-           ((1+sign*math.cos(beta_q))/2)*exp(1j*(sign*alpha_q+2*gamma_q))-\
-            ((1-sign*math.cos(beta_q))/2)*exp(1j*(sign*alpha_q-2*gamma_q))
-          )
-         )
+    v1 = (1/2) * (- 1j * sign * math.sqrt(3/8) * math.sin(2 * beta_q) * exp(sign * 1j * alpha_q) +\
+            1j * (eta/(math.sqrt(6)))*math.sin(beta_q) * \
+          (((1+sign * math.cos(beta_q))/2) * exp(1j * (sign * alpha_q+2 * gamma_q)) - \
+            ((1-sign * math.cos(beta_q))/2) * exp(1j * (sign * alpha_q-2 * gamma_q))))
     return v1
 
 def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
@@ -160,14 +152,14 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     ------
     ValueError, when the passed eta is not in the interval [0, 1].
     """
-    if eta<0 or eta>1: raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
+    if eta < 0 or eta > 1: raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
-    v2 = (1/2)*\
-         (math.sqrt(3/8)*((math.sin(beta_q))**2)*exp(sign*2j*alpha_q)+\
-          (eta/math.sqrt(6))*exp(sign*2j*alpha_q)*\
+    v2 = (1/2) * \
+         (math.sqrt(3/8) * ((math.sin(beta_q)) ** 2) * exp(sign * 2j * alpha_q)+\
+          (eta / math.sqrt(6)) * exp(sign*2j * alpha_q) * \
            (
-            exp(2j*gamma_q)*((1+sign*math.cos(beta_q))**2)/4 +\
-            exp(-2j*gamma_q)*((1-sign*math.cos(beta_q))**2)/4
+            exp(2j * gamma_q) * ((1 + sign * math.cos(beta_q)) ** 2) / 4 +\
+            exp(-2j * gamma_q) * ((1 - sign * math.cos(beta_q)) ** 2) / 4
            )
          )
     return v2
@@ -186,10 +178,10 @@ def pulse_time_dep_coeff(frequency, phase):
 
     Returns
     -------
-    Function with signature f(t: float) -> float
+    Function with signature f(t: float, args: iterable) -> float
     """
     def time_dependence_function(t, args):
-        return math.cos(2 * math.pi * frequency * t - phase)
+        return math.cos(frequency * t - phase)
     return time_dependence_function
 
 
@@ -212,9 +204,9 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
                       Polar and azimuthal angles of the direction of polarization of the magnetic wave in the LAB frame (expressed in radians);
     """
     return - spin.gyro_ratio_over_2pi * B_1 \
-            * (math.sin(theta_1) * math.cos(phi_1) * spin.I['x'] \
-                + math.sin(theta_1) * math.sin(phi_1) * spin.I['y'] \
-                + math.cos(theta_1) * spin.I['z'])
+            * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x'] \
+            + np.sin(theta_1) * np.sin(phi_1) * spin.I['y'] \
+            + np.cos(theta_1) * spin.I['z'])
 
 
 def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
@@ -257,9 +249,11 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
     t_dependence = pulse_time_dep_coeff(frequency, phase)
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence: 
-        return Qobj(h_t_independent.matrix), t_dependence
+        return Qobj(h_t_independent), t_dependence
     else:
-        return Observable((t_dependence * h_t_independent(t)).matrix)
+        # Need pass empty list because of QuTiP compatability necessary
+        # arguments of t_dependence; `args` argument functionless
+        return Qobj((t_dependence(t, []) * h_t_independent))
 
 
 def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
@@ -297,19 +291,23 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     OR 
     A list of tuples of the form (H_m, f_m(t)) for each mode m. 
     """
-    h_pulse = Operator(spin.d)*0
+    h_pulse = Qobj(np.eye(spin.d))*0
     omega = mode['frequency']
     B = mode['amplitude']
     phase = mode['phase']
     theta = mode['theta_p']
     phi = mode['phi_p']
     if factor_t_dependence:
-        # Create list of hamiltonians with unique time dependences
+        # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
                 t_dependence = pulse_time_dep_coeff(omega[i], phase[i])
-                h_t_independent = Operator(spin.d) * 0 
+                # dimensions of vector inputs to tensor; should be same as dual vector 
+                # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv. 
+                # to matrix being square.
+                dims = [s.d for s in spin.spin]
+                h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
 
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth 
@@ -318,36 +316,35 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                     term_n = pulse_t_independent_op(spin.spin[n], B[i], 
                                                     theta[i], phi[i])
                     for m in range(spin.n_spins)[:n]:
-                        term_n = tensor_product(Operator(spin.spin[m].d), term_n)
+                        term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
                     for l in range(spin.n_spins)[n+1:]:
-                        term_n = tensor_product(term_n, Operator(spin.spin[l].d))
+                        term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
                     h_t_independent += term_n
 
                 # Append total hamiltonian for this mode to mode_hamiltonians
-                mode_hamiltonians.append([Qobj(h_t_independent.matrix), t_dependence])
+                mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
         elif isinstance(spin, NuclearSpin):
             mode_hamiltonians = [h_single_mode_pulse(spin, omega[i], B[i],
                     phase[i], theta[i], phi[i], t, factor_t_dependence=True)
                         for i in mode.index]
             
         return mode_hamiltonians
-
     else:
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                h_pulse = Operator(spin.d)*0
+                h_pulse = Qobj(np.eye(spin.d))*0
                 for n in range(spin.n_spins):
                     term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i], phase[i], theta[i], phi[i], t)
                     for m in range(spin.n_spins)[:n]:
-                        term_n = tensor_product(Operator(spin.spin[m].d), term_n)
+                        term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
                     for l in range(spin.n_spins)[n+1:]:
-                        term_n = tensor_product(term_n, Operator(spin.spin[l].d))
+                        term_n = tensor(term_n, Qobj((spin.spin[l].d)))
                     h_pulse = h_pulse + term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 h_pulse = h_pulse + h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t)
 
-        return Observable(h_pulse.matrix)
+        return Qobj(h_pulse)
 
 # Global Hamiltonian of the system (stationary term + pulse term) cast in the picture generated by
 # the Operator h_change_of_picture
@@ -367,9 +364,9 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
     -------
     Observable object representing the Hamiltonian of the pulse evaluated at time t in the new picture (in MHz).
     # """
-    h_cp = (h_unperturbed + h_multiple_mode_pulse(spin, mode, t) - \
-            h_change_of_picture).changed_picture(h_change_of_picture, t)
-    return Observable(h_cp.matrix)
+    h_cp = changed_picture((h_unperturbed + h_multiple_mode_pulse(spin, mode, t) - \
+            h_change_of_picture), h_change_of_picture, t)
+    return Qobj(h_cp)
 
 def h_j_coupling(spins, j_matrix):
     """
@@ -394,23 +391,28 @@ def h_j_coupling(spins, j_matrix):
     Observable object acting on the full Hilbert space of the spins' system
     representing the Hamiltonian of the J-coupling between the spins.  
     """
-    h_j = Operator(spins.d)*0
+    # dimensions of vector inputs to tensor; should be same as dual vector 
+    # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv. 
+    # to matrix being square.
+    dims = [s.d for s in spins.spin]
+    h_j = Qobj(np.zeros((spins.d, spins.d)), dims=[dims, dims])
+    
     # row 
     for m in range(j_matrix.shape[0]):
         # column 
         for n in range(m):            
-            term_nm = j_matrix[n, m]*spins.spin[n].I['z']
+            term_nm = j_matrix[n, m] * spins.spin[n].I['z']
             for l in range(n):
-                term_nm = tensor_product(Operator(spins.spin[l].d), term_nm)
+                term_nm = tensor(Qobj(np.eye(spins.spin[l].d)), term_nm)
             for k in range(m)[n+1:]:
-                term_nm = tensor_product(term_nm, Operator(spins.spin[k].d))
-            term_nm = tensor_product(term_nm, spins.spin[m].I['z'])
+                term_nm = tensor(term_nm, Qobj(np.eye(spins.spin[k].d)))
+            term_nm = tensor(term_nm, spins.spin[m].I['z'])
             for j in range(spins.n_spins)[m+1:]:
-                term_nm = tensor_product(term_nm, Operator(spins.spin[j].d))
+                term_nm = tensor(term_nm, Qobj(np.eye(spins.spin[j].d)))
                             
             h_j = h_j + term_nm
             
-    return h_j.cast_to_observable()
+    return h_j
 
 def h_CS_isotropic(spin, delta_iso, B_0):
     """
@@ -438,7 +440,7 @@ def h_CS_isotropic(spin, delta_iso, B_0):
     if B_0<0: raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
     h_cs = -delta_iso*spin.gyro_ratio_over_2pi*B_0 \
           *spin.I['z']
-    return Observable(h_cs.matrix)
+    return Qobj(h_cs)
 
 def h_D1(spins,  b_D, theta):
     """
@@ -458,11 +460,11 @@ def h_D1(spins,  b_D, theta):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
     
     """
-    h_d1 = b_D*(1/2)*(3*(math.cos(theta)**2)-1)*( \
-            2*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z'])-\
-            tensor_product(spins.spin[0].I['x'], spins.spin[1].I['x']) -\
-            tensor_product(spins.spin[0].I['y'], spins.spin[1].I['y']) )
-    return Observable(h_d1.matrix)
+    h_d1 = b_D * (1/2) * (3 * (math.cos(theta) ** 2)-1) * \
+            (2 * tensor(spins.spin[0].I['z'], spins.spin[1].I['z'])-\
+            tensor(spins.spin[0].I['x'], spins.spin[1].I['x']) -\
+            tensor(spins.spin[0].I['y'], spins.spin[1].I['y']) )
+    return Qobj(h_d1)
 
 def h_D2(spins,  b_D, theta):
     """
@@ -483,8 +485,8 @@ def h_D2(spins,  b_D, theta):
     
     """
     h_d2 = b_D*(3*(math.cos(theta)**2)-1)*( \
-            tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z']) )
-    return Observable(h_d2.matrix)
+            tensor(spins.spin[0].I['z'], spins.spin[1].I['z']) )
+    return Qobj(h_d2)
         
     
 def h_HF_secular(spins,  A, B):
@@ -505,9 +507,9 @@ def h_HF_secular(spins,  A, B):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
     
     """
-    h_hf = A*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z']) +\
-           B*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['x'])
-    return Observable(h_hf.matrix)
+    h_hf = A * tensor(spins.spin[0].I['z'], spins.spin[1].I['z']) +\
+           B * tensor(spins.spin[0].I['z'], spins.spin[1].I['x'])
+    return Qobj(h_hf)
 
 def h_j_secular(spins,  J):
     """
@@ -525,22 +527,25 @@ def h_j_secular(spins,  J):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
     
     """
-    h_j = 2*np.pi*J*tensor_product(spins.spin[0].I['z'], spins.spin[1].I['z'])
-    return Observable(h_j.matrix)
+    h_j = 2*np.pi*J*tensor(spins.spin[0].I['z'], spins.spin[1].I['z'])
+    return Qobj(h_j)
 
-def h_tensor_coupling(spins, tensor):
+def h_tensor_coupling(spins, t):
     """
     Yields Hamiltonian representing an interaction of the form I_1 A I_2 where
     I_i are spin operators and A is a rank-2 tensor. Could for example be used 
     to obtain [hyperfine interaction Hamiltonian.](https://epr.ethz.ch/education/basic-concepts-of-epr/int--with-nucl--spins/hyperfine-interaction.html)
     Author: Lucas Brito
 
-     ### NOTE: This can be used for any coupling that has a tensor interaction, such as the full checmical shift, and full dipolar interaction, where the appropriate matrix is passed. ###
-
+    NOTE: This can be used for any coupling that has a tensor interaction, such
+    as the full chemical shift, and full dipolar interaction, where the
+    appropriate matrix is passed.
+   
     Params
     ------
-    - spins: 2-spin system under study 
-    - tensor: a numpy ndarray representing the interaction tensor of this 
+    - spins: ManySpins
+             2-spin system under study 
+    - t: a numpy ndarray representing the interaction tensor of this 
               Hamiltonian. 
     
     Returns
@@ -552,14 +557,14 @@ def h_tensor_coupling(spins, tensor):
     i_1 = spins.spin[0].cartesian_operator()
     i_2 = spins.spin[1].cartesian_operator()
 
-
     # Initialize empty operator of appropriate dimension as base case for 
     # for loop. 
-    h = Operator(spins.d) * 0 
+    dims = [s.d for s in spins.spin]
+    h = Qobj(np.zeros((spins.d, spins.d)), dims=[dims, dims])
 
     for m in range(len(i_1)):
         for n in range(len(i_2)):
-            h += tensor[m, n] * (tensor_product(i_1[m], i_2[n]))
+            h += t[m, n] * tensor(i_1[m], i_2[n])
 
     return h 
 
