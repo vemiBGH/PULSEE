@@ -13,10 +13,7 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
-from .operators import magnus_expansion_1st_term, \
-                       magnus_expansion_2nd_term, \
-                       magnus_expansion_3rd_term, \
-                       canonical_density_matrix, \
+from .operators import canonical_density_matrix, \
                        free_evolution
 
 from .nuclear_spin import NuclearSpin, ManySpins

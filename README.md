@@ -130,7 +130,7 @@ Below, the content and usage of these modules is reported briefly:
   
     Takes two operators of arbitrary dimensions and returns their tensor product.
     
-  * `partial_trace`
+  * `ptrace_subspace`
   
     Takes an operator acting on the Hilbert space of a many-particle system and extracts its partial trace over the specified subspace.
 

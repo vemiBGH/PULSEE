@@ -9,7 +9,7 @@ from qutip import Qobj
 
 from pulsee.operators import random_operator, random_density_matrix, random_observable
 
-from pulsee.many_body import partial_trace
+from pulsee.many_body import ptrace_subspace
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 
@@ -94,7 +94,7 @@ def test_interaction_picture_leaves_pulse_hamiltonian_unaltered_when_commutative
     h_pulse_ip = h_changed_picture(spin, mode, h_unperturbed, h_unperturbed, 10.)
     assert np.all(np.isclose(h_pulse, h_pulse_ip, rtol=1e-10))
     
-def test_partial_trace_j_coupling_hamiltonian_over_non_interacting_spins_subspaces():
+def test_ptrace_subspace_j_coupling_hamiltonian_over_non_interacting_spins_subspaces():
     spins = []
     for i in range(4):
         spins.append(NuclearSpin())
@@ -108,8 +108,8 @@ def test_partial_trace_j_coupling_hamiltonian_over_non_interacting_spins_subspac
         
     h_j = h_j_coupling(spin_system, j_matrix)
     
-    h_j_1 = partial_trace(h_j, [3, 3, 3, 3], 1)
-    h_j_2 = partial_trace(h_j, [3, 3, 3, 3], 2)
+    h_j_1 = ptrace_subspace(h_j, [3, 3, 3, 3], 1)
+    h_j_2 = ptrace_subspace(h_j, [3, 3, 3, 3], 2)
     
     assert np.all(np.isclose(h_j_2, Qobj(np.zeros((27, 27))), rtol = 1e-10))
     

@@ -217,33 +217,36 @@ def test_variance_formula(d):
     assert np.all(np.isclose(left_hand_side, right_hand_side, 1e-10))
 
 def observable_function(x):
-    matrix = np.array([[x, 1+1j*x**2],[1-1j*x**2, x**3]])
+    matrix = np.array([[x, 1 + 1j * x ** 2],[1 - 1j * x ** 2, x ** 3]])
     o = Qobj(matrix)
     return o
 
-def test_antihermitianity_magnus_1st_term():
-    times, time_step = np.linspace(0, 20, num=2001, retstep=True)
-    t_dep_hamiltonian = np.vectorize(observable_function)
-    sampled_hamiltonian = t_dep_hamiltonian(times)
-    magnus_1st = magnus_expansion_1st_term(sampled_hamiltonian, time_step)
-    magnus_1st_dagger = magnus_1st.dag()
-    assert np.all(np.isclose(magnus_1st_dagger.full(), -magnus_1st.full(), 1e-10))
 
-def test_antihermitianity_magnus_2nd_term():
-    times, time_step = np.linspace(0, 5, num=501, retstep=True)
-    t_dep_hamiltonian = np.vectorize(observable_function)
-    sampled_hamiltonian = t_dep_hamiltonian(times)
-    magnus_2nd = magnus_expansion_2nd_term(sampled_hamiltonian, time_step)
-    magnus_2nd_dagger = magnus_2nd.dag()
-    assert np.all(np.isclose(magnus_2nd_dagger.full(), -magnus_2nd.full(), 1e-10))
+# NOTE: Deprecated tests - Magnus expansion no longer used in evolution scheme
+#       as of QuTiP integration.
+# def test_antihermitianity_magnus_1st_term():
+#     times, time_step = np.linspace(0, 20, num=2001, retstep=True)
+#     t_dep_hamiltonian = observable_function
+#     sampled_hamiltonian = t_dep_hamiltonian(times)
+#     magnus_1st = magnus_expansion_1st_term(sampled_hamiltonian, time_step)
+#     magnus_1st_dagger = magnus_1st.dag()
+#     assert np.all(np.isclose(magnus_1st_dagger.full(), - magnus_1st.full(), 1e-10))
+
+# def test_antihermitianity_magnus_2nd_term():
+#     times, time_step = np.linspace(0, 5, num=501, retstep=True)
+#     t_dep_hamiltonian = np.vectorize(observable_function)
+#     sampled_hamiltonian = t_dep_hamiltonian(times)
+#     magnus_2nd = magnus_expansion_2nd_term(sampled_hamiltonian, time_step)
+#     magnus_2nd_dagger = magnus_2nd.dag()
+#     assert np.all(np.isclose(magnus_2nd_dagger.full(), -magnus_2nd.full(), 1e-10))
     
-def test_antihermitianity_magnus_3rd_term():
-    times, time_step = np.linspace(0, 1, num=101, retstep=True)
-    t_dep_hamiltonian = np.vectorize(observable_function)
-    sampled_hamiltonian = t_dep_hamiltonian(times)
-    magnus_3rd = magnus_expansion_3rd_term(sampled_hamiltonian, time_step)
-    magnus_3rd_dagger = magnus_3rd.dag()
-    assert np.all(np.isclose(magnus_3rd_dagger.full(), -magnus_3rd.full(), 1e-10))
+# def test_antihermitianity_magnus_3rd_term():
+#     times, time_step = np.linspace(0, 1, num=101, retstep=True)
+#     t_dep_hamiltonian = np.vectorize(observable_function)
+#     sampled_hamiltonian = t_dep_hamiltonian(times)
+#     magnus_3rd = magnus_expansion_3rd_term(sampled_hamiltonian, time_step)
+#     magnus_3rd_dagger = magnus_3rd.dag()
+#     assert np.all(np.isclose(magnus_3rd_dagger.full(), -magnus_3rd.full(), 1e-10))
     
 # Checks that the canonical density matrix computed with the function canonical_density_matrix reduces
 # to (1 - h*H_0/(k_B*T))/Z when the temperature T gets very large

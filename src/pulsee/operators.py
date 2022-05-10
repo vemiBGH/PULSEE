@@ -160,6 +160,7 @@ def commutator(A, B):
 
 def magnus_expansion_1st_term(h, time_step):
     """
+    NOTE: deprecated since QuTiP integration update.
     Returns the 1st order term of the Magnus expansion of the passed time-dependent Hamiltonian.
     
     Parameters
@@ -183,6 +184,7 @@ def magnus_expansion_1st_term(h, time_step):
 
 def magnus_expansion_2nd_term(h, time_step):
     """
+    NOTE: deprecated since QuTiP integration update.
     Returns the 2nd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
     
     Parameters
@@ -206,6 +208,7 @@ def magnus_expansion_2nd_term(h, time_step):
 
 def magnus_expansion_3rd_term(h, time_step):
     """
+    NOTE: deprecated since QuTiP integration update.
     Returns the 3rd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
     
     Parameters
