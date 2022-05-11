@@ -4,6 +4,7 @@ import math
 from fractions import Fraction
 
 from qutip import Options, mesolve, Qobj, tensor 
+import scipy.fft as fft
 
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
@@ -502,7 +503,7 @@ def evolve(spin, h_unperturbed, dm_initial, \
   
                      Hamiltonian of the nucleus at equilibrium (in MHz).
     
-    - dm_initial: DensityMatrix
+    - dm_initial: Qobj
   
                   Density matrix of the system at time t=0, just before the application of the pulse.
 
@@ -1118,9 +1119,45 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 1200, save=False,
     
     return fig
 
+ 
 
-def fourier_transform_signal(times, signal, frequency_start, frequency_stop, opposite_frequency=False):
+def fourier_transform_signal(signal, times, abs=False, padding=None):
+    if padding is not None: 
+        # This code by Stephen Carr
+        nt = len(times) #number of points
+        
+        # zero pad the ends to "interpolate" in frequency domain
+        zn = padding # power of zeros
+        N_z = 2 * (2 ** zn) + nt # number of elements in padded array
+        zero_pad = np.zeros(N_z, dtype=complex)
+        
+        M0_trunc_z = zero_pad
+        num = 2 ** zn
+        M0_trunc_z[num:(num + nt)] = signal
+        
+        # figure out the "frequency axis" after the FFT
+        dt = times[2] - times[1]
+        Fs = 1.0 / dt # max frequency sampling
+
+        # axis goes from - Fs / 2 to Fs / 2, with N_z steps
+        freq_ax = ((np.linspace(0, N_z, N_z) - 1/2) / N_z - 1/2) * Fs
+        
+        M_fft = fft.fftshift(fft.fft(fft.fftshift(M0_trunc_z)))
+        if abs:
+            M_fft = np.abs(M_fft)
+        return freq_ax, M_fft
+
+    ft = fft.fft(signal)
+    freq = fft.fftfreq(len(times), (times[-1] - times[0]) / len(times))
+    if abs: 
+        ft = np.abs(ft)
+    return freq, ft
+
+
+def legacy_fourier_transform_signal(times, signal, frequency_start, frequency_stop, opposite_frequency=False):
     """
+    Deprecated since QuTiP intergration; see simulation.fourier_transform_signal.
+
     Computes the Fourier transform of the passed time-dependent signal over the
     frequency interval [frequency_start, frequency_stop]. The implemented
     Fourier transform operation is
