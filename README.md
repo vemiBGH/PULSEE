@@ -273,7 +273,7 @@ gyromagnetic ratio x pulse field magnitude x pulse time
 
 is equal to pi/2. Setting a pulse made up of the single linearly polarized mode
 ```
-mode = pd.DataFrame([(1., 0.1, 0., math.pi/2, 0.)], 
+mode = pd.DataFrame([(1., 0.1, 0., np.pi/2, 0.)], 
                      columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 ```
 the pulse time should be equal to 5 us in order to produce a 90° rotation. Indeed, the effective amplitude of the wave is 0.05 T: the linearly polarized mode splits into two rotating waves, only one of which is in resonance with the system.

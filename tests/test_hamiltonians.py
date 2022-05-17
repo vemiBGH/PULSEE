@@ -24,13 +24,13 @@ from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
 def test_zeeman_hamiltonian_changes_sign_when_magnetic_field_is_flipped(par):
     spin = NuclearSpin()
     h_z1 = h_zeeman(spin, par[0], par[1], par[2])
-    h_z2 = h_zeeman(spin, math.pi-par[0], par[1]+math.pi, par[2])
+    h_z2 = h_zeeman(spin, np.pi-par[0], par[1]+np.pi, par[2])
     note("h_zeeman(theta, phi) = %r" % (h_z1))
     note("h_zeeman(pi-theta, phi+pi) = %r" % (h_z2))
     note("h_zeeman(pi-theta, phi+pi)+h_zeeman(theta, phi) = %r" % (np.absolute(h_z1.full() + h_z2.full())))
     assert np.all(np.absolute(h_z1.full() + h_z2.full()) < 1e-10)
     
-@given(gamma = st.lists(st.floats(min_value=0, max_value=2*math.pi), min_size=2, max_size=2))
+@given(gamma = st.lists(st.floats(min_value=0, max_value=2*np.pi), min_size=2, max_size=2))
 def test_h_quadrupole_independent_of_gamma_when_EFG_is_symmetric(gamma):
     spin = NuclearSpin()
     h_q1 = h_quadrupole(spin, 1, 0, 1, 1, gamma[0])
@@ -61,8 +61,8 @@ def test_periodicity_pulse_hamiltonian(n):
     nu = 5.
     t1 = 1.
     t2 = t1 + 2 * np.pi * n/nu 
-    h_p1 = h_single_mode_pulse(spin, nu, 10., 0, math.pi/2, 0, t1)
-    h_p2 = h_single_mode_pulse(spin, nu, 10., 0, math.pi/2, 0, t2)
+    h_p1 = h_single_mode_pulse(spin, nu, 10., 0, np.pi/2, 0, t1)
+    h_p2 = h_single_mode_pulse(spin, nu, 10., 0, np.pi/2, 0, t2)
     note("h_single_mode_pulse(t1) = %r" % (h_p1))
     note("h_single_mode_pulse(t2) = %r" % (h_p2))
     assert np.all(np.isclose(h_p1.full(), h_p2.full(), rtol=1e-10))
@@ -74,10 +74,10 @@ def test_periodicity_pulse_hamiltonian(n):
 def test_time_reversal_equivalent_opposite_circular_polarization(t):
     spin = NuclearSpin(1., 1.)
     mode_forward = pd.DataFrame([(5., 10., 0., 0., 0.),
-                                 (5., 10., math.pi/2, math.pi/2, 0.)], 
+                                 (5., 10., np.pi/2, np.pi/2, 0.)], 
                                 columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     mode_backward = pd.DataFrame([(5., 10., 0., 0., 0.),
-                                  (5., 10., -math.pi/2, math.pi/2, 0.)], 
+                                  (5., 10., -np.pi/2, np.pi/2, 0.)], 
                                  columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     h_p_forward = h_multiple_mode_pulse(spin, mode_forward, t)
     h_p_backward = h_multiple_mode_pulse(spin, mode_backward, -t)
@@ -87,7 +87,7 @@ def test_time_reversal_equivalent_opposite_circular_polarization(t):
 # Schroedinger picture when it commutes with the unperturbed Hamiltonian
 def test_interaction_picture_leaves_pulse_hamiltonian_unaltered_when_commutative_property_holds():
     spin = NuclearSpin(1., 1.)
-    mode = pd.DataFrame([(5., 10., 0., math.pi/2, 0.)], 
+    mode = pd.DataFrame([(5., 10., 0., np.pi/2, 0.)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     h_unperturbed = 5.*spin.I['x']
     h_pulse = h_multiple_mode_pulse(spin, mode, 10.)

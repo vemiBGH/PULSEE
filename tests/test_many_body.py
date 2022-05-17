@@ -41,7 +41,7 @@ def test_ptrace_subspace_is_inverse_tensor_product(d):
     BC = tensor(B, C)
     ABC = tensor(AB, C)
     
-    p_t = ptrace_subspace(ABC, 0, subspaces_dimensions=[d-1, d, d + 1])
+    p_t = ptrace_subspace(ABC, [d-1, d, d + 1], 0)
     
     assert np.all(np.isclose(p_t.full(), BC.full(), rtol=1e-10))
 

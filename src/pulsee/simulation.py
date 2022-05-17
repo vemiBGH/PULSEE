@@ -3,8 +3,8 @@ import pandas as pd
 import math
 from fractions import Fraction
 
-from qutip import Options, mesolve, Qobj, tensor 
-import scipy.fft as fft
+from qutip import Options, mesolve, Qobj, tensor
+from qutip.solver import Result
 
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
@@ -15,7 +15,9 @@ from matplotlib.axes import Axes
 from matplotlib.patches import Patch
 
 from .operators import canonical_density_matrix, \
-                       free_evolution
+                       free_evolution, magnus_expansion_1st_term, \
+                       magnus_expansion_2nd_term, magnus_expansion_3rd_term, \
+                       changed_picture
 
 from .nuclear_spin import NuclearSpin, ManySpins
 
@@ -483,37 +485,30 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
     return fig
 
 
-def evolve(spin, h_unperturbed, dm_initial, \
-           mode=None, pulse_time=0, \
-           picture='RRF', RRF_par={'nu_RRF': 0,
-                                   'theta_RRF': 0,
-                                   'phi_RRF': 0}, \
-           n_points=100):
+def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None, 
+            pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 
+            'phi_RRF': 0}, n_points=100, order=12):
     
     """
-    Simulates the evolution of the density matrix of a nuclear spin under the action of an electromagnetic pulse in a NMR/NQR experiment.
-  
+    Simulates the evolution of the density matrix of a nuclear spin under the
+    action of an electromagnetic pulse in a NMR/NQR experiment.
+    
     Parameters
     ----------
-    - spin: NuclearSpin
-  
+    - `spin`: NuclearSpin
             Spin under study.
     
-    - h_unperturbed: List[Qobj or (Qobj, function)]
-  
+    - `h_unperturbed`: List[Qobj or (Qobj, function)]
                      Hamiltonian of the nucleus at equilibrium (in MHz).
     
-    - dm_initial: Qobj
-  
+    - `dm_initial`: Qobj
                   Density matrix of the system at time t=0, just before the application of the pulse.
 
-    - solver: function
+    - `solver`: function (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
+                Solution method to be used when calculating 
+                time evolution of state. 
 
-              Qutip solver (i.e., solution method) to be used when calculating 
-              time evolution of state. 
-
-    - mode: pandas.DataFrame
-  
+    - `mode`: pandas.DataFrame
             Table of the parameters of each electromagnetic mode in the pulse.
             It is organised according to the following template:
 
@@ -531,31 +526,28 @@ def evolve(spin, h_unperturbed, dm_initial, \
             
             The default value is None.
     
-    - pulse_time: float
-  
+    - `pulse_time`: float
                   Duration of the pulse of radiation sent onto the sample (in microseconds).
                   
                   The default value is 0.
     
-    - picture: string
-  
+    - `picture`: string
                Sets the dynamical picture where the density matrix of the system is evolved. May take the values:
         1. IP', which sets the interaction picture;
         2.'RRF' (or anything else), which sets the picture corresponding to a rotating reference frame whose features are specified in argument RRF_par.
     
                The default value is RRF.
     
-    - RRF_par: dict
-  
+    - `RRF_par`: dict
                Specifies the properties of the rotating reference frame where evolution is carried out when picture='RRF'. The details on the organisation of these data can be found in the description of function RRF_Operator.
-    
                By default, all the values in this map are set to 0 (RRF equivalent to the LAB frame).
     
-    - n_points: float
-  
+    - `n_points`: float
                 Counts the number of points in which the time interval [0, pulse_time] is sampled in the discrete approximation of the time-dependent Hamiltonian of the system.
-    
                 Default value is 10.
+
+    - `order`: integer 
+               The order of the simulation method to use. For `magnus` must be <= 3. 
   
     Action
     ------
@@ -576,25 +568,32 @@ def evolve(spin, h_unperturbed, dm_initial, \
                                     - np.eye(spin.d))) < 1e-10):
         return dm_initial
     
-    if picture == 'IP':
-        o_change_of_picture = h_unperturbed
-    else:
-        o_change_of_picture = RRF_operator(spin, RRF_par)
         
     if mode is None:
         mode = pd.DataFrame([(0., 0., 0., 0., 0)], 
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
-    times, time_step = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
+
+    times = np.linspace(0, pulse_time, num=max(2, int(n_points)))
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
     h_perturbation = h_multiple_mode_pulse(spin, mode, t=0,
                                             factor_t_dependence=True)
 
     # match tolerance to operators.posititivity tolerance.
-    opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+    opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
     h = h_unperturbed + h_perturbation
-    result = mesolve(h, Qobj(dm_initial), times, options=opts)
+    result = None
+    if solver == magnus: 
+        if picture == 'IP':
+            o_change_of_picture = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
+        else:
+            o_change_of_picture = RRF_operator(spin, RRF_par)
+
+        h_total = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
+        result = magnus(h_total, Qobj(dm_initial), spin, times, mode, o_change_of_picture, options=opts)
+    else: 
+        result = solver(h, Qobj(dm_initial), times, options=opts)
     final_state = result.states[-1]
     return final_state # return last time step of density matrix evolution.
 
@@ -1051,7 +1050,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
             * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
     for t in times:
         dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
-        FID.append((dm_t*I_plus_rotated*np.exp(-t/T2)*np.exp(-1j*2*math.pi*reference_frequency*t)).tr())
+        FID.append((dm_t*I_plus_rotated*np.exp(-t/T2)*np.exp(-1j*2*np.pi*reference_frequency*t)).tr())
     
     return times, np.array(FID)
 
@@ -1142,13 +1141,13 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
         # axis goes from - Fs / 2 to Fs / 2, with N_z steps
         freq_ax = ((np.linspace(0, N_z, N_z) - 1/2) / N_z - 1/2) * Fs
         
-        M_fft = fft.fftshift(fft.fft(fft.fftshift(M0_trunc_z)))
+        M_fft = np.fft.fftshift(np.fft.fft(np.fft.fftshift(M0_trunc_z)))
         if abs:
             M_fft = np.abs(M_fft)
         return freq_ax, M_fft
 
-    ft = fft.fft(signal)
-    freq = fft.fftfreq(len(times), (times[-1] - times[0]) / len(times))
+    ft = np.fft.fft(signal)
+    freq = np.fft.fftfreq(len(times), (times[-1] - times[0]) / len(times))
     if abs: 
         ft = np.abs(ft)
     return freq, ft
@@ -1214,7 +1213,7 @@ def legacy_fourier_transform_signal(times, signal, frequency_start, frequency_st
         for nu in frequencies:
             integral = np.zeros(sign_options, dtype=complex)
             for t in range(len(times)):
-                integral[s] = integral[s] + np.exp(-1j*2*math.pi*(1-2*s)*nu*times[t])*signal[t]*dt
+                integral[s] = integral[s] + np.exp(-1j*2*np.pi*(1-2*s)*nu*times[t])*signal[t]*dt
             fourier[s].append(integral[s])
         
     if opposite_frequency == False:
@@ -1283,14 +1282,14 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         if int_imag_fourier > 0:
             return 0
         else:
-            return math.pi
+            return np.pi
     
     atan = math.atan(-int_imag_fourier/int_real_fourier)
     
     if int_real_fourier > 0:
-        phase = atan + math.pi/2
+        phase = atan + np.pi/2
     else:
-        phase = atan - math.pi/2
+        phase = atan - np.pi/2
         
     return phase
 
@@ -1299,7 +1298,8 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, 
-                           scaling_factor=None, fig_dpi = 1200, show=True, save=False, name='FTSignal', destination=''):
+                           scaling_factor=None, fig_dpi = 1200, show=True, save=False, 
+                           name='FTSignal', destination=''):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
   
@@ -1404,6 +1404,35 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig
 
 
+def magnus(h_unperturbed, rho0, spin, tlist, mode, o_change_of_picture, options=Options()):
+    """
+    Magnus expansion solver. 
+    """
+
+    if options.order > 3: 
+        raise ValueError('Magnus expansion solver does not support order > 3. ' + \
+                        f'Given order {options.order}.')
+    output = Result()
+    output.times = tlist 
+    output.solver = 'magnus'
+    time_step = tlist[1] - tlist[0]
+
+    h_new_picture = []
+    for t in tlist:
+        h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
+    
+    magnus_exp = magnus_expansion_1st_term(h_new_picture, time_step)
+    if options.order > 1:
+        magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_new_picture, time_step)
+        if options.order > 2:
+            magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_new_picture, time_step)
+        
+    dm_evolved_new_picture = rho0.transform((- magnus_exp).expm())
+    dm_evolved = changed_picture(dm_evolved_new_picture, o_change_of_picture, tlist[-1] - tlist[0], invert=True)
+    output.states = [rho0, dm_evolved]
+    return output
+
+        
 
 
 

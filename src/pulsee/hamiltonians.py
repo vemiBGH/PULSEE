@@ -332,14 +332,23 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     else:
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                h_pulse = Qobj(np.eye(spin.d))*0
+                # dimensions of vector inputs to tensor; should be same as dual vector 
+                # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv. 
+                # to matrix being square.
+                dims = [s.d for s in spin.spin]
+                h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
+
+                # Construct tensor product of operators acting on each spin.
+                # Take a tensor product where every operator except the nth 
+                # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i], phase[i], theta[i], phi[i], t)
+                    term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i],
+                            phase[i], theta[i], phi[i], t, factor_t_dependence=False)
                     for m in range(spin.n_spins)[:n]:
                         term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
                     for l in range(spin.n_spins)[n+1:]:
-                        term_n = tensor(term_n, Qobj((spin.spin[l].d)))
-                    h_pulse = h_pulse + term_n
+                        term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
+                    h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 h_pulse = h_pulse + h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t)
@@ -364,8 +373,9 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
     -------
     Observable object representing the Hamiltonian of the pulse evaluated at time t in the new picture (in MHz).
     # """
-    h_cp = changed_picture((h_unperturbed + h_multiple_mode_pulse(spin, mode, t) - \
-            h_change_of_picture), h_change_of_picture, t)
+    h_pulse = h_multiple_mode_pulse(spin, mode, t)
+    h_cp = changed_picture((h_unperturbed + h_pulse - h_change_of_picture),\
+            h_change_of_picture, t)
     return Qobj(h_cp)
 
 def h_j_coupling(spins, j_matrix):
