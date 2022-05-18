@@ -590,8 +590,14 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
 
+        h_new_picture = []
+        for t in times:
+            h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
+        
+
         h_total = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
-        result = magnus(h_total, Qobj(dm_initial), spin, times, mode, o_change_of_picture, options=opts)
+        result = magnus(h_total, Qobj(dm_initial), times, options=opts)
+        dm_evolved = changed_picture(result.states[-1], o_change_of_picture, times[-1] - times[0], invert=True)
     else: 
         result = solver(h, Qobj(dm_initial), times, options=opts)
     final_state = result.states[-1]
@@ -1404,7 +1410,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig
 
 
-def magnus(h_unperturbed, rho0, spin, tlist, mode, o_change_of_picture, options=Options()):
+def magnus(h, rho0, tlist, options=Options()):
     """
     Magnus expansion solver. 
     """
@@ -1419,7 +1425,7 @@ def magnus(h_unperturbed, rho0, spin, tlist, mode, o_change_of_picture, options=
 
     h_new_picture = []
     for t in tlist:
-        h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
+        h_new_picture.append(h(t, ()))
     
     magnus_exp = magnus_expansion_1st_term(h_new_picture, time_step)
     if options.order > 1:
@@ -1428,8 +1434,7 @@ def magnus(h_unperturbed, rho0, spin, tlist, mode, o_change_of_picture, options=
             magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_new_picture, time_step)
         
     dm_evolved_new_picture = rho0.transform((- magnus_exp).expm())
-    dm_evolved = changed_picture(dm_evolved_new_picture, o_change_of_picture, tlist[-1] - tlist[0], invert=True)
-    output.states = [rho0, dm_evolved]
+    output.states = [rho0, dm_evolved_new_picture]
     return output
 
         
