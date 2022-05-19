@@ -593,15 +593,15 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         h_new_picture = []
         for t in times:
             h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
-        
 
         h_total = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
         result = magnus(h_total, Qobj(dm_initial), times, options=opts)
         dm_evolved = changed_picture(result.states[-1], o_change_of_picture, times[-1] - times[0], invert=True)
+        return dm_evolved
     else: 
         result = solver(h, Qobj(dm_initial), times, options=opts)
-    final_state = result.states[-1]
-    return final_state # return last time step of density matrix evolution.
+        final_state = result.states[-1]
+        return final_state # return last time step of density matrix evolution.
 
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame
