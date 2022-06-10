@@ -443,12 +443,15 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
 
     - fig_dpi: int
 
-            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
-
+            Image quality of the figure when showing and saving. Useful for
+            publications. Default set to very high value.
+            
     - save: bool
   
-            When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
-    
+            When False, the plotted graph will not be saved on disk. When True,
+            it will be saved with the name passed as name and in the directory
+            passed as destination.
+            
             Default value is False.
     
     - name: string
@@ -459,17 +462,21 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
     
     - destination: string
   
-                   Path of the directory where the graph will be saved (starting from the current directory). The name of the directory must be terminated with a slash /.
-    
+                   Path of the directory where the graph will be saved (starting
+                   from the current directory). The name of the directory must
+                   be terminated with a slash /.
+                   
                    Default value is the empty string (current directory).
-    
+                   
     Action
     ------
-    If show=True, generates a graph with the frequencies of transition on the x axis and the corresponding intensities on the y axis.
+    If show=True, generates a graph with the frequencies of transition on the x
+    axis and the corresponding intensities on the y axis.
     
     Returns
     -------
-    An object of the class matplotlib.figure.Figure representing the figure built up by the function.
+    An object of the class matplotlib.figure.Figure representing the figure
+    built up by the function.  
     """
     fig = plt.figure()
     
@@ -487,7 +494,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None, 
             pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 
-            'phi_RRF': 0}, n_points=100, order=12):
+            'phi_RRF': 0}, n_points=100, order=None):
     
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -505,8 +512,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                   Density matrix of the system at time t=0, just before the application of the pulse.
 
     - `solver`: function (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
-                Solution method to be used when calculating 
-                time evolution of state. 
+                OR 
+                String
+                Solution method to be used when calculating time evolution of
+                state. If string, must be either `mesolve` or `magnus.`
 
     - `mode`: pandas.DataFrame
             Table of the parameters of each electromagnetic mode in the pulse.
@@ -532,22 +541,34 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                   The default value is 0.
     
     - `picture`: string
-               Sets the dynamical picture where the density matrix of the system is evolved. May take the values:
+               Sets the dynamical picture where the density matrix of the system
+               is evolved for the `magnus` solver. May take the values:
+               
         1. IP', which sets the interaction picture;
-        2.'RRF' (or anything else), which sets the picture corresponding to a rotating reference frame whose features are specified in argument RRF_par.
-    
+        2.'RRF' (or anything else), which sets the picture corresponding to a
+        rotating reference frame whose features are specified in argument
+        RRF_par.
+        
                The default value is RRF.
+               
+               The choice of picture has no effect on solvers other than `magnus`.
     
     - `RRF_par`: dict
-               Specifies the properties of the rotating reference frame where evolution is carried out when picture='RRF'. The details on the organisation of these data can be found in the description of function RRF_Operator.
-               By default, all the values in this map are set to 0 (RRF equivalent to the LAB frame).
-    
+               Specifies the properties of the rotating reference frame where
+               evolution is carried out when picture='RRF'. The details on the
+               organisation of these data can be found in the description of
+               function RRF_Operator.  By default, all the values in this map
+               are set to 0 (RRF
+               equivalent to the LAB frame).
+               
     - `n_points`: float
-                Counts the number of points in which the time interval [0, pulse_time] is sampled in the discrete approximation of the time-dependent Hamiltonian of the system.
-                Default value is 10.
+                Counts the number of points in which the time interval [0,
+                pulse_time] is sampled in the discrete approximation of the
+                time-dependent Hamiltonian of the system.  Default value is 10.
 
     - `order`: integer 
                The order of the simulation method to use. For `magnus` must be <= 3. 
+               Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
   
     Action
     ------
@@ -581,23 +602,37 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                                             factor_t_dependence=True)
 
     # match tolerance to operators.posititivity tolerance.
+    if order is None and (solver == magnus or solver == 'magnus'):
+        order = 3
+    elif order is None: 
+        order = 12
+
     opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
     h = h_unperturbed + h_perturbation
     result = None
-    if solver == magnus: 
+    if solver == magnus or solver == 'magnus': 
+        o_change_of_picture = None
         if picture == 'IP':
             o_change_of_picture = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
-
-        h_new_picture = []
-        for t in times:
-            h_new_picture.append(h_changed_picture(spin, mode, h_unperturbed, o_change_of_picture, t))
-
         h_total = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
-        result = magnus(h_total, Qobj(dm_initial), times, options=opts)
+        h_new_picture = []
+        for t in times: 
+            h_new_picture.append(h_changed_picture(spin, mode, h_total, o_change_of_picture, t))
+
+        result = magnus(h_new_picture, Qobj(dm_initial), times, options=opts)
         dm_evolved = changed_picture(result.states[-1], o_change_of_picture, times[-1] - times[0], invert=True)
         return dm_evolved
+
+    elif solver == mesolve or solver == 'mesolve':
+        result = mesolve(h, Qobj(dm_initial), times, options=opts)
+        final_state = result.states[-1]
+        return final_state # return last time step of density matrix evolution.
+
+    elif type(solver) == str:
+        raise ValueError('Invalid solver: ' + solver)
+
     else: 
         result = solver(h, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
@@ -1410,9 +1445,25 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig
 
 
-def magnus(h, rho0, tlist, options=Options()):
+def magnus(h_list, rho0, tlist, options=Options()):
     """
     Magnus expansion solver. 
+
+    Parameters: 
+    -----------
+    - `h_list`: Iterable[Qobj]
+                List of Hamiltonians at each time in `tlist`.
+    - `rho0`: Qobj
+              Initial density matrix 
+    - `tlist`: Iterable[float]
+               List of times at which the system will be solved. 
+    - `options`: qutip.Options
+                 Options for this solver. Default: see default `Options`
+                 instance as specified by QuTiP.  
+    
+    Returns:
+    --------
+    qutip.Result instance with the evolved density matrix. 
     """
 
     if options.order > 3: 
@@ -1423,15 +1474,11 @@ def magnus(h, rho0, tlist, options=Options()):
     output.solver = 'magnus'
     time_step = tlist[1] - tlist[0]
 
-    h_new_picture = []
-    for t in tlist:
-        h_new_picture.append(h(t, ()))
-    
-    magnus_exp = magnus_expansion_1st_term(h_new_picture, time_step)
+    magnus_exp = magnus_expansion_1st_term(h_list, time_step)
     if options.order > 1:
-        magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_new_picture, time_step)
+        magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_list, time_step)
         if options.order > 2:
-            magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_new_picture, time_step)
+            magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_list, time_step)
         
     dm_evolved_new_picture = rho0.transform((- magnus_exp).expm())
     output.states = [rho0, dm_evolved_new_picture]

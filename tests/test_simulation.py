@@ -95,9 +95,6 @@ def test_pi_pulse_yields_population_inversion():
     mode = pd.DataFrame([(10., 1., 0., np.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
-    # For now test using mesolve master equation solver
-    # TODO test fails because evolved density matrix has one eigenvalue JUST 
-    # below positivity thresh. consider more forgiving threshold.
     dm_evolved = evolve(spin, h_unperturbed, dm_initial, mesolve,
                                     mode=mode, pulse_time=2 * np.pi, picture='IP')
     
