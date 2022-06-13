@@ -5,6 +5,8 @@ import math
 from fractions import Fraction
 
 from qutip import Options, mesolve, Qobj, tensor, expect
+from qutip.parallel import parallel_map
+from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 from qutip.solver import Result
 
 import matplotlib.pylab as plt
@@ -1484,7 +1486,18 @@ def magnus(h_list, rho0, tlist, options=Options()):
     return output
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops, fid=False):
+def _ed_evolve_solve_t(t, h, rho0, e_ops):
+    u1, d1, d1exp = exp_diagonalize(-1j * h * t)
+    u2, d2, d2exp = exp_diagonalize(1j * h * t)
+
+    rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv() 
+
+    exp = np.transpose([[expect(op, rho) for op in e_ops]])
+    
+    return rho, exp
+
+
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
     """
     Evolve the given density matrix with the interactions given by the provided 
     Hamiltonian using exact diagonalization. 
@@ -1505,6 +1518,9 @@ def ed_evolve(h, rho0, spin, tlist, e_ops, fid=False):
              Whether to return the free induction decay (FID) signal as 
              an expectation value. If True, appends FID signal to the end of 
              the `e_ops` expectation value list. 
+    - `par`: Boolean
+             Whether to use QuTiP's parallel computing implementation `parallel_map` 
+             to evolve the system.
     
     Returns
     ------
@@ -1518,20 +1534,31 @@ def ed_evolve(h, rho0, spin, tlist, e_ops, fid=False):
     if fid: 
         e_ops.append(spin.I['+'])
 
-    rhot = []
-    e_opst = [[] for i in range(len(e_ops))]
-    for t in tlist: 
-        u1, d1, d1exp = exp_diagonalize(-1j * h * t)
-        u2, d2, d2exp = exp_diagonalize(1j * h * t)
-
-        rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv() 
-        rhot.append(rho)
-
-        e_opst = np.concatenate([e_opst, 
-                        np.transpose([[expect(op, rho) for op in e_ops]])],
-                    axis=1)
+    if par: 
+        res = None 
+        # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
+        try:
+            get_ipython().__class__.__name__
+            print('is ipynb')
+            res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
+        except NameError:
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,))
         
-    return rhot, e_opst
+        rhot = []
+        e_opst = []
+        for r, e in res: 
+            rhot.append(r)
+            e_opst.append(e)
+        return rhot, np.concatenate(e_opst, axis=1)
+    else:
+        rhot = []
+        e_opst = [[] for _ in range(len(e_ops))]
+        for t in tlist: 
+            rho, exp = _ed_evolve_solve_t(t)
+            e_opst = np.concatenate([e_opst, exp], axis=1)
+            rhot.append(rho)
+        return rhot, e_opst
+        
 
 
 def apply_rot_pulse(rho, duration, rot_axis):
