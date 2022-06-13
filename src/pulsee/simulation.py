@@ -1,13 +1,14 @@
+from pydoc import doc
 import numpy as np
 import pandas as pd
 import math
 from fractions import Fraction
 
-from qutip import Options, mesolve, Qobj, tensor
+from qutip import Options, mesolve, Qobj, tensor, expect
 from qutip.solver import Result
 
 import matplotlib.pylab as plt
-from matplotlib import colors as clrs
+from matplotlib import colors as clrs, docstring
 from matplotlib import colorbar as clrbar
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.pyplot import xticks, yticks
@@ -17,13 +18,11 @@ from matplotlib.patches import Patch
 from .operators import canonical_density_matrix, \
                        free_evolution, magnus_expansion_1st_term, \
                        magnus_expansion_2nd_term, magnus_expansion_3rd_term, \
-                       changed_picture
+                       changed_picture, exp_diagonalize
 
 from .nuclear_spin import NuclearSpin, ManySpins
 
 from .hamiltonians import h_zeeman, h_quadrupole, \
-                         v0_EFG, v1_EFG, v2_EFG, \
-                         h_single_mode_pulse, \
                          h_multiple_mode_pulse, \
                          h_changed_picture, \
                          h_j_coupling, \
@@ -1484,8 +1483,78 @@ def magnus(h_list, rho0, tlist, options=Options()):
     output.states = [rho0, dm_evolved_new_picture]
     return output
 
-        
 
+def ed_evolve(h, rho0, spin, tlist, e_ops, fid=False):
+    """
+    Evolve the given density matrix with the interactions given by the provided 
+    Hamiltonian using exact diagonalization. 
+    
+    Params
+    ------
+    - `h`: Qobj or List[Qobj]:
+           The Hamiltonian describing the system. 
+    - `rho0`: Qobj
+              The initial state of the system as a density matrix. 
+    - `spin`: NuclearSpin
+              The NuclearSpin object representing the system under study. 
+    - `tlist`: List[float]
+               List of times at which the system will be evolved. 
+    - `e_ops`: List[Qobj]:
+               List of oeprators for which to return the expectation values. 
+    - `fid`: Boolean
+             Whether to return the free induction decay (FID) signal as 
+             an expectation value. If True, appends FID signal to the end of 
+             the `e_ops` expectation value list. 
+    
+    Returns
+    ------
+    The evolved density matrix at times specified by `tlist`, and the expectation 
+    values of each operartor in `e_ops` at the times in `tlist`. The latter 
+    is in the format [e_op1[t], e_op2[t], ..., e_opn[t]]. 
+    """
+    if type(h) is not Qobj and type(h) is list: 
+        h = Qobj(np.sum(h, axis=0), dims=h[0].dims)
+
+    if fid: 
+        e_ops.append(spin.I['+'])
+
+    rhot = []
+    e_opst = [[] for i in range(len(e_ops))]
+    for t in tlist: 
+        u1, d1, d1exp = exp_diagonalize(-1j * h * t)
+        u2, d2, d2exp = exp_diagonalize(1j * h * t)
+
+        rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv() 
+        rhot.append(rho)
+
+        e_opst = np.concatenate([e_opst, 
+                        np.transpose([[expect(op, rho) for op in e_ops]])],
+                    axis=1)
+        
+    return rhot, e_opst
+
+
+def apply_rot_pulse(rho, duration, rot_axis):
+    """
+    Apply a "pulse" to the given state by rotating the given state by  
+    the given duration. I.e., transforms the density matrix by 
+    `U = exp(- i * duration * rot_axis)`:
+        `U * rho * U.dag()`
+
+    Parameters:
+    -----------
+    - `rho`: Qobj
+             The density matrix of the state to apply the pulse to.
+    - `duration`: float
+             The duration of the applied pulse.
+    - `rot_axis`: Qobj
+             Angular momentum operator for the corresponding axis of rotation. 
+
+    Returns:
+    --------
+    The transformed density matrix as a Qobj. 
+    """
+    return rho.transform((-1j * duration * rot_axis).expm())
 
 
 
