@@ -1487,6 +1487,27 @@ def magnus(h_list, rho0, tlist, options=Options()):
 
 
 def _ed_evolve_solve_t(t, h, rho0, e_ops):
+    """
+    Helper function for `ed_evolve`; uses exact diagonalization to evolve 
+    the given initial state rho0 by a time `t`. 
+
+    Params
+    ------
+    - `t`: float
+           The time up to which to evolve.
+    - `h`: Qobj or List[Qobj]:
+           The Hamiltonian describing the system. 
+    - `rho0`: Qobj
+              The initial state of the system as a density matrix. 
+    - `e_ops`: List[Qobj]:
+               List of oeprators for which to return the expectation values. 
+    
+    Returns
+    ------
+    The evolved density matrix at the time specified by `t`, and the expectation 
+    values of each operartor in `e_ops` at `t`. The latter is in the format
+    [e_op1[t], e_op2[t], ..., e_opn[t]]. 
+    """
     u1, d1, d1exp = exp_diagonalize(-1j * h * t)
     u2, d2, d2exp = exp_diagonalize(1j * h * t)
 
@@ -1501,7 +1522,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
     """
     Evolve the given density matrix with the interactions given by the provided 
     Hamiltonian using exact diagonalization. 
-    
+
     Params
     ------
     - `h`: Qobj or List[Qobj]:
@@ -1536,6 +1557,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
 
     if par: 
         res = None 
+        
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         try:
             get_ipython().__class__.__name__
