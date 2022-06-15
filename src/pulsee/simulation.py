@@ -422,7 +422,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi = 1200, save=False, name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi = 400, save=False, name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding frequencies.
   
@@ -677,7 +677,7 @@ def RRF_operator(spin, RRF_par):
     return Qobj(RRF_o)
 
 
-def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_dpi = 1200, save=False, show_legend = True, name='RealPartDensityMatrix', destination=''):
+def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_dpi = 400, save=False, xmin=None, xmax=None, ymin=None, ymax=None, show_legend = True, name='RealPartDensityMatrix', destination=''):
     """
     Generates a 3D histogram displaying the real part of the elements of the passed density matrix.
   
@@ -706,6 +706,10 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_
             When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
     
             Default value is False.
+    
+    - xmin, xmax, ymin, ymax : Float
+
+            Set axis limits of the graph.
     
     - name: string
   
@@ -813,6 +817,11 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_
     if(show_legend):
         ax.legend(handles=legend_elements, loc='upper left')
     
+    if (xmin is not None) and (xmax is not None):
+        plt.xlim(xmin, xmax)
+    if (ymin is not None) and (ymax is not None):
+        plt.ylim(ymin, ymax)
+    
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
     
@@ -853,7 +862,7 @@ def complex_phase_cmap():
 
     return cmap
 
-def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 1200, save=False, name='ComplexDensityMatrix', destination=''):
+def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 400, save=False, name='ComplexDensityMatrix', destination=''):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -1097,7 +1106,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     return times, np.array(FID)
 
 
-def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 1200, save=False, name='FIDSignal', destination=''):
+def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 400, save=False, name='FIDSignal', destination=''):
     """
     Plots the real part of the FID signal as a function of time.
   
@@ -1340,7 +1349,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, 
-                           scaling_factor=None, fig_dpi = 1200, show=True, save=False, 
+                           scaling_factor=None, fig_dpi = 400, show=True, save=False, 
                            name='FTSignal', destination=''):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
