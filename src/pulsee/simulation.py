@@ -1172,6 +1172,9 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 400, save=False, 
  
 
 def fourier_transform_signal(signal, times, abs=False, padding=None):
+    """
+    Take Fourier
+    """
     if padding is not None: 
         # This code by Stephen Carr
         nt = len(times) #number of points
@@ -1206,7 +1209,7 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
 
 def legacy_fourier_transform_signal(times, signal, frequency_start, frequency_stop, opposite_frequency=False):
     """
-    Deprecated since QuTiP intergration; see simulation.fourier_transform_signal.
+    Deprecated since QuTiP integration; see simulation.fourier_transform_signal.
 
     Computes the Fourier transform of the passed time-dependent signal over the
     frequency interval [frequency_start, frequency_stop]. The implemented

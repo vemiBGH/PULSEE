@@ -72,6 +72,37 @@ def test_correct_number_lines_power_absorption_spectrum(s):
     assert len(f)==(spin.d)*(spin.d-1)/2
     
 
+def test_magnus_pi_pulse_yields_population_inversion():
+    spin_par = {'quantum number' : 5/2,
+                'gamma/2pi' : 1.}
+    b0 = 10
+    b1 = 1 
+    zeem_par = {'field magnitude' : b0,
+                'theta_z' : 0,
+                'phi_z' : 0}
+    
+    quad_par = {'coupling constant' : 0.,
+                'asymmetry parameter' : 0.,
+                'alpha_q' : 0,
+                'beta_q' : 0,
+                'gamma_q' : 0}
+    
+    
+    initial_state = np.zeros((6, 6))
+    initial_state[0, 0] = 1
+    
+    spin, h_unperturbed, dm_initial = nuclear_system_setup(spin_par, quad_par, zeem_par,
+                                                           initial_state=initial_state)
+    
+    mode = pd.DataFrame([(2 * np.pi * b0, 2 * b1, 0., np.pi/2, 0)], 
+                        columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
+    
+    dm_evolved = evolve(spin, h_unperturbed, dm_initial, magnus,
+                                    mode=mode, pulse_time=1 / (2 * b1), picture='IP')
+    dm_evolved
+    assert np.all(np.isclose(dm_evolved[5, 5], 1, rtol=1e-1))
+
+
 def test_pi_pulse_yields_population_inversion():
     spin_par = {'quantum number' : 5/2,
                 'gamma/2pi' : 1.}
