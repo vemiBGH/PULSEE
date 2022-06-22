@@ -1,9 +1,7 @@
 import math
 import numpy as np
 
-from .operators import Operator, Observable
-
-from .many_body import tensor_product
+from qutip import Qobj, tensor
 
 class NuclearSpin:
     """
@@ -90,7 +88,7 @@ class NuclearSpin:
             for n in range(self.d):
                 if n - m == 1:
                     I_raising[m, n] = math.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n + 1))
-        return Operator(I_raising)
+        return Qobj(I_raising)
 
     def lowering_operator(self):
         """
@@ -101,7 +99,7 @@ class NuclearSpin:
             for n in range(self.d):
                 if n - m == -1:
                     I_lowering[m, n] = math.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n - 1))
-        return Operator(I_lowering)
+        return Qobj(I_lowering)
 
     def cartesian_operator(self):
         """
@@ -114,11 +112,11 @@ class NuclearSpin:
         - [2]: an Observable object standing for the z component of the spin;
         """
         I = []
-        I.append(Observable(((self.raising_operator() + self.lowering_operator())/2).matrix))
-        I.append(Observable(((self.raising_operator() - self.lowering_operator())/(2j)).matrix))
-        I.append(Observable(self.d))
+        I.append(Qobj(((self.raising_operator() + self.lowering_operator())/2)))
+        I.append(Qobj(((self.raising_operator() - self.lowering_operator())/(2j))))
+        I.append(Qobj(np.eye(self.d)))
         for m in range(self.d):
-            I[2].matrix[m, m] = self.quantum_number - m
+            I[2].data[m, m] = self.quantum_number - m
         return I    
 
 
@@ -180,18 +178,26 @@ class ManySpins(NuclearSpin):
         If component = +, -, an Operator object representing the corresponding spherical spin component is returned.
         If component = x, y, z, an Observable object representing the corresponding cartesian spin component is returned.
         """
-        many_spin_op = Operator(self.d)*0
+
+        # dimensions of vector inputs to tensor; should be same as dual vector 
+        # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv. 
+        # to matrix being square.
+        dims = [s.d for s in self.spin]
+        many_spin_op = Qobj(np.zeros((self.d, self.d)), dims=[dims, dims])
         
         for i in range(self.n_spins):
             term = self.spin[i].I[component]
             for j in range(self.n_spins)[:i]:
-                term = tensor_product(Operator(self.spin[j].d), term)
+                term = tensor(Qobj(np.eye(self.spin[j].d)), term)
             for k in range(self.n_spins)[i+1:]:
-                term = tensor_product(term, Operator(self.spin[k].d))
-            many_spin_op = many_spin_op + term
-            
-        if component in 'xyz':
-            many_spin_op = many_spin_op.cast_to_observable()
+                term = tensor(term, Qobj(np.eye(self.spin[k].d)))
+            many_spin_op = many_spin_op + Qobj(term.full(), dims=[dims, dims])
+            # Force proper dimensions due to mystery bug
+
+        # Below deprecated since QuTiP integration; not sure what it was doing
+        # other than typecasting, anyway. 
+        # if component in 'xyz':
+        #     many_spin_op = many_spin_op.cast_to_observable()
         
         return many_spin_op
             

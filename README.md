@@ -6,17 +6,96 @@ PULSEE is an open-source software for the simulation of typical nuclear quadrupo
 
 - [PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)](#pulsee-program-for-the-simulation-of-nuclear-spin-ensemble-evolution)
   - [Author: Davide Candoli (Università di Bologna)](#author-davide-candoli-università-di-bologna)
+  - [Example](#example)
   - [Physics background](#physics-background)
     - [Unit standard of the software](#unit-standard-of-the-software)
   - [Software](#software)
     - [Prerequisites](#prerequisites)
     - [Installation](#installation)
     - [Modules of the software](#modules-of-the-software)
-    - [Examples of execution](#examples-of-execution)
+    - [Further examples](#further-examples)
       - [Pure Zeeman experiment](#pure-zeeman-experiment)
       - [Perturbed Zeeman experiment](#perturbed-zeeman-experiment)
       - [Pure NQR experiment](#pure-nqr-experiment)
   - [Acknowledgements](#acknowledgements)
+
+## Example
+One can set up a simulation as follows. Import PULSEE's simulation module: 
+```
+from pulsee import simulation as sim
+```
+
+Define the system parameters as given by the function `nuclear_system_setup`'s
+documentation. For example, to include a Zeeman interaction and a quadrupolar
+interaction on a $s = 5/2$ system with $\gamma/ 2\pi = 1$, 
+```
+spin_par = {'quantum number' : 5/2,
+            'gamma/2pi' : 1.}
+
+zeem_par = {'field magnitude' : 10.,
+            'theta_z' : 0,
+            'phi_z' : 0}
+
+quad_par = {'coupling constant' : 0.,
+            'asymmetry parameter' : 0.,
+            'alpha_q' : 0,
+            'beta_q' : 0,
+            'gamma_q' : 0}
+```
+
+Now specify the initial state via a density matrix; in this case we choose 
+the $m = 5/2$ state given by the following density matrix:
+```
+initial_state = np.zeros((6, 6))
+initial_state[0, 0] = 1
+```
+
+We can then call `nuclear_system_setup` to produce the corresponding spin 
+operators (as `spin`), the Hamiltonian representing each of the specified 
+interactions (treated as an unperturbed Hamiltonian in the sense of perturbation
+theory), and the initial state's density matrix (in this case the same as
+specified above):
+```
+spin, h_unperturbed, dm_initial = nuclear_system_setup(spin_par, quad_par, zeem_par, \
+                                                        initial_state=initial_state)
+```
+
+We may now specify a pulse sequence to apply as a Pandas `DataFrame`: 
+```
+mode = pd.DataFrame([(10., 1., 0., np.pi/2, 0)], 
+                    columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
+```
+
+Finally we can evolve this state with 
+```
+from qutip import mesolve
+
+dm_evolved = evolve(spin, h_unperturbed, dm_initial, mesolve,
+                                mode=mode, pulse_time=2 * np.pi)
+```
+where we have chosen QuTiP's `mesolve` solver and a pulse time of $2\pi$ seconds.
+We can alternatively use `mesolve` using a string:
+```
+dm_evolved = evolve(spin, h_unperturbed, dm_initial, 'mesolve',
+                                mode=mode, pulse_time=2 * np.pi, picture='IP')
+```
+Other compatible solvers include the `magnus` magnus expansion solver that 
+can be imported from `pulsee.simulation` (which may also be specified as a 
+string `'magnus'`) or any solver function with signature `(Qobj, Qobj, ndarray,
+**kwargs) -> qutip.solver.Result`.
+
+To obtain the FID signal of the spins one can run 
+```
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=10, reference_frequency=0, n_points=10)
+```
+where `acquisition_time` denotes the amount of time we are capturing the FID signal, T2 is the (empirically determined) T2 decay time,
+`reference_frequency` is the frequency of rotation of the capturing reference frame, and `n_points` is the number of samples per microsecond 
+that are measured within the acquisition time. 
+
+To obtain the spectrum one can simply run 
+```
+f, ft = fourier_transform_signal(FID, t)
+```
 
 ## Physics background
 
@@ -130,7 +209,7 @@ Below, the content and usage of these modules is reported briefly:
   
     Takes two operators of arbitrary dimensions and returns their tensor product.
     
-  * `partial_trace`
+  * `ptrace_subspace`
   
     Takes an operator acting on the Hilbert space of a many-particle system and extracts its partial trace over the specified subspace.
 
@@ -220,23 +299,14 @@ Below, the content and usage of these modules is reported briefly:
   
   https://github.com/DavideCandoli/PULSEE/wiki/GUI
 
-### Examples of execution
+### Further examples
 
 Any simulation can be implemented using only the functions defined in the module
 `simulation`. Therefore, the imports required by a generic simulation code are
 the following: 
 
 ```
-from pulsee.simulation import nuclear_system_setup, \
-                              evolve, \
-                              power_absorption_spectrum, \
-                              plot_power_absorption_spectrum, \
-                              plot_real_part_density_matrix, \
-                              FID_signal, \
-                              plot_real_part_FID_signal, \
-                              fourier_transform_signal, \
-                              fourier_phase_shift, \
-                              plot_fourier_transform
+from pulsee.simulation import *
 ```
 
 #### Pure Zeeman experiment
@@ -273,14 +343,14 @@ gyromagnetic ratio x pulse field magnitude x pulse time
 
 is equal to pi/2. Setting a pulse made up of the single linearly polarized mode
 ```
-mode = pd.DataFrame([(1., 0.1, 0., math.pi/2, 0.)], 
+mode = pd.DataFrame([(1., 0.1, 0., np.pi/2, 0.)], 
                      columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 ```
 the pulse time should be equal to 5 us in order to produce a 90° rotation. Indeed, the effective amplitude of the wave is 0.05 T: the linearly polarized mode splits into two rotating waves, only one of which is in resonance with the system.
 
 Then, the state of the system is evolved and plotted with the following calls:
 ```
-dm_evolved = evolve(spin, h_unperturbed, dm_0, \
+dm_evolved = evolve(spin, h_unperturbed, dm_0, solver=magnus, \
                     mode=mode, pulse_time=5, \
                     picture = 'IP')
     
@@ -301,7 +371,7 @@ plot_real_part_FID_signal(t, fid)
 
 The Fourier analysis of the FID signal produces the NMR spectrum:
 ```
-f, ft = fourier_transform_signal(t, fid, -1.5, -0.5)
+f, ft = fourier_transform_signal(fid, t)
     
 plot_fourier_transform(f, ft)
 ```
@@ -361,7 +431,7 @@ while the evolved one is
 
 In this case, the frequencies of transition of the system have same modulus but opposite sign, namely 1 and -1 MHz. This means that both the rotating waves that make up the linearly polarized pulse are able to induce transitions. In order to visualize properly both the positive and negative resonance lines in the spectrum, the functions for the analysis of the FID must be run with the following parameters:
 ```
-f, ft, ft_n = fourier_transform_signal(t, fid, 0.5, 1.5, opposite_frequency=True)
+f, ft, ft_n = legacy_fourier_transform_signal(t, fid, 0.5, 1.5, opposite_frequency=True)
 
 plot_fourier_transform(f, ft, ft_n)
 ```
@@ -371,4 +441,4 @@ plot_fourier_transform(f, ft, ft_n)
 
 The program presented above was made possible thanks to professors Samuele Sanna (Università di Bologna) and Vesna Mitrovic (Brown University), who have been a great help in the interpretation of the physics simulated by the software.
 
-Further contributions to the developement of the program have been the advices given by Stephen Carr (Brown University) and professor Enrico Giampieri (Università di Bologna).
+Further contributions to the development of the program have been the advices given by Stephen Carr (Brown University) and professor Enrico Giampieri (Università di Bologna).

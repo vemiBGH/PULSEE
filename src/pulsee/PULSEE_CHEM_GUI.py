@@ -49,7 +49,7 @@ except ImportError as e:
     #This shouldn't be a problem in future updates of matplotlib and kivy.
 
 # NMR-NQRSimulationSoftware imports
-from pulsee.operators import Operator, density_matrix, Observable
+from qutip import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
@@ -131,11 +131,11 @@ class Simulation_Manager:
             
     spin = NuclearSpin()
     
-    h_unperturbed = Observable(1)
+    h_unperturbed = Qobj(np.eye(1))
         
     decoherence_time = 100.
         
-    dm = np.ndarray(5, dtype=DensityMatrix)
+    dm = np.ndarray(5, dtype=Qobj)
 
     FID_times = np.ndarray(1)
     
@@ -278,39 +278,39 @@ class System_Parameters(FloatLayout):
 
             sim_man.spin_par2['gamma/2pi'] = float(null_string(self.gyro2.text))
             
-            sim_man.zeem_par['theta_z'] = (float(null_string(self.theta_z.text))*math.pi)/180
+            sim_man.zeem_par['theta_z'] = (float(null_string(self.theta_z.text))*np.pi)/180
                         
-            sim_man.zeem_par['phi_z'] = (float(null_string(self.phi_z.text))*math.pi)/180
+            sim_man.zeem_par['phi_z'] = (float(null_string(self.phi_z.text))*np.pi)/180
             
             sim_man.quad_par['coupling constant'] = float(null_string(self.coupling.text))
             
             sim_man.quad_par['asymmetry parameter'] = float(null_string(self.asymmetry.text))
             
-            sim_man.quad_par['alpha_q'] = (float(null_string(self.alpha_q.text))*math.pi)/180
+            sim_man.quad_par['alpha_q'] = (float(null_string(self.alpha_q.text))*np.pi)/180
             
-            sim_man.quad_par['beta_q'] = (float(null_string(self.beta_q.text))*math.pi)/180
+            sim_man.quad_par['beta_q'] = (float(null_string(self.beta_q.text))*np.pi)/180
             
-            sim_man.quad_par['gamma_q'] = (float(null_string(self.gamma_q.text))*math.pi)/180
+            sim_man.quad_par['gamma_q'] = (float(null_string(self.gamma_q.text))*np.pi)/180
 
             sim_man.quad_par2['coupling constant'] = float(null_string(self.coupling2.text))
 
             sim_man.quad_par2['asymmetry parameter'] = float(null_string(self.asymmetry2.text))
 
-            sim_man.quad_par2['alpha_q'] = (float(null_string(self.alpha_q2.text))*math.pi)/180
+            sim_man.quad_par2['alpha_q'] = (float(null_string(self.alpha_q2.text))*np.pi)/180
 
-            sim_man.quad_par2['beta_q'] = (float(null_string(self.beta_q2.text))*math.pi)/180
+            sim_man.quad_par2['beta_q'] = (float(null_string(self.beta_q2.text))*np.pi)/180
 
-            sim_man.quad_par2['gamma_q'] = (float(null_string(self.gamma_q2.text))*math.pi)/180
+            sim_man.quad_par2['gamma_q'] = (float(null_string(self.gamma_q2.text))*np.pi)/180
 
             sim_man.cs_par['delta_iso'] = float(null_string(self.chemical_shift.text))
 
             sim_man.D1_par['b_D'] = float(null_string(self.bd1.text))
 
-            sim_man.D1_par['theta'] = (float(null_string(self.bdtheta1.text))*math.pi)/180
+            sim_man.D1_par['theta'] = (float(null_string(self.bdtheta1.text))*np.pi)/180
 
             sim_man.D2_par['b_D'] = float(null_string(self.bd2.text))
 
-            sim_man.D2_par['theta'] = (float(null_string(self.bdtheta2.text))*math.pi)/180
+            sim_man.D2_par['theta'] = (float(null_string(self.bdtheta2.text))*np.pi)/180
 
             sim_man.hf_par['A'] = float(null_string(self.hfA.text))
 
@@ -1127,16 +1127,16 @@ class Pulse_Sequence(FloatLayout):
                 for j in range(self.n_modes[i]):
                     sim_man.pulse[i]['frequency'][j] = float(null_string(self.frequency[i][j].text))
                     sim_man.pulse[i]['amplitude'][j] = float(null_string(self.amplitude[i][j].text))
-                    sim_man.pulse[i]['phase'][j] = (float(null_string(self.phase[i][j].text))*math.pi)/180
-                    sim_man.pulse[i]['theta_p'][j] = (float(null_string(self.theta_p[i][j].text))*math.pi)/180
-                    sim_man.pulse[i]['phi_p'][j] = (float(null_string(self.phi_p[i][j].text))*math.pi)/180
+                    sim_man.pulse[i]['phase'][j] = (float(null_string(self.phase[i][j].text))*np.pi)/180
+                    sim_man.pulse[i]['theta_p'][j] = (float(null_string(self.theta_p[i][j].text))*np.pi)/180
+                    sim_man.pulse[i]['phi_p'][j] = (float(null_string(self.phi_p[i][j].text))*np.pi)/180
                     sim_man.pulse_time[i] = float(null_string(self.pulse_times[i].text))
                                 
                 if self.RRF_btn[i].state == 'down':
                     sim_man.evolution_algorithm[i] = "RRF"
                     sim_man.RRF_par[i]['nu_RRF'] = float(null_string(self.RRF_frequency[i].text))
-                    sim_man.RRF_par[i]['theta_RRF'] = (float(null_string(self.RRF_theta[i].text))/180)*math.pi
-                    sim_man.RRF_par[i]['phi_RRF'] = (float(null_string(self.RRF_phi[i].text))/180)*math.pi
+                    sim_man.RRF_par[i]['theta_RRF'] = (float(null_string(self.RRF_theta[i].text))/180)*np.pi
+                    sim_man.RRF_par[i]['phi_RRF'] = (float(null_string(self.RRF_phi[i].text))/180)*np.pi
                 else:
                     sim_man.evolution_algorithm[i] = "IP"
                     
@@ -1363,9 +1363,9 @@ class NMR_Spectrum(FloatLayout):
             self.remove_widget(self.error_FID)
             self.remove_widget(self.tb_FID)
             
-            input_theta = (float(null_string(self.coil_theta.text))/180)*math.pi
+            input_theta = (float(null_string(self.coil_theta.text))/180)*np.pi
             
-            input_phi = (float(null_string(self.coil_phi.text))/180)*math.pi
+            input_phi = (float(null_string(self.coil_phi.text))/180)*np.pi
             
             input_time_aq = float(null_string(self.time_aq.text))
             
