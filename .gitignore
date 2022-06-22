@@ -7,3 +7,5 @@ notes/
 tests/.hypothesis/
 tests/__pycache__
 src/pulsee/__pycache__/
+.DS_Store
+__pycache__
