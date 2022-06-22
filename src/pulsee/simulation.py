@@ -29,7 +29,8 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
                          h_changed_picture, \
                          h_j_coupling, \
                          h_CS_isotropic, h_D1, h_D2,\
-                         h_HF_secular, h_j_secular, h_tensor_coupling
+                         h_HF_secular, h_j_secular, h_tensor_coupling,\
+                         h_userDefined
     
 
 def nuclear_system_setup(spin_par, 
@@ -41,7 +42,8 @@ def nuclear_system_setup(spin_par,
                          D2_param=None, 
                          hf_param=None, 
                          h_tensor_inter=None,
-                         j_sec_param=None, 
+                         j_sec_param=None,
+                         h_userDef=None,
                          initial_state='canonical', 
                          temperature=1e-4):
     """
@@ -197,7 +199,15 @@ def nuclear_system_setup(spin_par,
       When it is None, the interaction is not taken into account. 
 
       Default value is None.
-      
+
+    - h_userDef: numpy.ndarray
+
+      Square matrix array which will give the hamiltonian of the system, adding to
+      previous terms (if any). When passing, must ensure compability with the rest
+      of the system.
+
+      Default value is None.
+
     - initial_state: either string or numpy.ndarray
   
       Specifies the state of the system at time t=0.
@@ -327,7 +337,9 @@ def nuclear_system_setup(spin_par,
             for hyp_ten in h_tensor_inter:
                 h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten) \
                                                 )]
-    
+
+    if h_userDef is not None:
+        h_unperturbed += (h_userDefined(h_userDef))
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
                                                 temperature)
@@ -683,7 +695,7 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None, show=True, fig_
   
     Parameters
     ----------
-    - dm: DensityMatrix
+    - dm: DensityMatrix/numpy array as a square matrix
   
           Density matrix to be plotted.
           
@@ -872,7 +884,7 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
 
     Parameters
     ----------
-    - dm: DensityMatrix
+    - dm: DensityMatrix/numpy array as a square matrix
 
           Density matrix to be plotted.
 
