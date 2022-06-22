@@ -4,3 +4,6 @@ notes/
 .vscode/
 .hypothesis/
 .pytest_cache/
+tests/.hypothesis/
+tests/.pytest_cache
+src/pulsee/__pycache__/
