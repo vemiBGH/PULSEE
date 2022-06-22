@@ -5,5 +5,5 @@ notes/
 .hypothesis/
 .pytest_cache/
 tests/.hypothesis/
-tests/.pytest_cache
+tests/__pycache__
 src/pulsee/__pycache__/
