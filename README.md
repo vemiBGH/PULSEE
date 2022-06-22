@@ -359,7 +359,7 @@ plot_real_part_FID_signal(t, fid)
 
 The Fourier analysis of the FID signal produces the NMR spectrum:
 ```
-f, ft = fourier_transform_signal(t, fid, -1.5, -0.5)
+f, ft = fourier_transform_signal(fid, t)
     
 plot_fourier_transform(f, ft)
 ```
@@ -419,7 +419,7 @@ while the evolved one is
 
 In this case, the frequencies of transition of the system have same modulus but opposite sign, namely 1 and -1 MHz. This means that both the rotating waves that make up the linearly polarized pulse are able to induce transitions. In order to visualize properly both the positive and negative resonance lines in the spectrum, the functions for the analysis of the FID must be run with the following parameters:
 ```
-f, ft, ft_n = fourier_transform_signal(t, fid, 0.5, 1.5, opposite_frequency=True)
+f, ft, ft_n = legacy_fourier_transform_signal(t, fid, 0.5, 1.5, opposite_frequency=True)
 
 plot_fourier_transform(f, ft, ft_n)
 ```
@@ -429,4 +429,4 @@ plot_fourier_transform(f, ft, ft_n)
 
 The program presented above was made possible thanks to professors Samuele Sanna (Università di Bologna) and Vesna Mitrovic (Brown University), who have been a great help in the interpretation of the physics simulated by the software.
 
-Further contributions to the developement of the program have been the advices given by Stephen Carr (Brown University) and professor Enrico Giampieri (Università di Bologna).
+Further contributions to the development of the program have been the advices given by Stephen Carr (Brown University) and professor Enrico Giampieri (Università di Bologna).

@@ -8,6 +8,8 @@ from functools import partial
 # Write to file import
 import json
 
+from qutip import *
+
 # Generic graphics imports
 import matplotlib
 import matplotlib.pylab as plt
@@ -46,18 +48,14 @@ except ImportError as e:
     from backend_kivyagg import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
-from pulsee.operators import Operator, density_matrix, Observable
+from pulsee.operators import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.simulation import nuclear_system_setup, \
-                       power_absorption_spectrum, \
-                       evolve, RRF_operator, \
-                       plot_real_part_density_matrix, \
-                       FID_signal, plot_real_part_FID_signal, \
-                       fourier_transform_signal, \
-                       plot_fourier_transform, \
-                       fourier_phase_shift
+                       evolve, plot_real_part_density_matrix, \
+                       FID_signal, fourier_transform_signal, \
+                       plot_fourier_transform, fourier_phase_shift
 
 # This class defines the object responsible of the management of the inputs and outputs of the
 # simulation, mediating the interaction between the GUI and the computational core of the program.
@@ -106,11 +104,11 @@ class Simulation_Manager:
             
     spin = NuclearSpin()
     
-    h_unperturbed = Observable(1)
+    h_unperturbed = Qobj(np.eye(1))
         
     decoherence_time = 100.
         
-    dm = np.ndarray(5, dtype=DensityMatrix)
+    dm = np.ndarray(5, dtype=Qobj)
 
     FID_times = np.ndarray(1)
     

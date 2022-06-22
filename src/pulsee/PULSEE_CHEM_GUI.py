@@ -49,7 +49,7 @@ except ImportError as e:
     #This shouldn't be a problem in future updates of matplotlib and kivy.
 
 # NMR-NQRSimulationSoftware imports
-from pulsee.operators import Operator, density_matrix, Observable
+from qutip import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
@@ -131,11 +131,11 @@ class Simulation_Manager:
             
     spin = NuclearSpin()
     
-    h_unperturbed = Observable(1)
+    h_unperturbed = Qobj(np.eye(1))
         
     decoherence_time = 100.
         
-    dm = np.ndarray(5, dtype=DensityMatrix)
+    dm = np.ndarray(5, dtype=Qobj)
 
     FID_times = np.ndarray(1)
     
