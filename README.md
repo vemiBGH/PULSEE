@@ -84,6 +84,18 @@ can be imported from `pulsee.simulation` (which may also be specified as a
 string `'magnus'`) or any solver function with signature `(Qobj, Qobj, ndarray,
 **kwargs) -> qutip.solver.Result`.
 
+To obtain the FID signal of the spins one can run 
+```
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=10, reference_frequency=0, n_points=10)
+```
+where `acquisition_time` denotes the amount of time we are capturing the FID signal, T2 is the (empirically determined) T2 decay time,
+`reference_frequency` is the frequency of rotation of the capturing reference frame, and `n_points` is the number of samples per microsecond 
+that are measured within the acquisition time. 
+
+To obtain the spectrum one can simply run 
+```
+f, ft = fourier_transform_signal(FID, t)
+```
 
 ## Physics background
 
