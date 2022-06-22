@@ -4,43 +4,44 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee.operators import Operator, DensityMatrix, Observable, \
-                      random_operator, random_density_matrix, random_observable
+from qutip import tensor
 
-from pulsee.many_body import tensor_product, partial_trace
+from pulsee.operators import random_operator, random_density_matrix, random_observable
 
-@given(d = st.integers(min_value=1, max_value=8))
+from pulsee.many_body import ptrace_subspace
+
+@given(d = st.integers(min_value=2, max_value=8))
 @settings(deadline = None)
 def test_tensor_product_conserves_density_matrix_properties(d):
     A = random_density_matrix(d)
     B = random_density_matrix(d)
     
     try:
-        C = tensor_product(A, B)
+        C = tensor(A, B)
     except ValueError as ve:
         if "The input array lacks the following properties: \n" in ve.args[0]:
             error_message = ve.args[0][49:]
             error_message = "The tensor product of two DensityMatrix objects lacks the following properties: \n" + error_message
-            note("A = %r" % (A.matrix))
-            note("B = %r" % (B.matrix))
+            note("A = %r" % (A.full()))
+            note("B = %r" % (B.full()))
             raise AssertionError(error_message)
 
             
-@given(d = st.integers(min_value=2, max_value=6))
+@given(d = st.integers(min_value=3, max_value=6))
 @settings(deadline = None)
-def test_partial_trace_is_inverse_tensor_product(d):
-    A = random_operator(d-1)
-    A = A/A.trace()
+def test_ptrace_subspace_is_inverse_tensor_product(d):
+    A = random_operator(d - 1)
+    A = A / A.tr()
     B = random_operator(d)
-    B = B/B.trace()
+    B = B / B.tr()
     C = random_operator(d+1)
-    C = C/C.trace()
+    C = C / C.tr()
     
-    AB = tensor_product(A, B)
-    BC = tensor_product(B, C)
-    ABC = tensor_product(AB, C)
+    AB = tensor(A, B)
+    BC = tensor(B, C)
+    ABC = tensor(AB, C)
     
-    p_t = partial_trace(ABC, [d-1, d, d+1], 0)
+    p_t = ptrace_subspace(ABC, [d-1, d, d + 1], 0)
     
-    assert np.all(np.isclose(p_t.matrix, BC.matrix, rtol=1e-10))
+    assert np.all(np.isclose(p_t.full(), BC.full(), rtol=1e-10))
 
