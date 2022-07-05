@@ -43,7 +43,7 @@ from kivy.uix.popup import Popup
 
 try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
-except ImportError as e:
+except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
     from backend_kivyagg import FigureCanvasKivyAgg
 
