@@ -1288,7 +1288,7 @@ class Evolution_Results(FloatLayout):
                 print('\n')
     
             print("Temperature = " + str(sim_man.temperature) + " K")
-            print("Initial density matrix = " + str(sim_man.dm[0].matrix))
+            print("Initial density matrix = " + str(sim_man.dm[0]))
             print("Decoherence time = " + str(sim_man.decoherence_time) + " us")    
 
             # Panels showing the diagram of the density matrix evolved at each stage of the pulse
