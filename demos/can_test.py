@@ -3,10 +3,7 @@ import pandas as pd
 import math
 from pulsee.operators import * 
 from pulsee.simulation import *
-
 import matplotlib.pyplot as plt
-
-
 
 qn = 3/2
 gr = 1

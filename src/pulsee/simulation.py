@@ -1185,7 +1185,22 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi = 400, save=False, 
 
 def fourier_transform_signal(signal, times, abs=False, padding=None):
     """
-    Take Fourier
+    Computes the Fourier transform of the passed time-dependent signal.
+
+    Parameters
+    ----------
+     - `signal`: array-like:
+              Sampled signal to be transformed in the frequency domain (in a.u.).
+    - `times`: array-like
+             Sampled time domain (in microseconds).
+    - `abs`: Boolean 
+             Whether to return the absolute value of the computer Fourier transform. 
+    - `padding`: Integer
+             Amount of zero-padding to add to signal in the power of zeroes.
+    
+    Returns
+    -------
+    The frequency and fourier-transformed signal as a tuple (f, ft)
     """
     if padding is not None: 
         # This code by Stephen Carr
@@ -1239,7 +1254,7 @@ def legacy_fourier_transform_signal(times, signal, frequency_start, frequency_st
     - signal: array-like
   
               Sampled signal to be transformed in the frequency domain (in a.u.).
-  
+
     - frequency_start, frequency_stop: float
   
                                        Left and right bounds of the frequency interval of interest, respectively (in MHz).
@@ -1558,7 +1573,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
     - `tlist`: List[float]
                List of times at which the system will be evolved. 
     - `e_ops`: List[Qobj]:
-               List of oeprators for which to return the expectation values. 
+               List of operators for which to return the expectation values. 
     - `fid`: Boolean
              Whether to return the free induction decay (FID) signal as 
              an expectation value. If True, appends FID signal to the end of 
