@@ -1615,7 +1615,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
         rhot = []
         e_opst = [[] for _ in range(len(e_ops))]
         for t in tlist: 
-            rho, exp = _ed_evolve_solve_t(t)
+            rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
             e_opst = np.concatenate([e_opst, exp], axis=1)
             rhot.append(rho)
         return rhot, e_opst
