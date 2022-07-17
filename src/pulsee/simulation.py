@@ -1,4 +1,5 @@
 from pydoc import doc
+from typing import Type
 import numpy as np
 import pandas as pd
 import math
@@ -1062,10 +1063,16 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
   
                         Duration of the acquisition of the signal, expressed in microseconds.
     
-    - T2: float
-  
-          Characteristic time of relaxation of the component of the magnetization on the plane of detectionvanishing. It is measured in microseconds.
-    
+    - T2: iterable[float or function with signature (float) -> float] or float or function with signature (float) -> float
+        
+          If float, characteristic time of relaxation of the component of the
+          magnetization on the plane of detection vanishing, i.e., T2. It is measured in
+          microseconds.
+
+          If function, the decay envelope. 
+
+          If iterable, total decay envelope will be product of decays in list.
+
           Default value is 100 (microseconds).
     
     - theta, phi: float
@@ -1104,7 +1111,20 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     times = np.linspace(start=0, stop=acquisition_time, num=int(acquisition_time*n_points))
     
     FID = []
-    
+
+    decay_envelopes = []
+    try:
+        for d in T2: 
+            if not callable(d):
+                decay_envelopes.append(lambda t: np.exp(-t / d))
+            else: 
+                decay_envelopes.append(d)
+    except TypeError:
+        if not callable(T2): 
+            decay_envelopes.append(lambda t: np.exp(-t / T2))
+        else: 
+            decay_envelopes.append(T2)
+
     # Computes the FID assuming that the detection coils record the time-dependence of the
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
@@ -1112,8 +1132,15 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     I_plus_rotated = (1j * phi * Iz).expm() * (1j * theta * Iy).expm() \
             * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
     for t in times:
+
+        # Obtain total decay envelope at that time.
+        env = 1
+        for dec in decay_envelopes: 
+            env *= dec(t) # Different name to avoid bizarre variable naming bug
+                          # (can't have same name as iteration var in line 1117.)
+
         dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
-        FID.append((dm_t*I_plus_rotated*np.exp(-t/T2)*np.exp(-1j*2*np.pi*reference_frequency*t)).tr())
+        FID.append((dm_t * I_plus_rotated * env * np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
     
     return times, np.array(FID)
 

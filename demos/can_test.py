@@ -50,24 +50,8 @@ dm_evolved = evolve(spin, h_unperturbed, dm_initial, solver=magnus, \
 print(np.round(dm_evolved, 2))
 #plot_real_part_density_matrix(dm_evolved)
 
-t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=10, reference_frequency=gr*B0, n_points=100)
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=lambda t: np.exp(-t /2), reference_frequency=gr*B0, n_points=100)
 
-# plot_real_part_FID_signal(t, FID)
-
-f, ft = fourier_transform_signal(FID, t, padding=10)
-
-fig, ax = plt.subplots()
-
-# print(np.absolute(ft) ** 2)
-ax.plot(f, np.abs(ft) ** 2, label="\N{GREEK SMALL LETTER ETA} = " + str(np.round(eta, 2)))
-
-plt.figtext(.65, .8, 'e2qQ = ' + str(np.round(0.2, 3)) + ' MHz')
-ax.legend(loc='upper left')
-ax.set_xlabel("frequency (MHz)")    
-ax.set_ylabel("FT signal (a. u.)")
-# ax.set_xlim(2, 4)
-# plt.savefig(f'./demos/testfigs/increasing_eta.pdf')
-plt.show()
 
 
 
