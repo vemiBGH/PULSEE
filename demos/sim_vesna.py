@@ -25,7 +25,7 @@ def sim_vesna():
 	set_e2qQ = np.linspace(0, 0.2, num=5)
 	
 	set_eta = np.linspace(0, 1, num=1)
-	
+
 	for eta in set_eta:
 		print(eta)
 		quad_par = {'coupling constant' : 0.2,
@@ -73,7 +73,7 @@ def sim_vesna():
 	plt.ylabel("FT signal (a. u.)")
 	
 	plt.savefig(f'./demos/testfigs/increasing_eta.pdf')
-	# plt.show()
+	plt.show()
 
 sim_vesna()
 
