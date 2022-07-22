@@ -282,8 +282,7 @@ def canonical_density_matrix(hamiltonian, temperature):
 
     exponent = - ((Planck/Boltzmann) * hamiltonian * 1e6) / temperature
     numerator = exponent.expm()
-    canonical_partition_function = numerator.tr()
-    canonical_dm = numerator / canonical_partition_function
+    canonical_dm = numerator.unit()
     return canonical_dm
 
 
