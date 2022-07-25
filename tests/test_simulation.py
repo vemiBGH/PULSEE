@@ -128,6 +128,7 @@ def test_pi_pulse_yields_population_inversion():
     
     dm_evolved = evolve(spin, h_unperturbed, dm_initial, mesolve,
                                     mode=mode, pulse_time=2 * np.pi, picture='IP')
+
     
     assert np.all(np.isclose(dm_evolved[5, 5], 1, rtol=1e-1))
     

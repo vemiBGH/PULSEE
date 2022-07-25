@@ -508,7 +508,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None, 
             pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 
-            'phi_RRF': 0}, n_points=100, order=None):
+            'phi_RRF': 0}, n_points=100, order=None, opts=None):
     
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -621,7 +621,11 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     elif order is None: 
         order = 12
 
-    opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
+    if opts is None: 
+        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
+    else: 
+        opts.order = order
+
     h = h_unperturbed + h_perturbation
     result = None
     if solver == magnus or solver == 'magnus': 

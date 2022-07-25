@@ -73,7 +73,7 @@ def FT_Stephen(signal, times, abs=False, padding=None):
 
     Parameters
     ----------
-     - `signal`: array-like:
+    - `signal`: array-like:
               Sampled signal to be transformed in the frequency domain (in a.u.).
     - `times`: array-like
              Sampled time domain (in microseconds).
