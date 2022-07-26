@@ -107,7 +107,9 @@ def test_pi_pulse_yields_population_inversion():
     spin_par = {'quantum number' : 5/2,
                 'gamma/2pi' : 1.}
     
-    zeem_par = {'field magnitude' : 10.,
+    b0 = 10
+    b1 = 1 
+    zeem_par = {'field magnitude' : b0,
                 'theta_z' : 0,
                 'phi_z' : 0}
     
@@ -123,11 +125,11 @@ def test_pi_pulse_yields_population_inversion():
     spin, h_unperturbed, dm_initial = nuclear_system_setup(spin_par, quad_par, zeem_par, \
                                                            initial_state=initial_state)
     
-    mode = pd.DataFrame([(10., 1., 0., np.pi/2, 0)], 
+    mode = pd.DataFrame([(2 * np.pi * b0, 2 * b1, 0., np.pi/2, 0)], 
                         columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
     
     dm_evolved = evolve(spin, h_unperturbed, dm_initial, mesolve,
-                                    mode=mode, pulse_time=2 * np.pi, picture='IP')
+                                    mode=mode, pulse_time=1 / (2 * b1), picture='IP')
 
     
     assert np.all(np.isclose(dm_evolved[5, 5], 1, rtol=1e-1))

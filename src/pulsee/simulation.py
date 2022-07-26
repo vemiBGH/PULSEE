@@ -644,7 +644,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         return dm_evolved
 
     elif solver == mesolve or solver == 'mesolve':
-        result = mesolve(h, Qobj(dm_initial), times, options=opts)
+        scaled_h = [] 
+
+        # Magnus expansion solver includes 2 pi factor in exponentiations; 
+        # scale Hamiltonians by this factor for `mesolve` for consistency.
+        for i in h: 
+            if type(i) == list or type(i) == tuple: 
+                scaled_h.append([i[0] * 2 * np.pi, i[1]])
+            else: 
+                scaled_h.append(2 * np.pi * i)
+
+        result = mesolve(scaled_h, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
         return final_state # return last time step of density matrix evolution.
 
@@ -655,7 +665,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         result = solver(h, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
         return final_state # return last time step of density matrix evolution.
-
 
 # Operator which generates a change of picture equivalent to moving to the rotating reference frame
 # (RRF)
@@ -1047,8 +1056,11 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0, reference_frequency=0, n_points=100):
     """ 
-    Simulates the free induction decay signal (FID) measured after the shut-off of the electromagnetic pulse, once the evolved density matrix of the system, the time interval of acquisition, the relaxation time T2 and the direction of the detection coils are given.
-  
+    Simulates the free induction decay signal (FID) measured after the shut-off
+    of the electromagnetic pulse, once the evolved density matrix of the system,
+    the time interval of acquisition, the relaxation time T2 and the direction
+    of the detection coils are given.
+    
     Parameters
     ----------
     - spin: NuclearSpin
@@ -1061,8 +1073,9 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
     
     - dm: DensityMatrix
   
-          Density matrix representing the state of the system at the beginning of the acquisition of the signal.
-    
+          Density matrix representing the state of the system at the beginning
+          of the acquisition of the signal.
+          
     - acquisition_time: float
   
                         Duration of the acquisition of the signal, expressed in microseconds.
@@ -1140,7 +1153,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0
         # Obtain total decay envelope at that time.
         env = 1
         for dec in decay_envelopes: 
-            env *= dec(t) # Different name to avoid bizarre variable naming bug
+            env *= dec(t) # Different name to avoid bizarre variable scope bug
                           # (can't have same name as iteration var in line 1117.)
 
         dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
