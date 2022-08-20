@@ -112,7 +112,6 @@ def free_evolution(q, static_hamiltonian, time):
     return evolved_dm
 
 
-
 def random_operator(d):
     """
     Returns a randomly generated operator object of dimensions d.
