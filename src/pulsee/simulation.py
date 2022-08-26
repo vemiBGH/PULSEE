@@ -342,6 +342,7 @@ def nuclear_system_setup(spin_par,
     if h_userDef is not None:
         h_unperturbed += (h_userDefined(h_userDef))
     if isinstance(initial_state, str) and initial_state == 'canonical':
+
         dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
                                                 temperature)
     else:
@@ -625,7 +626,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
     else: 
         opts.order = order
-
     h = h_unperturbed + h_perturbation
     result = None
     if solver == magnus or solver == 'magnus': 
@@ -1596,6 +1596,9 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
     rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv() 
 
+    if e_ops == None:
+        return rho
+
     exp = np.transpose([[expect(op, rho) for op in e_ops]])
     
     return rho, exp
@@ -1636,11 +1639,9 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
         h = Qobj(np.sum(h, axis=0), dims=h[0].dims)
 
     if fid: 
-        e_ops.append(spin.I['+'])
+        e_ops.append(Qobj(np.array(spin.I['+'])))
 
-    if par: 
-        res = None 
-        
+    if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         try:
             get_ipython().__class__.__name__
@@ -1655,6 +1656,13 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
             rhot.append(r)
             e_opst.append(e)
         return rhot, np.concatenate(e_opst, axis=1)
+
+    elif e_ops == []:
+        rhot = []
+        for t in tlist:
+            rhot.append(_ed_evolve_solve_t(t, h, rho0, None))
+
+        return rhot
     else:
         rhot = []
         e_opst = [[] for _ in range(len(e_ops))]
