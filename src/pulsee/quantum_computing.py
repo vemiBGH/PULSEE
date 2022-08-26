@@ -203,15 +203,14 @@ class NGate(Qobj):
             raise MatrixRepresentationError(f'Dimension {self._n} of gate ' + \
                                 f'does not match dimension {state.n} of state.')
         
-        return QubitState(self._qubit_space, np.matmul(self, state))
+        return QubitState(self._qubit_space, np.matmul(self.full(), state.matrix))
 
     @property
     def n(self):
         return self._n
     
 
-
-class QubitState:
+class QubitState(Qobj):
     def __init__(self, qubit_space: CompositeQubitSpace, matrix):
         """
         Params
@@ -225,6 +224,8 @@ class QubitState:
             raise MatrixRepresentationError(f'Improper array shape ' + \
                              f'{np.shape(matrix)[0]} for matrix representation ' + \
                              f'of {2 ** qubit_space.n}-dimensional qubit space.')
+
+        super().__init__(matrix)
         self._matrix = matrix
         self._qubit_space = qubit_space 
 
@@ -238,7 +239,7 @@ class QubitState:
         ------
         This instance's density matrix as a DensityMatrix object.
         """
-        density_matrix = np.outer(self, self)
+        density_matrix = np.outer(self.matrix, self.matrix)
         return Qobj(density_matrix)
 
     @property
@@ -284,10 +285,10 @@ class QubitState:
                 k_otimes_identity = np.kron(np.eye(2, dtype="complex_"), k)
                 
             reduced_density_matrix += np.matmul(k_otimes_identity,
-                                 np.matmul(density_matrix, np.transpose(k_otimes_identity)))
+                                 np.matmul(density_matrix.full(), np.transpose(k_otimes_identity)))
                     
 
-        return reduced_density_matrix
+        return Qobj(reduced_density_matrix)
 
     def __mul__(self, other):
         return tensor_product(self, other)
@@ -303,8 +304,7 @@ class QubitState:
             raise MatrixRepresentationError(f'Cannot cast qubit with n = {self.n}' + \
                 f' to qubit with n = {other.n}.')
         return QubitState(self.qubit_space, normalize(self - other))
-
-
+    
 
 class QubitSpace(CompositeQubitSpace):
     """
@@ -381,7 +381,7 @@ def tensor_product(q1, q2):
     """
     # Find number of qubit spaces that this composite qubit's qubit space is 
     # comprised of 
-    n = q1.qn + q2.n 
+    n = q1.n + q2.n 
 
     # Make matrix representation of tensor product. 
     prod = np.kron(q1, q2)
