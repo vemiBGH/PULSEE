@@ -1,10 +1,10 @@
 ### Project status
 
 - [ ] Check the demo for hyperfine (small errors) 
-- [ ] For the direction diagonalization ed_evolve:
-           - [ ] option to only return expected value of operator of ed_evolve
-           - [ ] returns twice the fid?
-           - [ ] no T2 in the FID
+- [ ] For the direction diagonalization ed_evolve:\\
+           - [ ] option to only return expected value of operator of ed_evolve\\
+           - [ ] returns twice the fid?\\
+           - [ ] no T2 in the FID\\
 - [ ] Add xlim and ylim for the plot_fourier_transform function
 - [ ] Add normalize for plot_fourier_transform function
 - [ ] Show option of for plot_fourier_transform function does not do anything
