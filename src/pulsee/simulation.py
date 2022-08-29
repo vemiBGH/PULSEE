@@ -1686,7 +1686,7 @@ def apply_rot_pulse(rho, duration, rot_axis):
     - `rho`: Qobj
              The density matrix of the state to apply the pulse to.
     - `duration`: float
-             The duration of the applied pulse.
+             The duration of the applied pulse as an angle in radians.
     - `rot_axis`: Qobj
              Angular momentum operator for the corresponding axis of rotation. 
 
