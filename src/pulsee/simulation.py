@@ -1698,7 +1698,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False)
     if all_t:
         return rhot, e_opst 
     else: 
-        return rhot[-1], e_opst[-1]
+        return rhot[-1], e_opst
         
 
 
