@@ -1604,7 +1604,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     return rho, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False):
     """
     Evolve the given density matrix with the interactions given by the provided 
     Hamiltonian using exact diagonalization. 
@@ -1628,11 +1628,17 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
     - `par`: Boolean
              Whether to use QuTiP's parallel computing implementation `parallel_map` 
              to evolve the system.
-    
+    - `all_t`: Boolean 
+               Whether to return the density matrix and expectation values for 
+               all times in the evolution (as opposed oto the last state)
+
     Returns
     ------
+    The density matrix  and the expectation values of each operator in `e_ops`
+    at time `tlist[-1]`.
+    OR 
     The evolved density matrix at times specified by `tlist`, and the expectation 
-    values of each operartor in `e_ops` at the times in `tlist`. The latter 
+    values of each operator in `e_ops` at the times in `tlist`. The latter 
     is in the format [e_op1[t], e_op2[t], ..., e_opn[t]]. 
     """
     if type(h) is not Qobj and type(h) is list: 
@@ -1641,11 +1647,13 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
     if fid: 
         e_ops.append(Qobj(np.array(spin.I['+'])))
 
+    rhot = []
+    e_opst = []
+
     if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         try:
             get_ipython().__class__.__name__
-            print('is ipynb')
             res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
         except NameError:
             res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,))
@@ -1655,14 +1663,14 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
         for r, e in res: 
             rhot.append(r)
             e_opst.append(e)
-        return rhot, np.concatenate(e_opst, axis=1)
+
+        e_opst = np.concatenate(e_opst, axis=1)
 
     elif e_ops == []:
         rhot = []
         for t in tlist:
             rhot.append(_ed_evolve_solve_t(t, h, rho0, None))
-
-        return rhot
+        e_opst = []
     else:
         rhot = []
         e_opst = [[] for _ in range(len(e_ops))]
@@ -1670,7 +1678,11 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False):
             rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
             e_opst = np.concatenate([e_opst, exp], axis=1)
             rhot.append(rho)
-        return rhot, e_opst
+    
+    if all_t:
+        return rhot, e_opst 
+    else: 
+        return rhot[-1], e_opst[-1]
         
 
 
