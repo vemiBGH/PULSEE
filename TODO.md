@@ -13,3 +13,10 @@
 - [ ] Fix demos (3 methods should agree) & there are errors
 - [ ] Don't return every state ed_evolve, return only final state unless wanted
 - [ ] IMPORTANT Write examples of how to pass $T_2$ decay function
+
+
+- [ ] CRITICAL GUI qt error
+QObject::moveToThread: Current thread (0x239c69f27d0) is not the object's thread (0x239c69f3f30).
+Cannot move to target thread (0x239c69f27d0) 
+qt.qpa.plugin: Could not load the Qt platform plugin "windows" in "" even though it was found.
+This application failed to start because no Qt platform plugin could be initialized. Reinstalling the application may fix this problem.
