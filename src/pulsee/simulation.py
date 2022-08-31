@@ -1762,7 +1762,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     return rho, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False):
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, all_t=False):
     """
     Evolve the given density matrix with the interactions given by the provided 
     Hamiltonian using exact diagonalization. 
@@ -1779,6 +1779,8 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False)
                List of times at which the system will be evolved. 
     - `e_ops`: List[Qobj]:
                List of operators for which to return the expectation values. 
+    - `state`: Boolean 
+               Whether to return the density matrix at all. Default `True`.
     - `fid`: Boolean
              Whether to return the free induction decay (FID) signal as 
              an expectation value. If True, appends FID signal to the end of 
@@ -1787,17 +1789,19 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False)
              Whether to use QuTiP's parallel computing implementation `parallel_map` 
              to evolve the system.
     - `all_t`: Boolean 
-               Whether to return the density matrix and expectation values for 
-               all times in the evolution (as opposed oto the last state)
+               Whether to return the density matrix and for all times in the
+               evolution (as opposed to the last state)
 
     Returns
     ------
-    The density matrix  and the expectation values of each operator in `e_ops`
-    at time `tlist[-1]`.
+    - [0]: The density matrix at time `tlist[-1]` OR the evolved density matrix
+    at times specified by `tlist`. 
+    
+    - [1]: the expectation values of each operator in `e_ops` at the times in
+    `tlist`. The latter is in the format [e_op1[t], e_op2[t], ..., e_opn[t]]. 
     OR 
-    The evolved density matrix at times specified by `tlist`, and the expectation 
-    values of each operator in `e_ops` at the times in `tlist`. The latter 
-    is in the format [e_op1[t], e_op2[t], ..., e_opn[t]]. 
+
+    The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list: 
         h = Qobj(np.sum(h, axis=0), dims=h[0].dims)
@@ -1829,6 +1833,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False)
         for t in tlist:
             rhot.append(_ed_evolve_solve_t(t, h, rho0, None))
         e_opst = []
+
     else:
         rhot = []
         e_opst = [[] for _ in range(len(e_ops))]
@@ -1837,10 +1842,13 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], fid=False, par=False, all_t=False)
             e_opst = np.concatenate([e_opst, exp], axis=1)
             rhot.append(rho)
     
+    if not state: 
+        return e_opst
+
     if all_t:
         return rhot, e_opst 
     else: 
-        return rhot[-1], e_opst[-1]
+        return rhot[-1], e_opst
         
 
 
