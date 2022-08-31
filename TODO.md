@@ -12,7 +12,7 @@
 - For the direct diagonalization ed_evolve:
   - [x] option to only return expected value of operator of ed_evolve
   - [x] returns twice the fid?
-  - [ ] no T2 in the FID
+  - [x] no T2 in the FID
 
 - [ ] CRITICAL GUI qt error
 QObject::moveToThread: Current thread (0x239c69f27d0) is not the object's thread (0x239c69f3f30).

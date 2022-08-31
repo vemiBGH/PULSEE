@@ -1139,7 +1139,8 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
 
 
 
-def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, phi=0, reference_frequency=0, n_points=100):
+def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, 
+               phi=0, reference_frequency=0, n_points=100):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1762,7 +1763,8 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     return rho, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, all_t=False):
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, 
+    all_t=False, T2=100):
     """
     Evolve the given density matrix with the interactions given by the provided 
     Hamiltonian using exact diagonalization. 
@@ -1791,6 +1793,19 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, 
     - `all_t`: Boolean 
                Whether to return the density matrix and for all times in the
                evolution (as opposed to the last state)
+    - T2: iterable[float or function with signature (float) -> float] or float
+            or function with signature (float) -> float
+    
+          If float, characteristic time of relaxation of the component of the
+          magnetization on the plane of detection vanishing, i.e., T2. It is
+          measured in
+          microseconds.
+
+          If function, the decay envelope. 
+
+          If iterable, total decay envelope will be product of decays in list.
+
+          Default value is 100 (microseconds).
 
     Returns
     ------
@@ -1798,7 +1813,9 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, 
     at times specified by `tlist`. 
     
     - [1]: the expectation values of each operator in `e_ops` at the times in
-    `tlist`. The latter is in the format [e_op1[t], e_op2[t], ..., e_opn[t]]. 
+    `tlist`. The latter is in the format `[[e_op1[t1], e_op1[t2], ...] , 
+    [e_op2[t1], e_op2[t2]], ..., [e_opn[t1], e_opn[t2], ...]]`. 
+
     OR 
 
     The expectation values of each operator in `e_ops` at the times in `tlist`.
@@ -1811,6 +1828,19 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, 
 
     rhot = []
     e_opst = []
+
+    decay_envelopes = []
+    try:
+        for d in T2: 
+            if not callable(d):
+                decay_envelopes.append(lambda t: np.exp(-t / d))
+            else: 
+                decay_envelopes.append(d)
+    except TypeError:
+        if not callable(T2): 
+            decay_envelopes.append(lambda t: np.exp(-t / T2))
+        else: 
+            decay_envelopes.append(T2)
 
     if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
@@ -1841,7 +1871,21 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False, 
             rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
             e_opst = np.concatenate([e_opst, exp], axis=1)
             rhot.append(rho)
-    
+
+    if fid: 
+        fid_exp = []
+        for f in e_opst[-1]:
+            # Obtain total decay envelope at that time.
+            env = 1
+            for dec in decay_envelopes: 
+                env *= dec(t) # Different name to avoid bizarre variable scope bug
+                            # (can't have same name as iteration var in line 1117.)
+            fid_exp.append(f * env)
+        
+        e_opst[-1] = fid_exp
+        
+
+
     if not state: 
         return e_opst
 
