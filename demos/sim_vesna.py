@@ -43,10 +43,11 @@ dm_evolved = evolve(spin, h_unperturbed, dm_initial, solver='mesolve', \
 					picture='IP', n_points=50, opts=opts)
 
 t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, \
-		T2=[lambda t: 1.0 / t, lambda t: np.exp(-t)], reference_frequency=0, n_points=100)
-
+		T2=[lambda t: 1.0 / (t + 1), lambda t: np.exp(-t)], reference_frequency=0, n_points=100)
 
 f, ft = fourier_transform_signal(FID, t, padding=10)
+
+plot_fourier_transform(f, ft, show=True)
 
 
 	

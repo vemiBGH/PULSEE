@@ -1550,7 +1550,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, xlim=None, ylim=None,
-                           scaling_factor=None, fig_dpi = 400, show=True, save=False, 
+                           scaling_factor=None, norm=True, fig_dpi = 400, show=True, save=False, 
                            name='FTSignal', destination=''):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
@@ -1587,6 +1587,10 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
                       When it is not None, it specifies the scaling factor which
                       multiplies the data to be plotted. It applies
                       simultaneously to all the plots in the resulting figure.
+    
+    - `norm`: Boolean 
+              Whether to normalize the fourier transform; i.e., scale it such 
+              that its maximum value is 1.
                       
     - fig_dpi: int
             Image quality of the figure when showing and saving. Useful for
@@ -1640,6 +1644,10 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         fourier_data = [fourier, fourier_neg]
         plot_title = ["Counter-clockwise precession", "Clockwise precession"]
     
+    if norm: 
+        for i in range(n_plots):
+            fourier_data[i] = fourier_data[i] / np.amax(fourier_data[i])
+
     fig, ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace':0.5})
     
     if fourier_neg is None:
