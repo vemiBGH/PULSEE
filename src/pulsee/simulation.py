@@ -1422,7 +1422,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # If another set of data is passed as fourier_neg, the function plots a couple of graphs, with the
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
-def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, 
+def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, xlim=None, ylim=None,
                            scaling_factor=None, fig_dpi = 400, show=True, save=False, 
                            name='FTSignal', destination=''):
     """
@@ -1431,53 +1431,63 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     Parameters
     ----------
     - frequencies: array-like
-  
-                   Sampled values of frequency (in MHz).
+                     Sampled values of frequency (in MHz).
     
     - fourier: array-like
-  
                Sampled values of the Fourier transform (in a.u.).
     
     - fourier_neg: array-like
-  
-                   Sampled values of the Fourier transform (in a.u.) evaluated at the frequencies in frequencies changed by sign.
-    
-                   Default value is None.
+                   Sampled values of the Fourier transform (in a.u.) evaluated
+                   at the frequencies in frequencies changed by sign.
+
+                   Default value is `None`.
     
     - square_modulus: bool
-  
-                      When True, makes the function plot the square modulus of the Fourier spectrum rather than the separate real and imaginary parts, which is the default option (by default, square_modulus=False).
+                      When True, makes the function plot the square modulus of
+                      the Fourier spectrum rather than the separate real and
+                      imaginary parts, which is the default option (by default,
+                      `square_modulus=False`).
+                      
+    - `xlim`: 2-element iterable or `None`
+              Lower and upper x-axis limits of the plot.
+              When `None` uses `matplotlib` default.
+
+    - `ylim`: 2-element iterable or `None`
+              Lower and upper y-axis limits of the plot.
+              When `None` uses `matplotlib` default.
                       
     - scaling_factor: float
-    
-                      When it is not None, it specifies the scaling factor which multiplies the data to be plotted. It applies simultaneously to all the plots in the resulting figure.
-
+                      When it is not None, it specifies the scaling factor which
+                      multiplies the data to be plotted. It applies
+                      simultaneously to all the plots in the resulting figure.
+                      
     - fig_dpi: int
-
-            Image quality of the figure when showing and saving. Useful for publications. Default set to very high value.
-
+            Image quality of the figure when showing and saving. Useful for
+            publications. Default set to very high value.
+            
     - show: bool
-  
-            When False, the graph constructed by the function will not be displayed.
-    
-            Default value is True.
+            When False, the graph constructed by the function will not be
+            displayed.
+
+            Default value is `True`.
     
     - save: bool
-  
-            When False, the plotted graph will not be saved on disk. When True, it will be saved with the name passed as name and in the directory passed as destination.
-    
+            When `False`, the plotted graph will not be saved on disk. When `True`,
+            it will be saved with the name passed as name and in the directory
+            passed as destination.
+            
             Default value is False.
     
     - name: string
-  
             Name with which the graph will be saved.
     
-            Default value is 'FTSignal'.
+            Default value is `'FTSignal'`.
     
     - destination: string
-  
-                   Path of the directory where the graph will be saved (starting from the current directory). The name of the directory must be terminated with a slash /.
-    
+                   Path of the directory where the graph will be saved (starting
+                   from the current directory). The name of the directory must
+                   be terminated with a slash /.
+                   
                    Default value is the empty string (current directory).
     
     Action
@@ -1521,7 +1531,13 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         ax[i].legend(loc='upper left')
         ax[i].set_xlabel("frequency (MHz)")    
         ax[i].set_ylabel("FT signal (a. u.)")  
+
+        if xlim is not None: 
+            ax[i].set_xlim(*xlim)
          
+        if ylim is not None: 
+            ax[i].set_xlim(*ylim)
+
     if save: plt.savefig(destination + name, dpi=fig_dpi)
         
     if show: plt.show()
