@@ -88,9 +88,24 @@ To obtain the FID signal of the spins one can run
 ```
 t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=10, reference_frequency=0, n_points=10)
 ```
-where `acquisition_time` denotes the amount of time we are capturing the FID signal, T2 is the (empirically determined) T2 decay time,
-`reference_frequency` is the frequency of rotation of the capturing reference frame, and `n_points` is the number of samples per microsecond 
-that are measured within the acquisition time. 
+where `acquisition_time` denotes the amount of time we are capturing the FID signal, `T2` is the (empirically determined) T2 decay time `reference_frequency` is the frequency of rotation of the capturing reference frame, and `n_points` is the number of samples per microsecond that are measured within the acquisition time. 
+
+Passing a list of values produces a decay envelope equivalent to the product 
+of exponential decay envelopes with the corresponding T2 values: 
+```
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, T2=[5, 10, 15], reference_frequency=0, n_points=10)
+```
+
+Alternatively, PULSEE allows one to specify a custom decay function 
+```
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, 
+T2=lambda t: 1/t, reference_frequency=0, n_points=10)
+```
+and follows the same protocol as above when given a list of functions 
+```
+t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, 
+T2=[lambda t: 1/t, lambda t: np.exp(-1/t)], reference_frequency=0, n_points=10)
+```
 
 To obtain the spectrum one can simply run 
 ```
