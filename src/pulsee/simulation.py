@@ -1636,6 +1636,9 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     built up by the function.
     
     """
+    fourier = np.array(fourier)
+    frequencies = np.array(frequencies)
+
     if fourier_neg is None:
         n_plots = 1
         fourier_data = [fourier]
@@ -1662,7 +1665,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
             ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part')
             ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part')
         else:
-            ax[i].plot(frequencies, np.absolute(fourier_data[i])**2, label='Square modulus')
+            ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2, label='Square modulus')
         
         if n_plots>1:
             ax[i].title.set_text(plot_title[i])
@@ -1675,7 +1678,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
             ax[i].set_xlim(*xlim)
          
         if ylim is not None: 
-            ax[i].set_xlim(*ylim)
+            ax[i].set_ylim(*ylim)
 
     if save: plt.savefig(destination + name, dpi=fig_dpi)
         

@@ -1,8 +1,8 @@
 ### Project status
 
 - [ ] Check the demo for hyperfine (small errors) 
-- [ ] Add xlim and ylim for the plot_fourier_transform function
-- [ ] Add normalize for plot_fourier_transform function
+- [x] Add xlim and ylim for the plot_fourier_transform function
+- [x] Add normalize for plot_fourier_transform function
 - [x] Show option of for plot_fourier_transform function does not do anything (it works perfectly fine for me -Lucas)
 - [ ] Change the demo plots to use plot_fourier_transform
 - [ ] Fix the initial demo on the main page (initially made by Davide)
