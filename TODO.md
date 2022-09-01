@@ -6,7 +6,7 @@
 - [x] Show option of for plot_fourier_transform function does not do anything (it works perfectly fine for me -Lucas)
 - [ ] Change the demo plots to use plot_fourier_transform
 - [ ] Fix the initial demo on the main page (initially made by Davide)
-- [ ] Fix demos (3 methods should agree) & there are errors
+- [x] Fix demos (3 methods should agree) & there are errors
 - [x] Don't return every state ed_evolve, return only final state unless wanted
 - [x] IMPORTANT Write examples of how to pass $T_2$ decay function
 - For the direct diagonalization ed_evolve:

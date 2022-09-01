@@ -671,6 +671,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
     else: 
         opts.order = order
+        
     h = h_unperturbed + h_perturbation
     result = None
     if solver == magnus or solver == 'magnus': 
@@ -1750,8 +1751,8 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     values of each operartor in `e_ops` at `t`. The latter is in the format
     [e_op1[t], e_op2[t], ..., e_opn[t]]. 
     """
-    u1, d1, d1exp = exp_diagonalize(-1j * h * t)
-    u2, d2, d2exp = exp_diagonalize(1j * h * t)
+    u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
+    u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
 
     rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv() 
 
@@ -1883,8 +1884,6 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
             fid_exp.append(f * env)
         
         e_opst[-1] = fid_exp
-        
-
 
     if not state: 
         return e_opst
@@ -1893,7 +1892,6 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
         return rhot, e_opst 
     else: 
         return rhot[-1], e_opst
-        
 
 
 def apply_rot_pulse(rho, duration, rot_axis):
