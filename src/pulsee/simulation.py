@@ -1879,7 +1879,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
             # Obtain total decay envelope at that time.
             env = 1
             for dec in decay_envelopes: 
-                env *= dec(t) # Different name to avoid bizarre variable scope bug
+                env *= dec(f) # Different name to avoid bizarre variable scope bug
                             # (can't have same name as iteration var in line 1117.)
             fid_exp.append(f * env)
         
