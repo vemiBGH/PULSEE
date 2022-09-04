@@ -360,15 +360,15 @@ gyromagnetic ratio x pulse field magnitude x pulse time
 
 is equal to pi/2. Setting a pulse made up of the single linearly polarized mode
 ```
-mode = pd.DataFrame([(1., 0.1, 0., np.pi/2, 0.)], 
+mode = pd.DataFrame([(2 * np.pi, 0.2, 0., np.pi/2, 0.)], 
                      columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 ```
-the pulse time should be equal to 5 us in order to produce a 90° rotation. Indeed, the effective amplitude of the wave is 0.05 T: the linearly polarized mode splits into two rotating waves, only one of which is in resonance with the system.
+the pulse time should be equal to `1/(4 * 0.1)` in order to produce a 90° rotation. Indeed, the effective amplitude of the wave is 0.05 T: the linearly polarized mode splits into two rotating waves, only one of which is in resonance with the system.
 
 Then, the state of the system is evolved and plotted with the following calls:
 ```
 dm_evolved = evolve(spin, h_unperturbed, dm_0, solver=magnus, \
-                    mode=mode, pulse_time=5, \
+                    mode=mode, pulse_time=1 / (4 * 0.1), \
                     picture = 'IP')
     
 plot_real_part_density_matrix(dm_evolved)
@@ -415,7 +415,7 @@ The presence of this perturbation leads eventually to a spectrum with two resona
 
 As one can see, the real and imaginary parts of the spectrum at each peak don't fit the conventional absorptive/dispersive lorentzian shapes, which would be a nice feature to be visualized. By means of the function `fourier_phase_shift`, one can obtain the phase for the correction of the shape of the spectrum at a specified peak (the simultaneous correction at both peaks is impossible):
 ```
-phi = fourier_phase_shift(f, ft, peak_frequency=-0.82, int_domain_width=0.2)
+phi = fourier_phase_shift(f, ft, peak_frequency=0.82, int_domain_width=0.2)
 
 plot_fourier_transform(f, np.exp(1j*phi)*ft)
 ```

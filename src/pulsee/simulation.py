@@ -425,6 +425,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
+    h_unperturbed = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
     energies, o_change_of_basis = h_unperturbed.eigenstates()
     
     transition_frequency = []
@@ -469,7 +470,8 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True, fig_dpi = 400, save=False, name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(frequencies, intensities, show=True, 
+                                   fig_dpi = 400, save=False, name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding
     frequencies.
@@ -826,8 +828,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None,
     
     Returns
     -------
-    An object of the class matplotlib.figure.Figure representing the figure
-    built up by the function.
+    An object of the class matplotlib.figure.Figure and an object of the class
+    matplotlib.axis.Axis representing the figure built up by the function.
     
     """    
     real_part = np.vectorize(np.real)
@@ -926,7 +928,7 @@ def plot_real_part_density_matrix(dm, many_spin_indexing = None,
     if show:
         plt.show()
         
-    return fig
+    return fig, ax
 
 def complex_phase_cmap():
     """
@@ -1038,8 +1040,8 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
     
     Returns
     -------
-    An object of the class matplotlib.figure.Figure representing the figure
-    built up by the function.
+    An object of the class matplotlib.figure.Figure and an object of the class 
+e   matplotlib.axis.Axis representing the figure built up by the function.
     
     """
     if isinstance(dm, Qobj):
@@ -1136,7 +1138,7 @@ def plot_density_complex_matrix(dm, many_spin_indexing = None, show=True, phase_
     if show:
         plt.show()
 
-    return fig
+    return fig, ax
 
 
 
@@ -1201,7 +1203,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                 which the time interval [0, acquisition_time] is sampled for the
                 generation of the FID signal.
                 
-                Default value is 10.
+                Default value is 100.
     
     Action
     ------
@@ -1385,7 +1387,8 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
     return freq, ft
 
 
-def legacy_fourier_transform_signal(times, signal, frequency_start, frequency_stop, opposite_frequency=False):
+def legacy_fourier_transform_signal(times, signal, frequency_start, 
+                                    frequency_stop, opposite_frequency=False):
     """
     Deprecated since QuTiP integration; see simulation.fourier_transform_signal.
 
@@ -1538,7 +1541,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         else:
             return np.pi
     
-    atan = math.atan(-int_imag_fourier/int_real_fourier)
+    atan = math.atan(- int_imag_fourier / int_real_fourier)
     
     if int_real_fourier > 0:
         phase = atan + np.pi/2
@@ -1634,7 +1637,8 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
   
     Returns
     -------
-    An object of the class matplotlib.figure.Figure representing the figure
+    An object of the class matplotlib.figure.Figure and an object of the class 
+    matplotlib.axis.Axis representing the figure
     built up by the function.
     
     """
@@ -1686,7 +1690,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         
     if show: plt.show()
         
-    return fig
+    return fig, ax 
 
 
 def magnus(h_list, rho0, tlist, options=Options()):
