@@ -101,12 +101,12 @@ t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50,
 Alternatively, PULSEE allows one to specify a custom decay function 
 ```
 t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, 
-         T2=lambda t: 1/t, reference_frequency=0, n_points=10)
+         T2=lambda t: np.exp(-t/50), reference_frequency=0, n_points=10)
 ```
 and follows the same protocol as above when given a list of functions 
 ```
 t, FID = FID_signal(spin, h_unperturbed, dm_evolved, acquisition_time=50, 
-T2=[lambda t: 1/t, lambda t: np.exp(-1/t)], reference_frequency=0, n_points=10)
+T2=[lambda t: np.exp(-(t/50)**1.5), lambda t: np.exp(-(t/50)**2)], reference_frequency=0, n_points=10)
 ```
 
 To obtain the spectrum one can simply run 
