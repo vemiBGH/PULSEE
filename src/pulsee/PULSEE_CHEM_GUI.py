@@ -58,7 +58,7 @@ from pulsee.simulation import nuclear_system_setup, \
                        evolve, RRF_operator, \
                        plot_real_part_density_matrix, \
                        FID_signal, plot_real_part_FID_signal, \
-                       fourier_transform_signal, \
+                       legacy_fourier_transform_signal, \
                        plot_fourier_transform, \
                        fourier_phase_shift
 
@@ -340,6 +340,7 @@ class System_Parameters(FloatLayout):
                                      sim_man.D1_par, \
                                      sim_man.D2_par, \
                                      sim_man.hf_par, \
+                                     None, \
                                      sim_man.J_sec_par, \
                                      initial_state='canonical', \
                                      temperature=sim_man.temperature)
@@ -358,6 +359,7 @@ class System_Parameters(FloatLayout):
                                      sim_man.D1_par, \
                                      sim_man.D2_par, \
                                      sim_man.hf_par, \
+                                     None, \
                                      sim_man.J_sec_par, \
                                      initial_state=self.manual_dm_elements, \
                                      temperature=300)
@@ -1332,7 +1334,7 @@ class Evolved_Density_Matrices(TabbedPanel):
             self.pulse_tab[i] = TabbedPanelItem(text='Pulse '+str(i+1))
             self.evolved_dm_box[i] = BoxLayout()
             
-            self.evolved_dm_figure[i] = plot_real_part_density_matrix(sim_man.dm[i+1], show=False)
+            self.evolved_dm_figure[i] = plot_real_part_density_matrix(sim_man.dm[i+1], show=False)[0]
             
             self.evolved_dm_box[i].add_widget(FigureCanvasKivyAgg(self.evolved_dm_figure[i]))
             self.pulse_tab[i].add_widget(self.evolved_dm_box[i])
@@ -1421,14 +1423,14 @@ class NMR_Spectrum(FloatLayout):
             
             if self.input_opposite_frequency == False:
                 sim_man.spectrum_frequencies, \
-                sim_man.spectrum_fourier = fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier = legacy_fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID,\
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound)
             else:
                 sim_man.spectrum_frequencies, \
                 sim_man.spectrum_fourier, \
-                sim_man.spectrum_fourier_neg = fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier_neg = legacy_fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID, \
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound, \

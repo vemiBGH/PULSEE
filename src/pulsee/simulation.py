@@ -546,7 +546,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None, 
             pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 
-            'phi_RRF': 0}, n_points=100, order=None, opts=None):
+            'phi_RRF': 0}, n_points=30, order=None, opts=None):
     
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -1146,7 +1146,7 @@ e   matplotlib.axis.Axis representing the figure built up by the function.
 
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0, 
-               phi=0, reference_frequency=0, n_points=100):
+               phi=0, reference_frequency=0, n_points=30):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1261,7 +1261,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                           # (can't have same name as iteration var in line 1117.)
 
         dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
-        FID.append((dm_t * I_plus_rotated * env * np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
+        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env * np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
     
     return times, np.array(FID)
 

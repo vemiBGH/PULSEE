@@ -54,7 +54,7 @@ from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.simulation import nuclear_system_setup, \
                        evolve, plot_real_part_density_matrix, \
-                       FID_signal, fourier_transform_signal, \
+                       FID_signal, legacy_fourier_transform_signal, \
                        plot_fourier_transform, fourier_phase_shift
 
 # This class defines the object responsible of the management of the inputs and outputs of the
@@ -101,7 +101,7 @@ class Simulation_Manager:
     canonical_dm_0 = False
     
     temperature = 300.
-            
+
     spin = NuclearSpin()
     
     h_unperturbed = Qobj(np.eye(1))
@@ -901,7 +901,7 @@ class Evolution_Results(FloatLayout):
             self.remove_widget(self.evolved_dm_panels)
             
             for i in range(sim_man.n_pulses):
-                sim_man.dm[i+1] = evolve(sim_man.spin, sim_man.h_unperturbed, sim_man.dm[i], \
+                sim_man.dm[i+1] = evolve(sim_man.spin, sim_man.h_unperturbed, sim_man.dm[i], 'magnus',\
                                          sim_man.pulse[i], sim_man.pulse_time[i], \
                                          picture=sim_man.evolution_algorithm[i], \
                                          RRF_par=sim_man.RRF_par[i])
@@ -986,9 +986,9 @@ class Evolved_Density_Matrices(TabbedPanel):
             
             self.pulse_tab[i] = TabbedPanelItem(text='Pulse '+str(i+1))
             self.evolved_dm_box[i] = BoxLayout()
-            
-            self.evolved_dm_figure[i] = plot_real_part_density_matrix(sim_man.dm[i+1], show=False)
-            
+
+            self.evolved_dm_figure[i] = plot_real_part_density_matrix(sim_man.dm[i+1], show=False)[0]
+
             self.evolved_dm_box[i].add_widget(FigureCanvasKivyAgg(self.evolved_dm_figure[i]))
             self.pulse_tab[i].add_widget(self.evolved_dm_box[i])
             self.add_widget(self.pulse_tab[i])
@@ -1076,14 +1076,14 @@ class NMR_Spectrum(FloatLayout):
             
             if self.input_opposite_frequency == False:
                 sim_man.spectrum_frequencies, \
-                sim_man.spectrum_fourier = fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier = legacy_fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID,\
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound)
             else:
                 sim_man.spectrum_frequencies, \
                 sim_man.spectrum_fourier, \
-                sim_man.spectrum_fourier_neg = fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier_neg = legacy_fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID, \
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound, \
