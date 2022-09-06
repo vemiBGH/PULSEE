@@ -1877,15 +1877,16 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
             e_opst = np.concatenate([e_opst, exp], axis=1)
             rhot.append(rho)
 
-    if fid: 
+    if fid:
         fid_exp = []
-        for f in e_opst[-1]:
+        fids = e_opst[-1]
+        for i in range(len(fids)):
             # Obtain total decay envelope at that time.
             env = 1
-            for dec in decay_envelopes: 
-                env *= dec(f) # Different name to avoid bizarre variable scope bug
+            for dec in decay_envelopes:
+                env *= dec(tlist[i]) # Different name to avoid bizarre variable scope bug
                             # (can't have same name as iteration var in line 1117.)
-            fid_exp.append(f * env)
+            fid_exp.append(fids[i] * env)
         
         e_opst[-1] = fid_exp
 
