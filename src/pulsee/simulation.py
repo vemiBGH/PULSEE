@@ -962,7 +962,7 @@ def complex_phase_cmap():
 
     return cmap
 
-def plot_complex_density_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 400, save=False, name='ComplexDensityMatrix', destination=''):
+def plot_complex_density_matrix(dm, many_spin_indexing = None, show=True, phase_limits=None, phi_label = r'$\phi$', show_legend = True, fig_dpi = 400, save=False, name='ComplexDensityMatrix', destination='', figsize=None, labelsize=6):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -1051,6 +1051,8 @@ e   matplotlib.axis.Axis representing the figure built up by the function.
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
+    if(figsize):
+        fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
 
     # Create an X-Y mesh of the same dimension as the 2D data
@@ -1119,7 +1121,7 @@ e   matplotlib.axis.Axis representing the figure built up by the function.
         for i in range(d):
             tick_label[i] = '|' + tick_label[i]
 
-        ax.tick_params(axis='both', which='major', labelsize=6)
+        ax.tick_params(axis='both', which='major', labelsize=labelsize)
 
     xticks(np.arange(start=0.5, stop=data_array.shape[0]+0.5), tick_label)
     yticks(np.arange(start=1., stop=data_array.shape[0]+1.), tick_label)
@@ -1133,6 +1135,7 @@ e   matplotlib.axis.Axis representing the figure built up by the function.
         cb.set_label(phi_label)
 
     if save:
+        print(1)
         plt.savefig(destination + name, dpi=fig_dpi)
 
     if show:
