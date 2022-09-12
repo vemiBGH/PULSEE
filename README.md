@@ -160,7 +160,9 @@ The operative systems where it has been tested and executed are
 * Ubuntu
 * Windows 10 (through the Spyder interface provided by the distribution Anaconda)
 
-The software makes wide use of many of the standard Python modules (namely `numpy`, `scipy`, `pandas`, `matplotlib`) for its general purposes.
+The software makes wide use of many of the standard Python modules (namely `numpy`, `scipy`, `pandas`, `matplotlib`) for its general purposes. 
+
+The Quantum toolbox in Python (QuTiP) -> https://qutip.org/ is required. 
 
 Tests have been carried out using the `pytest` framework and the `hypothesis` module.
 
@@ -172,13 +174,7 @@ The GUI has been implemented with the tools provided by the Python library `kivy
 
 `kivy` -> https://kivy.org/#home
 
-In order to run the GUI, it is required the additional installation of the module `kivy.garden` and `garden.matplotlib.backend_kivy`.
-
-**Remark:** The package `garden.matplotlib.backend_kivy` is only compatible with `matplotlib` 3.1 or older.
-
-`kivy.garden` -> https://kivy.org/doc/stable/api-kivy.garden.html
-
-`garden.matplotlib.backend_kivy` -> https://github.com/kivy-garden/garden.matplotlib/blob/master/backend_kivy.py
+In order to run the GUI, it is required the additional installation of the module `kivy.`
 
 ### Installation 
 The development version of the package may be installed by navigating to the 
