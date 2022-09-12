@@ -184,7 +184,7 @@ directory `PULSEE` (where the file `setup.py` is located) and running
 
 ### Modules of the software
 
-PULSEE is made up by 6 modules. Each of them is described in full detail in the wiki page of the repository of GitHub which hosts the project:
+PULSEE's modules are described in detail in the wiki page of the repository of GitHub which hosts the project:
 
 https://github.com/DavideCandoli/NQR-NMRSimulationSoftware/wiki
 [deprecated]
@@ -276,7 +276,10 @@ Below, the content and usage of these modules is reported briefly:
      
   1. `evolve`
      
-     Evolves the state of the system under the action of a given electromagnetic pulse, or just the stationary Hamiltonian. Evolution is carried out approximating the evolution operator with the first terms of the Magnus expansion and the user can specify in which dynamical picture to evolve the system.
+     Evolves the state of the system under the action of a given electromagnetic pulse, or just the stationary Hamiltonian. Evolution is carried out in one of the three methods: 
+     - Direct diagonalization for time independet Hamiltonians.
+     - Average Hamiltonian Theory: approximating the evolution operator with the first terms of the Magnus expansion and the user can specify in which dynamical picture to evolve the system.
+     - QuTiP evolution with mesolve.
 
   1. `FID_signal`
   
@@ -306,6 +309,7 @@ Below, the content and usage of these modules is reported briefly:
   physics and chemistry respectively. The execution of the following command from the terminal
   
   `$ python PULSEE_CMP_GUI.py`
+  `$ python PULSEE_CHEM_GUI.py`
   
   launches the application. This has been developed using the tools provided by the library Kivy.
   
