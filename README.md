@@ -187,7 +187,7 @@ directory `PULSEE` (where the file `setup.py` is located) and running
 PULSEE is made up by 6 modules. Each of them is described in full detail in the wiki page of the repository of GitHub which hosts the project:
 
 https://github.com/DavideCandoli/NQR-NMRSimulationSoftware/wiki
-[depreciated]
+[deprecated]
 
 Below, the content and usage of these modules is reported briefly:
 
