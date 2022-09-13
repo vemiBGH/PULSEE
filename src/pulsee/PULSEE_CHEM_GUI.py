@@ -1130,7 +1130,7 @@ class Pulse_Sequence(FloatLayout):
                     sim_man.pulse[i]['frequency'][j] = float(null_string(self.frequency[i][j].text))
                     sim_man.pulse[i]['amplitude'][j] = float(null_string(self.amplitude[i][j].text))
                     sim_man.pulse[i]['phase'][j] = (float(null_string(self.phase[i][j].text))*np.pi)/180
-                    sim_man.pulse[i]['theta_p'][j] = (float(null_string(self.theta_p[i][j].text))*np.pi)/180
+                    sim_man.pulse[i]['theta_p'][j] = (float(null_string(self.theta_p[i][j].text))*np.pi)/180 + np.pi/2
                     sim_man.pulse[i]['phi_p'][j] = (float(null_string(self.phi_p[i][j].text))*np.pi)/180
                     sim_man.pulse_time[i] = float(null_string(self.pulse_times[i].text))
                                 
