@@ -5,7 +5,7 @@ import pandas as pd
 import math
 from fractions import Fraction
 
-from qutip import Options, mesolve, Qobj, tensor, expect
+from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 from qutip.solver import Result
@@ -310,9 +310,9 @@ def nuclear_system_setup(spin_par,
     for i in range(spin_system.n_spins):
         h_i = h_q[i] + h_z[i]
         for j in range(i):
-            h_i = tensor(Qobj(np.eye(spin_system.spin[j].d)), h_i)
+            h_i = tensor(Qobj(qeye(spin_system.spin[j].d)), h_i)
         for k in range(spin_system.n_spins)[i+1:]:
-            h_i = tensor(h_i, Qobj(np.eye(spin_system.spin[k].d)))
+            h_i = tensor(h_i, Qobj(qeye(spin_system.spin[k].d)))
         h_unperturbed = h_unperturbed + [Qobj(h_i)]
     
     if j_matrix is not None:
@@ -436,13 +436,13 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     
     # Operator of the magnetic moment of the spin system
     if isinstance(spin,  ManySpins):
-        magnetic_moment = Qobj(np.eye(spin.d))*0
+        magnetic_moment = Qobj(qeye(spin.d))*0
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi*spin.spin[i].I['x']
             for j in range(i):
-                mm_i = tensor(Qobj(np.eye(spin.spin[j].d)), mm_i)
+                mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
             for k in range(spin.n_spins)[i+1:]:
-                mm_i = tensor(mm_i, Qobj(np.eye(spin.spin[k].d)))
+                mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
             magnetic_moment = magnetic_moment + mm_i
     else:
         magnetic_moment = spin.gyro_ratio_over_2pi*spin.I['x']
