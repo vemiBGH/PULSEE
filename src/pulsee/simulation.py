@@ -362,8 +362,7 @@ def nuclear_system_setup(spin_par,
     if h_userDef is not None:
         h_unperturbed += (h_userDefined(h_userDef))
     if isinstance(initial_state, str) and initial_state == 'canonical':
-
-        dm_initial = canonical_density_matrix(Qobj(np.sum(h_unperturbed, axis=0)), 
+        dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)),
                                                 temperature)
     else:
         dm_initial = Qobj(initial_state)
@@ -425,7 +424,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
-    h_unperturbed = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
+    h_unperturbed = Qobj(np.sum(h_unperturbed), dims=h_unperturbed[0].dims)
     energies, o_change_of_basis = h_unperturbed.eigenstates()
     
     transition_frequency = []
@@ -679,10 +678,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if solver == magnus or solver == 'magnus': 
         o_change_of_picture = None
         if picture == 'IP':
-            o_change_of_picture = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
+            o_change_of_picture = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
-        h_total = Qobj(np.sum(h_unperturbed, axis=0), dims=h_unperturbed[0].dims)
+        h_total = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
         h_new_picture = []
         for t in times: 
             h_new_picture.append(h_changed_picture(spin, mode, h_total, o_change_of_picture, t))
@@ -701,7 +700,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                 scaled_h.append([i[0] * 2 * np.pi, i[1]])
             else: 
                 scaled_h.append(2 * np.pi * i)
-
         result = mesolve(scaled_h, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
         return final_state # return last time step of density matrix evolution.
@@ -1135,7 +1133,6 @@ e   matplotlib.axis.Axis representing the figure built up by the function.
         cb.set_label(phi_label)
 
     if save:
-        print(1)
         plt.savefig(destination + name, dpi=fig_dpi)
 
     if show:
@@ -1260,7 +1257,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
             env *= dec(t) # Different name to avoid bizarre variable scope bug
                           # (can't have same name as iteration var in line 1117.)
 
-        dm_t = free_evolution(dm, Qobj(np.sum(h_unperturbed, axis=0)), t)
+        dm_t = free_evolution(dm, Qobj(sum(h_unperturbed)), t)
         FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env * np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
     
     return times, np.array(FID)
@@ -1829,7 +1826,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list: 
-        h = Qobj(np.sum(h, axis=0), dims=h[0].dims)
+        h = Qobj(sum(h), dims=h[0].dims)
 
     if fid: 
         e_ops.append(Qobj(np.array(spin.I['+'])))
