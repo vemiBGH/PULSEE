@@ -276,8 +276,6 @@ def nuclear_system_setup(spin_par,
     h_q = []
     h_z = []        
     
-    h_unperturbed = []
-    
     for i in range(len(spin_par)):
         spins.append(NuclearSpin(spin_par[i]['quantum number'], \
                                   spin_par[i]['gamma/2pi']))
@@ -613,8 +611,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                evolution is carried out when picture='RRF'. The details on the
                organisation of these data can be found in the description of
                function RRF_Operator.  By default, all the values in this map
-               are set to 0 (RRF
-               equivalent to the LAB frame).
+               are set to 0 (RRF equivalent to the LAB frame).
                
     - `n_points`: float
                 Counts the number of points in which the time interval [0,
@@ -656,11 +653,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
 
-    times = np.linspace(0, pulse_time, num=max(2, int(n_points)))
+    times = np.linspace(0, pulse_time, num=max(2, int(n_points * pulse_time)))
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
-    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0,
-                                            factor_t_dependence=True)
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, factor_t_dependence=True)
 
     # match tolerance to operators.posititivity tolerance.
     if order is None and (solver == magnus or solver == 'magnus'):
@@ -669,12 +665,15 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         order = 12
 
     if opts is None: 
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
+        # opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
+        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, nsteps=10000)
     else: 
         opts.order = order
         
+    # h_unperturbed and h_perturbation are both lists. If H = H0 + H1*f1(t) + H2*f1(t) + ..., then
+    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...] (refer to QuTiP's mesolve documentation for further detail)
     h = h_unperturbed + h_perturbation
-    result = None
+    # result = None
     if solver == magnus or solver == 'magnus': 
         o_change_of_picture = None
         if picture == 'IP':
@@ -695,12 +694,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
         # Magnus expansion solver includes 2 pi factor in exponentiations; 
         # scale Hamiltonians by this factor for `mesolve` for consistency.
-        for i in h: 
-            if type(i) == list or type(i) == tuple: 
-                scaled_h.append([i[0] * 2 * np.pi, i[1]])
-            else: 
-                scaled_h.append(2 * np.pi * i)
-        result = mesolve(scaled_h, Qobj(dm_initial), times, options=opts)
+        for h_term in h: 
+            if type(h_term) == list or type(h_term) == tuple: # of the form: (Hm, fm(t))
+                scaled_h.append([h_term[0] * 2 * np.pi, h_term[1]])
+            else: # of the form: H0
+                scaled_h.append(2 * np.pi * h_term) 
+
+        result = mesolve(scaled_h, Qobj(dm_initial), times, options=opts, progress_bar=True)
         final_state = result.states[-1]
         return final_state # return last time step of density matrix evolution.
 
