@@ -181,7 +181,7 @@ def pulse_time_dep_coeff(frequency, phase):
     Function with signature f(t: float, args: iterable) -> float
     """
     def time_dependence_function(t, args):
-        return math.cos(frequency * t - phase)
+        return np.cos(frequency * t - phase)
     return time_dependence_function
 
 
@@ -243,10 +243,11 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
     1. When the passed frequency parameter is a negative quantity;
     2. When the passed B_1 parameter is a negative quantity.
     """
-    if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave must be a positive quantity")
+    #if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave must be a positive quantity")
     if B_1 < 0: raise ValueError("The amplitude of the electromagnetic wave must be a positive quantity")
+
     # Notice the following does not depend on spin
-    t_dependence = pulse_time_dep_coeff(frequency, phase)
+    t_dependence = pulse_time_dep_coeff(frequency, phase) # this variable is a function!
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence: 
         return Qobj(h_t_independent), t_dependence
@@ -291,7 +292,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     OR 
     A list of tuples of the form (H_m, f_m(t)) for each mode m. 
     """
-    h_pulse = Qobj(np.eye(spin.d))*0
+
     omega = mode['frequency']
     B = mode['amplitude']
     phase = mode['phase']
@@ -324,12 +325,18 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # Append total hamiltonian for this mode to mode_hamiltonians
                 mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
         elif isinstance(spin, NuclearSpin):
-            mode_hamiltonians = [h_single_mode_pulse(spin, omega[i], B[i],
-                    phase[i], theta[i], phi[i], t, factor_t_dependence=True)
-                        for i in mode.index]
+            for i in mode.index:
+                # Ix term
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i],
+                                                             t, factor_t_dependence=True))
+                # Iy term (used the fact cos(x - pi/2) = sin(x)) (phase is + pi/2 because we have cos(w*t MINUS phase))
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i] + np.pi/2, theta[i], phi[i] + np.pi/2,
+                                                             t, factor_t_dependence=True))
+            # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function' (which returns cos(w0*t)))]
             
         return mode_hamiltonians
     else:
+        h_pulse = Qobj(np.zeros((spin.d,spin.d)))
         if isinstance(spin, ManySpins):
             for i in mode.index:
                 # dimensions of vector inputs to tensor; should be same as dual vector 
