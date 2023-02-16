@@ -86,7 +86,7 @@ class Qobj(QutipQobj):
         Indicates if the operator satisfies the characteristic properties of a 
         density matrix; i.e., positive semi-definite, unit trace, and
         hermiticity. 
-        
+
     Methods
     -------
     copy()
@@ -145,6 +145,7 @@ class Qobj(QutipQobj):
 
     *Implemented by PULSEE wrapper.
     """
+
     def __init__(self, inpt=None, dims=None, shape=None,
                  type=None, isherm=None, copy=True,
                  fast=False, superrep=None, isunitary=None):
@@ -152,8 +153,8 @@ class Qobj(QutipQobj):
         Qobj constructor.
         """
         super().__init__(inpt, dims, shape, type, isherm, copy, fast, superrep,
-                            isunitary)
-        
+                         isunitary)
+
     @property
     def positivity(self):
         """
@@ -162,19 +163,16 @@ class Qobj(QutipQobj):
         with an error margin of 10^(-10)).
 
         Modified from pulsee.operators.Operator.positivity in legacy version.
-        
+
         Returns
         -------
         True, when positivity is verified.
-        
+
         False, when positivity is not verified.
         """
         eigenvalues = eig(self)[0]
         return np.all(np.real(eigenvalues) >= -1e-10)
-    
+
     @property
-    def isdm(self): 
+    def isdm(self):
         return self.isherm and self.positivity and self.tr() == 1
-
-
-
