@@ -655,25 +655,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     times = np.linspace(0, pulse_time, num=max(2, int(n_points * pulse_time)))
 
-    # Split into operator and time-dependent coefficient as per QuTiP scheme.
-    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, factor_t_dependence=True)
-
     # match tolerance to operators.posititivity tolerance.
     if order is None and (solver == magnus or solver == 'magnus'):
-        order = 3
-    elif order is None: 
-        order = 12
+        order = 2
 
     if opts is None: 
-        # opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, order=order)
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False, nsteps=10000)
-    else: 
-        opts.order = order
-        
-    # h_unperturbed and h_perturbation are both lists. If H = H0 + H1*f1(t) + H2*f1(t) + ..., then
-    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...] (refer to QuTiP's mesolve documentation for further detail)
-    h = h_unperturbed + h_perturbation
-    # result = None
+        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+
     if solver == magnus or solver == 'magnus': 
         o_change_of_picture = None
         if picture == 'IP':
@@ -685,11 +673,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         for t in times: 
             h_new_picture.append(h_changed_picture(spin, mode, h_total, o_change_of_picture, t))
 
-        result = magnus(h_new_picture, Qobj(dm_initial), times, options=opts)
+        result = magnus(h_new_picture, Qobj(dm_initial), times, order)
         dm_evolved = changed_picture(result.states[-1], o_change_of_picture, times[-1] - times[0], invert=True)
         return dm_evolved
 
-    elif solver == mesolve or solver == 'mesolve':
+    # Split into operator and time-dependent coefficient as per QuTiP scheme.
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, factor_t_dependence=True)
+    # h_unperturbed and h_perturbation are both lists. If H = H0 + H1*f1(t) + H2*f1(t) + ..., then
+    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...] (refer to QuTiP's mesolve documentation for further detail)
+    h = h_unperturbed + h_perturbation
+
+    if solver == mesolve or solver == 'mesolve':
         scaled_h = [] 
 
         # Magnus expansion solver includes 2 pi factor in exponentiations; 
@@ -747,9 +741,9 @@ def RRF_operator(spin, RRF_par):
     nu = RRF_par['nu_RRF']
     theta = RRF_par['theta_RRF']
     phi = RRF_par['phi_RRF']
-    RRF_o = nu*(spin.I['z']*math.cos(theta) + \
-                spin.I['x']*math.sin(theta)*math.cos(phi) + \
-                spin.I['y']*math.sin(theta)*math.sin(phi))
+    RRF_o = nu*(spin.I['z'] * np.cos(theta) + \
+                spin.I['x'] * np.sin(theta) * np.cos(phi) + \
+                spin.I['y'] * np.sin(theta) * np.sin(phi))
     return Qobj(RRF_o)
 
 
@@ -1693,7 +1687,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig, ax 
 
 
-def magnus(h_list, rho0, tlist, options=Options()):
+def magnus(h_list, rho0, tlist, order):
     """
     Magnus expansion solver. 
 
@@ -1705,16 +1699,15 @@ def magnus(h_list, rho0, tlist, options=Options()):
               Initial density matrix 
     - `tlist`: Iterable[float]
                List of times at which the system will be solved. 
-    - `options`: qutip.Options
-                 Options for this solver. Default: see default `Options`
-                 instance as specified by QuTiP.  
+    - `order`: qutip.Options
+                the order number for magnus
     
     Returns:
     --------
     qutip.Result instance with the evolved density matrix. 
     """
 
-    if options.order > 3: 
+    if order > 3: 
         raise ValueError('Magnus expansion solver does not support order > 3. ' + \
                         f'Given order {options.order}.')
     output = Result()
@@ -1723,9 +1716,9 @@ def magnus(h_list, rho0, tlist, options=Options()):
     time_step = tlist[1] - tlist[0]
 
     magnus_exp = magnus_expansion_1st_term(h_list, time_step)
-    if options.order > 1:
+    if order > 1:
         magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_list, time_step)
-        if options.order > 2:
+        if order > 2:
             magnus_exp = magnus_exp + magnus_expansion_3rd_term(h_list, time_step)
         
     dm_evolved_new_picture = rho0.transform((- magnus_exp).expm())
@@ -1857,6 +1850,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
         
         rhot = []
         e_opst = []
+        # change this to unzip
         for r, e in res: 
             rhot.append(r)
             e_opst.append(e)
