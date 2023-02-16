@@ -331,28 +331,30 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
-            for i in mode.index:
-                t_dependence = pulse_time_dep_coeff(omega[i], phase[i])
-                # dimensions of vector inputs to tensor; should be same as dual vector
-                # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
-                # to matrix being square.
-                dims = [s.d for s in spin.spin]
-                h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
+            for angle in [0, np.pi/2]:
+                # Angle adds both Ix and Iy circular pulses in the rotating frame, used for qutip.
+                for i in mode.index:
+                    t_dependence = pulse_time_dep_coeff(omega[i], phase[i] + angle)
+                    # dimensions of vector inputs to tensor; should be same as dual vector
+                    # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
+                    # to matrix being square.
+                    dims = [s.d for s in spin.spin]
+                    h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
 
-                # Construct tensor product of operators acting on each spin.
-                # Take a tensor product where every operator except the nth
-                # is the identity, add those together
-                for n in range(spin.n_spins):
-                    term_n = pulse_t_independent_op(spin.spin[n], B[i],
-                                                    theta[i], phi[i])
-                    for m in range(spin.n_spins)[:n]:
-                        term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
-                    for l in range(spin.n_spins)[n+1:]:
-                        term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
-                    h_t_independent += term_n
+                    # Construct tensor product of operators acting on each spin.
+                    # Take a tensor product where every operator except the nth
+                    # is the identity, add those together
+                    for n in range(spin.n_spins):
+                        term_n = pulse_t_independent_op(spin.spin[n], B[i],
+                                                        theta[i], phi[i] + angle)
+                        for m in range(spin.n_spins)[:n]:
+                            term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
+                        for l in range(spin.n_spins)[n+1:]:
+                            term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
+                        h_t_independent += term_n
 
-                # Append total hamiltonian for this mode to mode_hamiltonians
-                mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
+                    # Append total hamiltonian for this mode to mode_hamiltonians
+                    mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
