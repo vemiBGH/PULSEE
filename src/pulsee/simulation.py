@@ -1,7 +1,7 @@
 import numpy as np
 import pandas as pd
-import math
 from fractions import Fraction
+import sys
 
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
@@ -1553,7 +1553,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         else:
             return np.pi
 
-    atan = math.atan(- int_imag_fourier / int_real_fourier)
+    atan = np.arctan(- int_imag_fourier / int_real_fourier)
 
     if int_real_fourier > 0:
         phase = atan + np.pi / 2
@@ -1867,11 +1867,10 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
 
     if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
-        try:
-            get_ipython().__class__.__name__
-            res = ipynb_parallel_map(
-                _ed_evolve_solve_t, tlist, (h, rho0, e_ops))
-        except NameError:
+        # Better method than calling 'get_ipython()' since this requires calling un un-imported function
+        if 'ipykernel' in sys.modules:
+            res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
+        else:
             res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,))
 
         rhot = []

@@ -1,5 +1,3 @@
-import math
-from cmath import exp
 import numpy as np
 import pandas as pd
 from qutip import Qobj, tensor
@@ -35,9 +33,9 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
     if B_0 < 0: raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
 
     h_z = -spin.gyro_ratio_over_2pi * B_0 * \
-        (math.sin(theta_z) * math.cos(phi_z) * spin.I['x'] +
-         math.sin(theta_z) * math.sin(phi_z) * spin.I['y'] +
-         math.cos(theta_z) * spin.I['z'])
+        (np.sin(theta_z) * np.cos(phi_z) * spin.I['x'] +
+         np.sin(theta_z) * np.sin(phi_z) * spin.I['y'] +
+         np.cos(theta_z) * spin.I['z'])
     return Qobj(h_z)
 
 
@@ -65,12 +63,12 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
     laboratory reference frame (expressed in MHz).
 
     """
-    if math.isclose(spin.quantum_number, 1/2, rel_tol=1e-10):
+    if np.isclose(spin.quantum_number, 1/2, rel_tol=1e-10):
         return Qobj(spin.d)*0
     I = spin.quantum_number
     h_q = (e2qQ/(I * (2 * I-1))) *  \
           ((1/2) * (3 * (spin.I['z'] ** 2) - Qobj(np.eye(spin.d)) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q) +
-           (math.sqrt(6)/4) *
+           (np.sqrt(6)/4) *
            ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) *
             v1_EFG(-1, eta, alpha_q, beta_q, gamma_q) +
             (spin.I['z'] * spin.I['-'] + spin.I['-'] * spin.I['z']) *
@@ -105,8 +103,8 @@ def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     if eta < 0 or eta > 1:
         raise ValueError(
             "The asymmetry parameter must fall in the interval [0, 1]")
-    v0 = (1/2) * (((3 * (math.cos(beta_q)) ** 2 - 1) / 2) -
-                  (eta * (math.sin(beta_q)) ** 2) * (math.cos(2 * gamma_q)) / 2)
+    v0 = (1/2) * (((3 * (np.cos(beta_q)) ** 2 - 1) / 2) -
+                  (eta * (np.sin(beta_q)) ** 2) * (np.cos(2 * gamma_q)) / 2)
     return v0
 
 
@@ -140,10 +138,10 @@ def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
         raise ValueError(
             "The asymmetry parameter must fall within the interval [0, 1]")
     sign = np.sign(sign)
-    v1 = (1/2) * (- 1j * sign * math.sqrt(3/8) * math.sin(2 * beta_q) * exp(sign * 1j * alpha_q) +
-                  1j * (eta/(math.sqrt(6)))*math.sin(beta_q) *
-                  (((1+sign * math.cos(beta_q))/2) * exp(1j * (sign * alpha_q+2 * gamma_q)) -
-                   ((1-sign * math.cos(beta_q))/2) * exp(1j * (sign * alpha_q-2 * gamma_q))))
+    v1 = (1/2) * (- 1j * sign * np.sqrt(3/8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q) +
+                  1j * (eta/(np.sqrt(6)))*np.sin(beta_q) *
+                  (((1+sign * np.cos(beta_q))/2) * np.exp(1j * (sign * alpha_q+2 * gamma_q)) -
+                   ((1-sign * np.cos(beta_q))/2) * np.exp(1j * (sign * alpha_q-2 * gamma_q))))
     return v1
 
 
@@ -178,11 +176,11 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
             "The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
     v2 = (1/2) * \
-         (math.sqrt(3/8) * ((math.sin(beta_q)) ** 2) * exp(sign * 2j * alpha_q) +
-          (eta / math.sqrt(6)) * exp(sign*2j * alpha_q) *
+         (np.sqrt(3/8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q) +
+          (eta / np.sqrt(6)) * np.exp(sign*2j * alpha_q) *
           (
-             exp(2j * gamma_q) * ((1 + sign * math.cos(beta_q)) ** 2) / 4 +
-             exp(-2j * gamma_q) * ((1 - sign * math.cos(beta_q)) ** 2) / 4
+             np.exp(2j * gamma_q) * ((1 + sign * np.cos(beta_q)) ** 2) / 4 +
+             np.exp(-2j * gamma_q) * ((1 - sign * np.cos(beta_q)) ** 2) / 4
          )
     )
     return v2
@@ -543,7 +541,7 @@ def h_D1(spins,  b_D, theta):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
 
     """
-    h_d1 = b_D * (1/2) * (3 * (math.cos(theta) ** 2)-1) * \
+    h_d1 = b_D * (1/2) * (3 * (np.cos(theta) ** 2)-1) * \
         (2 * tensor(spins.spin[0].I['z'], spins.spin[1].I['z']) -
          tensor(spins.spin[0].I['x'], spins.spin[1].I['x']) -
          tensor(spins.spin[0].I['y'], spins.spin[1].I['y']))
@@ -569,7 +567,7 @@ def h_D2(spins,  b_D, theta):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
 
     """
-    h_d2 = b_D*(3*(math.cos(theta)**2)-1)*(
+    h_d2 = b_D*(3*(np.cos(theta)**2)-1)*(
         tensor(spins.spin[0].I['z'], spins.spin[1].I['z']))
     return Qobj(h_d2)
 
@@ -675,4 +673,4 @@ def h_userDefined(matrix):
    Observable object representing the Hamiltonian.
 
     """
-    return Operator(matrix)
+    return Qobj(matrix)
