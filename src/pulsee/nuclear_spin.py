@@ -1,4 +1,3 @@
-import math
 import numpy as np
 
 from qutip import Qobj, tensor
@@ -70,7 +69,7 @@ class NuclearSpin:
     tolerance of 10^(-10)).
         """
         s = float(s)
-        if not math.isclose(int(2*s), 2*s, rel_tol=1e-10):
+        if not np.isclose(int(2*s), 2*s, rel_tol=1e-10):
             raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
@@ -97,7 +96,7 @@ class NuclearSpin:
         for m in range(self.d):
             for n in range(self.d):
                 if n - m == 1:
-                    I_raising[m, n] = math.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n + 1))
+                    I_raising[m, n] = np.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n + 1))
         return Qobj(I_raising)
 
     def lowering_operator(self):
@@ -109,7 +108,7 @@ class NuclearSpin:
         for m in range(self.d):
             for n in range(self.d):
                 if n - m == -1:
-                    I_lowering[m, n] = math.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n - 1))
+                    I_lowering[m, n] = np.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n - 1))
         return Qobj(I_lowering)
 
     def cartesian_operator(self):

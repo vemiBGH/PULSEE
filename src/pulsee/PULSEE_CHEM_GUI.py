@@ -1,5 +1,4 @@
 # Generic python imports
-import math
 import numpy as np
 import pandas as pd
 from fractions import Fraction
@@ -229,7 +228,7 @@ class System_Parameters(FloatLayout):
         sim_man.nu_q = 3*sim_man.quad_par['coupling constant']/ \
                       (2*sim_man.spin_par['quantum number']* \
                       (2*sim_man.spin_par['quantum number']-1))* \
-                       math.sqrt(1+(sim_man.quad_par['asymmetry parameter']**2)/3)
+                       np.sqrt(1+(sim_man.quad_par['asymmetry parameter']**2)/3)
             
         self.nu_q_label = Label(text="\N{GREEK SMALL LETTER NU}Q = " + str(round(sim_man.nu_q, 2)) + "MHz", pos=(250, 140), size=(200, 200), font_size='15sp')
         self.add_widget(self.nu_q_label)

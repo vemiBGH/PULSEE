@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import math
 from fractions import Fraction
 
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
@@ -1553,7 +1552,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         else:
             return np.pi
 
-    atan = math.atan(- int_imag_fourier / int_real_fourier)
+    atan = np.arctan(- int_imag_fourier / int_real_fourier)
 
     if int_real_fourier > 0:
         phase = atan + np.pi / 2

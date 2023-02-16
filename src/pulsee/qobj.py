@@ -1,4 +1,3 @@
-import numpy
 from qutip import Qobj as QutipQobj
 import numpy as np
 from scipy.linalg import eig
