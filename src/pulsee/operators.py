@@ -94,7 +94,8 @@ def positivity(q):
 
 def free_evolution(q, static_hamiltonian, time):
     """
-    Returns the density matrix represented by the owner object evolved through a time interval time under the action of the stationary Hamiltonian static_hamiltonian.
+    Returns the density matrix represented by the owner object evolved through a
+    time interval time under the action of the stationary Hamiltonian static_hamiltonian.
     
     Parameters
     ----------
@@ -105,7 +106,7 @@ def free_evolution(q, static_hamiltonian, time):
     
     Returns
     -------
-    A DensityMatrix object representing the evolved state.
+    A DensityMatrix object representing the evolved state converted to rads.
     """
     iHt = 1j * 2 * np.pi * static_hamiltonian * time 
     evolved_dm = q.transform(iHt.expm())
@@ -123,7 +124,8 @@ def random_operator(d):
            
     Returns
     -------
-    An Operator object whose matrix is d-dimensional and has random complex elements with real and imaginary parts in the half-open interval [-10., 10.].
+    An Operator object whose matrix is d-dimensional and has random complex elements
+     with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
     real_part = round_elements(20 * (np.random.rand(d, d) -1/2), 2)

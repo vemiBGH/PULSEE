@@ -573,7 +573,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
     | ----- | ------------- | ------------- | --------- | ----------- | --------- |
-    |       |     (MHz)     |      (T)      |   (rad)   |    (rad)    |   (rad)   |
+    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |
     |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |
     |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |
     |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
@@ -586,13 +586,11 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
             given time duration without any applied pulse.
             
             The default value is None.
-    
     - `pulse_time`: float
                   Duration of the pulse of radiation sent onto the sample (in
                   microseconds).
                   
                   The default value is 0.
-    
     - `picture`: string
                Sets the dynamical picture where the density matrix of the system
                is evolved for the `magnus` solver. May take the values:
@@ -601,24 +599,31 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         2.'RRF' (or anything else), which sets the picture corresponding to a
         rotating reference frame whose features are specified in argument
         RRF_par.
-        
                The default value is RRF.
-               
+
                The choice of picture has no effect on solvers other than `magnus`.
-    
     - `RRF_par`: dict
                Specifies the properties of the rotating reference frame where
-               evolution is carried out when picture='RRF'. The details on the
-               organisation of these data can be found in the description of
-               function RRF_Operator.  By default, all the values in this map
-               are set to 0 (RRF equivalent to the LAB frame).
+               evolution is carried out when picture='RRF.' The
+               keys and values required to this argument are shown in the table
+               below:
+               |      key      |  value  |
+               |      ---      |  -----  |
+               |'nu_RRF' (MHz) |  float  |
+               |  'theta_RRF'  |  float  |
+               |   'phi_RRF'   |  float  |
+               where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
+               'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
+               to the plane of rotation in the LAB frame (in radians).
+               By default, all the values in this map are set to 0 (RRF equivalent
+               to the LAB frame).
                
     - `n_points`: float
                 Counts the number of points in which the time interval [0,
                 pulse_time] is sampled in the discrete approximation of the
                 time-dependent Hamiltonian of the system.  Default value is 10.
 
-    - `order`: integer 
+    - `order`: float
                The order of the simulation method to use. For `magnus` must be <= 3. 
                Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
   
@@ -646,19 +651,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if pulse_time == 0 or np.all(np.absolute((dm_initial.full() \
                                     - np.eye(spin.d))) < 1e-10):
         return dm_initial
-    
-        
+
     if mode is None:
         mode = pd.DataFrame([(0., 0., 0., 0., 0)], 
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
-        
 
     times = np.linspace(0, pulse_time, num=max(2, int(n_points * pulse_time)))
 
-    # match tolerance to operators.posititivity tolerance.
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 2
 
+    # match tolerance to operators.posititivity tolerance.
     if opts is None: 
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
 
@@ -717,9 +720,7 @@ def RRF_operator(spin, RRF_par):
     - spin: NuclearSpin
             
             Spin under study.
-  
     - RRF_par: dict
-                
                Specifies the properties of the rotating reference frame. The
                keys and values required to this argument are shown in the table
                below:
@@ -729,7 +730,6 @@ def RRF_operator(spin, RRF_par):
                |    'nu_RRF'   |  float  |
                |  'theta_RRF'  |  float  |
                |   'phi_RRF'   |  float  |
-    
     where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
     'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
     to the plane of rotation in the LAB frame (in radians).
@@ -1189,6 +1189,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     
                            Specifies the frequency of rotation of the
                            measurement apparatus with respect to the LAB system.
+                           (in MHz)
                            Default value is 0.
     
     - n_points: float
@@ -1252,7 +1253,8 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                           # (can't have same name as iteration var in line 1117.)
 
         dm_t = free_evolution(dm, Qobj(sum(h_unperturbed)), t)
-        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env * np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
+        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env * \
+                    np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
     
     return times, np.array(FID)
 
@@ -1347,7 +1349,7 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
     
     Returns
     -------
-    The frequency and fourier-transformed signal as a tuple (f, ft)
+    The frequency (in MHz) and fourier-transformed signal as a tuple (f, ft)
     """
     if padding is not None: 
         # This code by Stephen Carr
@@ -1699,7 +1701,7 @@ def magnus(h_list, rho0, tlist, order):
               Initial density matrix 
     - `tlist`: Iterable[float]
                List of times at which the system will be solved. 
-    - `order`: qutip.Options
+    - `order`: int
                 the order number for magnus
     
     Returns:
@@ -1736,7 +1738,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     - `t`: float
            The time up to which to evolve.
     - `h`: Qobj or List[Qobj]:
-           The Hamiltonian describing the system. 
+           The Hamiltonian describing the system in MHz.
     - `rho0`: Qobj
               The initial state of the system as a density matrix. 
     - `e_ops`: List[Qobj]:
@@ -1744,7 +1746,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     
     Returns
     ------
-    The evolved density matrix at the time specified by `t`, and the expectation 
+    The evolved density matrix at the time specified by `t,' and the expectation
     values of each operartor in `e_ops` at `t`. The latter is in the format
     [e_op1[t], e_op2[t], ..., e_opn[t]]. 
     """
@@ -1770,7 +1772,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
     Params
     ------
     - `h`: Qobj or List[Qobj]:
-           The Hamiltonian describing the system. 
+           The Hamiltonian describing the system in MHz.
     - `rho0`: Qobj
               The initial state of the system as a density matrix. 
     - `spin`: NuclearSpin

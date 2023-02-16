@@ -24,7 +24,8 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
     
     Returns
     -------
-    An Observable object which represents the Zeeman Hamiltonian in the laboratory reference frame (expressed in MHz).
+    An Observable object which represents the Zeeman Hamiltonian in the laboratory reference frame
+    (expressed in rad/sec).
     Raises
     ------
     
@@ -46,16 +47,19 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
     - spin: NuclearSpin
             Spin under study;
     - e2qQ: float
-            Product of the quadrupole moment constant, eQ, and the eigenvalue of the EFG tensor which is greatest in absolute value, eq. e2qQ is measured in MHz;
+            Product of the quadrupole moment constant, eQ, and the eigenvalue of the EFG tensor
+            which is greatest in absolute value, eq. e2qQ is measured in MHz;
     - eta: float in the interval [0, 1]
            Asymmetry parameter of the EFG;
     - alpha_q, beta_q, gamma_q: float
-                                Euler angles for the conversion from the system of the principal axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
+                                Euler angles for the conversion from the system of the principal
+                                axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
                                 
     Returns
     -------
     If the quantum number of the spin is 1/2, the whole calculation is skipped and a null Observable object is returned.
-    Otherwise, the function returns the Observable object which correctly represents the quadrupolar Hamiltonian in the laboratory reference frame (expressed in MHz).
+    Otherwise, the function returns the Observable object which correctly represents the quadrupolar Hamiltonian in the
+    laboratory reference frame (expressed in MHz).
 
     """
     if math.isclose(spin.quantum_number, 1/2, rel_tol=1e-10):
@@ -76,14 +80,16 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
 
 def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     """
-    Returns the component V0 of the EFG tensor (divided by eq) as seen in the LAB system. This quantity is expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
+    Returns the component V0 of the EFG tensor (divided by eq) as seen in the LAB system. This quantity is expressed
+    in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
     
     Parameters
     ----------
     - eta: float in the interval [0, 1]
            Asymmetry parameter of the EFG;
     - alpha_q, beta_q, gamma_q: float
-                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
+                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS) to
+                                the lab system (LAB) (expressed in radians).
     
     Returns
     -------
@@ -98,7 +104,8 @@ def v0_EFG(eta, alpha_q, beta_q, gamma_q):
 
 def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     """
-    Returns the components V+/-1 of the EFG tensor (divided by eq) as seen in the LAB system. These quantities are expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
+    Returns the components V+/-1 of the EFG tensor (divided by eq) as seen in the LAB system.
+    These quantities are expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
     
     Parameters
     ----------
@@ -107,7 +114,8 @@ def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     - eta: float in the interval [0, 1]
            Asymmetry parameter of the EFG;
     - alpha_q, beta_q, gamma_q: float
-                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
+                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS)
+                                to the lab system (LAB) (expressed in radians).
     
     Returns
     -------
@@ -130,7 +138,8 @@ def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
 
 def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     """
-    Returns the components V+/-2 of the EFG tensor (divided by eq) as seen in the LAB system. These quantities are expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
+    Returns the components V+/-2 of the EFG tensor (divided by eq) as seen in the LAB system. These quantities are
+    expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
     
     Parameters
     ----------
@@ -139,7 +148,8 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     - eta: float in the interval [0, 1]
            Asymmetry parameter of the EFG tensor;
     - alpha_q, beta_q, gamma_q: float
-                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
+                                Euler angles connecting the system of the principal axes of the EFG tensor (PAS) to
+                                the lab system (LAB) (expressed in radians).
                                 
     Returns
     -------
@@ -172,7 +182,7 @@ def pulse_time_dep_coeff(frequency, phase):
     Parameters
     ----------
     - frequency: non-negative float
-                 Frequency of the monochromatic wave (expressed in MHz).
+                 Frequency of the monochromatic wave (expressed in rad/sec).
     - phase: float
              Inital phase of the wave (at t=0) (expressed in radians).
 
@@ -194,14 +204,13 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
     ----------
     - spin: NuclearSpin
             Spin under study.
-    - frequency: non-negative float
-                 Frequency of the monochromatic wave (expressed in MHz).
     - phase: float
              Inital phase of the wave (at t=0) (expressed in radians).
     - B_1: non-negative float
            Maximum amplitude of the oscillating magnetic field (expressed in tesla).
     - theta_1, phi_1: float
-                      Polar and azimuthal angles of the direction of polarization of the magnetic wave in the LAB frame (expressed in radians);
+                      Polar and azimuthal angles of the direction of polarization of
+                      the magnetic wave in the LAB frame (expressed in radians);
     """
     return - spin.gyro_ratio_over_2pi * B_1 \
             * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x'] \
@@ -212,20 +221,22 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
 def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
                         factor_t_dependence=False):
     """
-    Computes the term of the Hamiltonian describing the interaction with a monochromatic and linearly polarized electromagnetic pulse.
+    Computes the term of the Hamiltonian describing the interaction with a monochromatic
+    and linearly polarized electromagnetic pulse.
     
     Parameters
     ----------
     - spin: NuclearSpin
             Spin under study.
     - frequency: non-negative float
-                 Frequency of the monochromatic wave (expressed in MHz).
+                 Frequency of the monochromatic wave (expressed in rad/sec).
     - phase: float
              Inital phase of the wave (at t=0) (expressed in radians).
     - B_1: non-negative float
            Maximum amplitude of the oscillating magnetic field (expressed in tesla).
     - theta_1, phi_1: float
-                      Polar and azimuthal angles of the direction of polarization of the magnetic wave in the LAB frame (expressed in radians);
+                      Polar and azimuthal angles of the direction of polarization of the magnetic
+                      wave in the LAB frame (expressed in radians);
     - t: float
          Time of evaluation of the Hamiltonian (expressed in microseconds).
     - factor_t_dependence: bool
@@ -235,7 +246,8 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
     
     Returns
     -------
-    An Observable object which represents the Hamiltonian of the coupling with the electromagnetic pulse evaluated at time t (expressed in MHz).
+    An Observable object which represents the Hamiltonian of the coupling with the electromagnetic pulse
+    evaluated at time t (expressed in rad/sec).
     
     Raises
     ------
@@ -243,7 +255,8 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
     1. When the passed frequency parameter is a negative quantity;
     2. When the passed B_1 parameter is a negative quantity.
     """
-    #if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave must be a positive quantity")
+    #if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave
+    # must be a positive quantity")
     if B_1 < 0: raise ValueError("The amplitude of the electromagnetic wave must be a positive quantity")
 
     # Notice the following does not depend on spin
@@ -274,7 +287,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
   
     | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
     | ----- | ------------- | ------------- | --------- | ----------- | --------- |
-    |       |     (MHz)     |      (T)      |   (rad)   |    (rad)    |   (rad)   |
+    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |
     |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |
     |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |
     |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
@@ -288,7 +301,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     Returns
     -------
     An Observable object which represents the Hamiltonian of the coupling with
-    the superposition of the given modes evaluated at time t (expressed in MHz).
+    the superposition of the given modes evaluated at time t (expressed in rad/sec).
     OR 
     A list of tuples of the form (H_m, f_m(t)) for each mode m. 
     """
@@ -330,9 +343,10 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i],
                                                              t, factor_t_dependence=True))
                 # Iy term (used the fact cos(x - pi/2) = sin(x)) (phase is + pi/2 because we have cos(w*t MINUS phase))
-                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i] + np.pi/2, theta[i], phi[i] + np.pi/2,
-                                                             t, factor_t_dependence=True))
-            # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function' (which returns cos(w0*t)))]
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i] + np.pi/2, theta[i], \
+                                                             phi[i] + np.pi/2, t, factor_t_dependence=True))
+            # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
+            # (which returns cos(w0*t)))]
             
         return mode_hamiltonians
     else:
@@ -475,7 +489,8 @@ def h_CS_isotropic(spin, delta_iso, B_0):
     
     Returns
     -------
-    An Observable object which represents the Zeeman Hamiltonian in the laboratory reference frame (expressed in MHz).
+    An Observable object which represents the Zeeman Hamiltonian in the laboratory reference
+    frame (expressed in MHz).
     
     Raises
     ------
@@ -568,7 +583,7 @@ def h_j_secular(spins,  J):
     - spin: ManySpins
             2 Spins in the system under study;
     - J: float
-         The J-coupling constant in Hz.
+         The J-coupling constant in MHz.
     
     Returns
     -------
@@ -582,7 +597,8 @@ def h_tensor_coupling(spins, t):
     """
     Yields Hamiltonian representing an interaction of the form I_1 A I_2 where
     I_i are spin operators and A is a rank-2 tensor. Could for example be used 
-    to obtain [hyperfine interaction Hamiltonian.](https://epr.ethz.ch/education/basic-concepts-of-epr/int--with-nucl--spins/hyperfine-interaction.html)
+    to obtain [hyperfine interaction Hamiltonian.]
+    (https://epr.ethz.ch/education/basic-concepts-of-epr/int--with-nucl--spins/hyperfine-interaction.html)
     Author: Lucas Brito
 
     NOTE: This can be used for any coupling that has a tensor interaction, such
@@ -594,7 +610,7 @@ def h_tensor_coupling(spins, t):
     - spins: ManySpins
              2-spin system under study 
     - t: a numpy ndarray representing the interaction tensor of this 
-              Hamiltonian. 
+              Hamiltonian in MHz.
     
     Returns
     ------
@@ -619,6 +635,8 @@ def h_tensor_coupling(spins, t):
 def h_userDefined(matrix):
     """
     Rehashes the numpy array of the user defined hamiltonian as an Operator.
+
+    Important! --> Make sure to give the Hamiltonian in MHz!
 
     Parameters
     ----------
