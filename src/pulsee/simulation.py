@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 from fractions import Fraction
+import sys
 
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
@@ -1866,11 +1867,10 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
 
     if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
-        try:
-            get_ipython().__class__.__name__
-            res = ipynb_parallel_map(
-                _ed_evolve_solve_t, tlist, (h, rho0, e_ops))
-        except NameError:
+        # Better method than calling 'get_ipython()' since this requires calling un un-imported function
+        if 'ipykernel' in sys.modules:
+            res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
+        else:
             res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,))
 
         rhot = []
