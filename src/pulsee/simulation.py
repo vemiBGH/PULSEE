@@ -654,7 +654,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         mode = pd.DataFrame([(0., 0., 0., 0., 0)],
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 
-    times = np.linspace(0, pulse_time, num=max(2, int(n_points * pulse_time)))
+    times = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
 
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 2
@@ -678,7 +678,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
         result = magnus(h_new_picture, Qobj(dm_initial), times, order)
         dm_evolved = changed_picture(
-            result.states[-1], o_change_of_picture, times[-1] - times[0], invert=True)
+            result.states[-1], o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
@@ -1737,7 +1737,7 @@ def magnus(h_list, rho0, tlist, order):
     output = Result()
     output.times = tlist
     output.solver = 'magnus'
-    time_step = tlist[1] - tlist[0]
+    time_step = (tlist[1] - tlist[0])/(len(tlist)-1)
 
     magnus_exp = magnus_expansion_1st_term(h_list, time_step)
     if order > 1:
