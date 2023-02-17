@@ -3,6 +3,11 @@ Jiwoo:
 - [ ] Timd dependent Hamiltonians during FID and as ``pulses''
 - [ ] Test, QA
 
+Ilija
+- [ ] Update notebooks
+- [ ] Add notebook simple 1/2 case
+- [ ] Add noetbook selective pulse
+
 ### Project status
 
 - [x] Check the demo for hyperfine (small errors) 
