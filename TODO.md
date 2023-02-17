@@ -1,3 +1,8 @@
+Jiwoo: 
+- [ ] FID parallelizable
+- [ ] Timd dependent Hamiltonians during FID and as ``pulses''
+- [ ] Test, QA
+
 ### Project status
 
 - [x] Check the demo for hyperfine (small errors) 
