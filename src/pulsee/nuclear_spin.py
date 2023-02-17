@@ -69,7 +69,7 @@ class NuclearSpin:
     tolerance of 10^(-10)).
         """
         s = float(s)
-        if not np.isclose(int(2*s), 2*s, rel_tol=1e-10):
+        if not np.isclose(int(2*s), 2*s, rtol=1e-10):
             raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
