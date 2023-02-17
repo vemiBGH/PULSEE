@@ -1,9 +1,9 @@
 import numpy as np
-import pandas as pd
+from tqdm import trange
 from qutip import Qobj, tensor
 
 from .nuclear_spin import NuclearSpin, ManySpins
-from .operators import changed_picture
+from .operators import changed_picture, commutator
 
 
 def h_zeeman(spin, theta_z, phi_z, B_0):
@@ -417,7 +417,7 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
     Observable object representing the Hamiltonian of the pulse evaluated at time t in the new picture (in MHz).
     # """
     h_pulse = h_multiple_mode_pulse(spin, mode, t)
-    h_cp = changed_picture((h_unperturbed + h_pulse - h_change_of_picture),
+    h_cp = changed_picture((h_unperturbed - h_change_of_picture + h_pulse),
                            h_change_of_picture, t)
     return Qobj(h_cp)
 
@@ -680,3 +680,95 @@ def h_userDefined(matrix):
 
     """
     return Qobj(matrix)
+
+# TODO: Better way to calcualte Magnus terms...
+def magnus_expansion_1st_term(h_total, times, time_step, spin, mode, o_change_of_picture):
+    """
+    Returns the 1st order term of the Magnus expansion of the passed time-dependent Hamiltonian.
+
+    Parameters
+    ----------
+    - h: np.ndarray of Observable
+         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable
+          objects which correspond to the Hamiltonian evaluated at successive instants of time.
+          The start and end points of the array are taken as the extremes of integration 0 and t;
+    - time_step: float
+                 Time difference between adjacent points of the array h, expressed in microseconds.
+
+    Returns
+    -------
+    An adimensional Operator object resulting from the integral of h over the whole array size,
+     multiplied by -1j*2*np.pi. The integration is carried out through the traditional trapezoidal rule.
+    """
+    h = []
+    integral = 0
+    for t in trange(len(times)):
+        h.append(h_changed_picture(
+            spin, mode, h_total, o_change_of_picture, times[t]))
+
+        # Trapezoid Rule
+        if t == 0:
+            integral = h[t]
+        elif t == len(times)-1:
+            integral += h[t]
+        else:
+            integral += 2 * h[t]
+
+    magnus_1st_term = Qobj(1j * 2 * np.pi * integral * time_step / 2)
+    return magnus_1st_term, h
+
+
+def magnus_expansion_2nd_term(h, time_step):
+    """
+    Returns the 2nd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
+
+    Parameters
+    ----------
+    - h: np.ndarray of Observable
+         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable objects
+         which correspond to the Hamiltonian evaluated at successive instants of time. The start and
+          end points of the array are taken as the extremes of integration 0 and t;
+    - time_step: float
+                 Time difference between adjacent points of the array h, expressed in microseconds.
+
+    Returns
+    -------
+    An adimensional Operator object representing the 2nd order Magnus term of the Hamiltonian,
+    calculated applying Commutator to the elements in h and summing them.
+    """
+    integral = (h[0] * 0)
+    for t1 in trange(len(h) - 1):
+        for t2 in range(t1 + 1):
+            integral += (commutator(h[t1], h[t2])) * (time_step ** 2)
+    magnus_2nd_term = ((2 * np.pi) ** 2) * Qobj((1 / 2) * integral)
+    return magnus_2nd_term
+
+
+def magnus_expansion_3rd_term(h, time_step):
+    """
+    Returns the 3rd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
+
+    Parameters
+    ----------
+
+    - h: np.ndarray of Observable
+         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable objects
+         which correspond to the Hamiltonian evaluated at successive instants of time. The start and end
+         points of the array are taken as the extremes of integration 0 and t;
+    - time_step: float
+                 Time difference between adjacent points of the array h, expressed in microseconds.
+
+    Returns
+    -------
+    An adimensional Operator object representing the 3rd order Magnus term of the Hamiltonian,
+    calculated applying nested Commutator to the elements in h and summing them.
+    """
+    integral = (h[0] * 0)
+    for t1 in trange(len(h) - 1):
+        for t2 in range(t1 + 1):
+            for t3 in range(t2 + 1):
+                integral += \
+                           ((commutator(h[t1], commutator(h[t2], h[t3])) +
+                             commutator(h[t3], commutator(h[t2], h[t1])))) * (time_step ** 3)
+    magnus_3rd_term = Qobj((-1j / 6) * ((2 * np.pi) ** 3) * integral)
+    return magnus_3rd_term

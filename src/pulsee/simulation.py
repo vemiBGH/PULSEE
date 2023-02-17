@@ -15,19 +15,19 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.patches import Patch
 
 from .operators import canonical_density_matrix, \
-    free_evolution, magnus_expansion_1st_term, \
-    magnus_expansion_2nd_term, magnus_expansion_3rd_term, \
+    free_evolution, \
     changed_picture, exp_diagonalize
 
 from .nuclear_spin import NuclearSpin, ManySpins
 
 from .hamiltonians import h_zeeman, h_quadrupole, \
     h_multiple_mode_pulse, \
-    h_changed_picture, \
     h_j_coupling, \
     h_CS_isotropic, h_D1, h_D2, \
     h_HF_secular, h_j_secular, h_tensor_coupling, \
-    h_userDefined
+    h_userDefined, \
+    magnus_expansion_1st_term, \
+    magnus_expansion_2nd_term, magnus_expansion_3rd_term
 
 
 def nuclear_system_setup(spin_par,
@@ -654,7 +654,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         mode = pd.DataFrame([(0., 0., 0., 0., 0)],
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 
-    times = np.linspace(0, pulse_time, num=max(2, int(n_points)), retstep=True)
+    times, tm = np.linspace(0, pulse_time, num=max(3, int(n_points)), retstep=True)
 
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 2
@@ -664,19 +664,14 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
 
     if solver == magnus or solver == 'magnus':
-        o_change_of_picture = None
         if picture == 'IP':
             o_change_of_picture = Qobj(
                 sum(h_unperturbed), dims=h_unperturbed[0].dims)
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
         h_total = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
-        h_new_picture = []
-        for t in times:
-            h_new_picture.append(h_changed_picture(
-                spin, mode, h_total, o_change_of_picture, t))
 
-        result = magnus(h_new_picture, Qobj(dm_initial), times, order)
+        result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
             result.states[-1], o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
@@ -1711,7 +1706,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig, ax
 
 
-def magnus(h_list, rho0, tlist, order):
+def magnus(h_list, rho0, tlist, order, spin, mode, o_change_of_picture):
     """
     Magnus expansion solver. 
 
@@ -1737,16 +1732,17 @@ def magnus(h_list, rho0, tlist, order):
     output = Result()
     output.times = tlist
     output.solver = 'magnus'
-    time_step = (tlist[1] - tlist[0])/(len(tlist)-1)
+    time_step = (tlist[-1] - tlist[0])/(len(tlist)-1)
+    T = tlist[-1] - tlist[0]
 
-    magnus_exp = magnus_expansion_1st_term(h_list, time_step)
+    magnus_exp, h_list = magnus_expansion_1st_term(h_list, tlist, time_step, spin, mode, o_change_of_picture)
     if order > 1:
         magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_list, time_step)
         if order > 2:
             magnus_exp = magnus_exp + \
                 magnus_expansion_3rd_term(h_list, time_step)
 
-    dm_evolved_new_picture = rho0.transform((- magnus_exp).expm())
+    dm_evolved_new_picture = rho0.transform((magnus_exp/T).expm())
     output.states = [rho0, dm_evolved_new_picture]
     return output
 
