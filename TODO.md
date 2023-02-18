@@ -6,7 +6,8 @@ Jiwoo:
 
 Ilija
 - [ ] Update notebooks
-- [ ] Add notebook simple 1/2 case
+- [x] Add notebook simple 1/2 case
+- [ ] Check magnus higher order integral approx
 - [ ] Add noetbook selective pulse
 
 ### Project status
