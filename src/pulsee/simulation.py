@@ -1720,7 +1720,12 @@ def magnus(h_list, rho0, tlist, order, spin, mode, o_change_of_picture):
                List of times at which the system will be solved. 
     - `order`: int
                 the order number for magnus
-
+    - `spin`: NuclearSpin
+            Spin under study.
+    - `mode`: pandas.DataFrame
+            Table of the parameters of each electromagnetic mode in the pulse.
+    - o_change_of_picture: Qobj
+                Operator which generates the change to the new picture.
     Returns:
     --------
     qutip.Result instance with the evolved density matrix. 

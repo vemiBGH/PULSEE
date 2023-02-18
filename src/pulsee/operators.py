@@ -43,8 +43,8 @@ def changed_picture(q, h_change_of_picture, time, invert=False):
     ----------
     - q: Qobj
     - h_change_of_picture: Qobj
-                                Operator which generates the change to the new picture. Typically,
-                                this operator is a term of the Hamiltonian (measured in MHz).
+                Operator which generates the change to the new picture. Typically,
+                this operator is a term of the Hamiltonian (measured in MHz).
     - time: float
                 Instant of evaluation of the operator in the new picture, expressed in microseconds.
     - invert: bool

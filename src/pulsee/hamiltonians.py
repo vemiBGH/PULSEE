@@ -682,19 +682,26 @@ def h_userDefined(matrix):
     return Qobj(matrix)
 
 # TODO: Better way to calcualte Magnus terms...
-def magnus_expansion_1st_term(h_total, times, time_step, spin, mode, o_change_of_picture):
+def magnus_expansion_1st_term(h_total, tlist, time_step, spin, mode, o_change_of_picture):
     """
     Returns the 1st order term of the Magnus expansion of the passed time-dependent Hamiltonian.
 
     Parameters
     ----------
-    - h: np.ndarray of Observable
+    - h_total: np.ndarray of Observable
          Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable
           objects which correspond to the Hamiltonian evaluated at successive instants of time.
           The start and end points of the array are taken as the extremes of integration 0 and t;
+    - `tlist`: Iterable[float]
+            List of times at which the system will be solved.
     - time_step: float
-                 Time difference between adjacent points of the array h, expressed in microseconds.
-
+            Time difference of steps, expressed in microseconds
+    - `spin`: NuclearSpin
+            Spin under study.
+    - `mode`: pandas.DataFrame
+            Table of the parameters of each electromagnetic mode in the pulse.
+    - o_change_of_picture: Qobj
+                Operator which generates the change to the new picture.
     Returns
     -------
     An adimensional Operator object resulting from the integral of h over the whole array size,
@@ -702,14 +709,14 @@ def magnus_expansion_1st_term(h_total, times, time_step, spin, mode, o_change_of
     """
     h = []
     integral = 0
-    for t in trange(len(times)):
+    for t in trange(len(tlist)):
         h.append(h_changed_picture(
-            spin, mode, h_total, o_change_of_picture, times[t]))
+            spin, mode, h_total, o_change_of_picture, tlist[t]))
 
         # Trapezoid Rule
         if t == 0:
             integral = h[t]
-        elif t == len(times)-1:
+        elif t == len(tlist)-1:
             integral += h[t]
         else:
             integral += 2 * h[t]
@@ -729,7 +736,7 @@ def magnus_expansion_2nd_term(h, time_step):
          which correspond to the Hamiltonian evaluated at successive instants of time. The start and
           end points of the array are taken as the extremes of integration 0 and t;
     - time_step: float
-                 Time difference between adjacent points of the array h, expressed in microseconds.
+         Time difference of steps, expressed in microseconds.
 
     Returns
     -------
@@ -756,7 +763,7 @@ def magnus_expansion_3rd_term(h, time_step):
          which correspond to the Hamiltonian evaluated at successive instants of time. The start and end
          points of the array are taken as the extremes of integration 0 and t;
     - time_step: float
-                 Time difference between adjacent points of the array h, expressed in microseconds.
+        Time difference of steps, expressed in microseconds.
 
     Returns
     -------
