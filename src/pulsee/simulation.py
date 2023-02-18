@@ -1880,9 +1880,15 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         # Better method than calling 'get_ipython()' since this requires calling un un-imported function
         if 'ipykernel' in sys.modules:
-            res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
+            # make sure to have a running cluser:
+            try:
+                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+            except OSError:
+                print('Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
+                raise OSError
+
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,))
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,), progress_bar=True)
 
         rhot = []
         e_opst = []
