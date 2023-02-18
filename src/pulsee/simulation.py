@@ -542,7 +542,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
            pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0,
-                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None):
+                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None, ret_allstates=False):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
     action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -625,6 +625,11 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                The order of the simulation method to use. For `magnus` must be <= 3. 
                Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
 
+    - 'ret_allstates': boolean
+                    Specify whether to return every calculated state or only last one.
+                    Default False --> returns only last state.
+                    [Magnus solver only returns final state]
+
     Action
     ------
     If
@@ -673,7 +678,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
         result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
-            result.states[-1], o_change_of_picture, pulse_time, invert=True)
+                result.states[-1], o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
@@ -696,9 +701,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
         result = mesolve(scaled_h, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
-        final_state = result.states[-1]
-        # return last time step of density matrix evolution.
-        return final_state
+        if ret_allstates:
+            to_return = []
+            for state in result.states:
+                to_return.append(state.conj())
+            return to_return
+        else:
+            final_state = result.states[-1]
+            # return last time step of density matrix evolution.
+            # conj for consistency
+            return final_state.conj()
+
 
     elif type(solver) == str:
         raise ValueError('Invalid solver: ' + solver)
