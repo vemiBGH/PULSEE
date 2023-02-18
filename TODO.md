@@ -1,6 +1,7 @@
 Jiwoo: 
 - [ ] FID parallelizable
 - [ ] Timd dependent Hamiltonians during FID and as ``pulses''
+- [ ] Arbitrary pulse shape (not just square pulse)
 - [ ] Test, QA
 
 Ilija
