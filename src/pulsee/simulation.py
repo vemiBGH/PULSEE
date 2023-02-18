@@ -679,7 +679,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
                 result.states[-1], o_change_of_picture, pulse_time, invert=True)
-        return dm_evolved
+        return dm_evolved.conj()
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
     h_perturbation = h_multiple_mode_pulse(
@@ -702,15 +702,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         result = mesolve(scaled_h, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
         if ret_allstates:
-            to_return = []
-            for state in result.states:
-                to_return.append(state.conj())
-            return to_return
+            return result.states
         else:
-            final_state = result.states[-1]
             # return last time step of density matrix evolution.
-            # conj for consistency
-            return final_state.conj()
+            return result.states[-1]
 
 
     elif type(solver) == str:
