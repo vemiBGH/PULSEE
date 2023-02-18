@@ -662,7 +662,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     times, tm = np.linspace(0, pulse_time, num=max(3, int(n_points)), retstep=True)
 
     if order is None and (solver == magnus or solver == 'magnus'):
-        order = 2
+        order = 1
 
     # match tolerance to operators.posititivity tolerance.
     if opts is None:
@@ -1046,7 +1046,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
     Returns
     -------
     An object of the class matplotlib.figure.Figure and an object of the class 
-e   matplotlib.axis.Axis representing the figure built up by the function.
+   matplotlib.axis.Axis representing the figure built up by the function.
 
     """
     if isinstance(dm, Qobj):
@@ -1799,7 +1799,9 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
               all_t=False, T2=100):
     """
     Evolve the given density matrix with the interactions given by the provided 
-    Hamiltonian using exact diagonalization. 
+    Hamiltonian using exact diagonalization.
+
+    ipyparallel must be present for Jupyter notebooks.
 
     Params
     ------
