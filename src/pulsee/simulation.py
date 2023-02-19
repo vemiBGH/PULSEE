@@ -6,7 +6,6 @@ import sys
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
-from qutip.solver import Result
 
 import matplotlib.pylab as plt
 from matplotlib import colors as clrs
@@ -26,8 +25,7 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
     h_CS_isotropic, h_D1, h_D2, \
     h_HF_secular, h_j_secular, h_tensor_coupling, \
     h_userDefined, \
-    magnus_expansion_1st_term, \
-    magnus_expansion_2nd_term, magnus_expansion_3rd_term
+    magnus
 
 
 def nuclear_system_setup(spin_par,
@@ -418,7 +416,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
 
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
-    h_unperturbed = Qobj(np.sum(h_unperturbed), dims=h_unperturbed[0].dims)
+    h_unperturbed = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
     energies, o_change_of_basis = h_unperturbed.eigenstates()
 
     transition_frequency = []
@@ -450,7 +448,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
 
                 intensity_nu = nu * \
-                    (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
+                               (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
 
                 if not normalized:
                     p_i = dm_initial[i, i]
@@ -542,7 +540,8 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
            pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0,
-                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None, ret_allstates=False):
+                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None,
+           ret_allstates=False):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
     action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -579,6 +578,9 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
             where the meaning of each column is analogous to the corresponding
             parameters in h_single_mode_pulse.
+
+            Important: The amplitude value is B_1, not 2*B_1. The code will
+            automatically multiply by 2!
 
             When it is None, the evolution of the system is performed for the
             given time duration without any applied pulse.
@@ -675,11 +677,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
         h_total = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
-
         result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
-                result.states[-1], o_change_of_picture, pulse_time, invert=True)
-        return dm_evolved.conj()
+            result.states[-1], o_change_of_picture, pulse_time, invert=True)
+        return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
     h_perturbation = h_multiple_mode_pulse(
@@ -900,8 +901,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
                 for k in range(d_sub[i]):
                     for l in range(d_downhill):
                         tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                            ', ' + tick_label[j * d_sub[
-                                i] * d_downhill + k * d_downhill + l]
+                                                                                     ', ' + tick_label[j * d_sub[
+                            i] * d_downhill + k * d_downhill + l]
 
         for i in range(d):
             tick_label[i] = '|' + tick_label[i]
@@ -1121,8 +1122,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
                 for k in range(d_sub[i]):
                     for l in range(d_downhill):
                         tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                            ', ' + tick_label[j * d_sub[
-                                i] * d_downhill + k * d_downhill + l]
+                                                                                     ', ' + tick_label[j * d_sub[
+                            i] * d_downhill + k * d_downhill + l]
 
         for i in range(d):
             tick_label[i] = '|' + tick_label[i]
@@ -1257,7 +1258,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     Iz = spin.I['z']
     Iy = spin.I['y']
     I_plus_rotated = (1j * phi * Iz).expm() * (1j * theta * Iy).expm() \
-        * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
+                     * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
     for t in times:
 
         # Obtain total decay envelope at that time.
@@ -1471,8 +1472,8 @@ def legacy_fourier_transform_signal(times, signal, frequency_start,
             integral = np.zeros(sign_options, dtype=complex)
             for t in range(len(times)):
                 integral[s] = integral[s] + \
-                    np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
-                           nu * times[t]) * signal[t] * dt
+                              np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
+                                     nu * times[t]) * signal[t] * dt
             fourier[s].append(integral[s])
 
     if opposite_frequency == False:
@@ -1714,52 +1715,6 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     return fig, ax
 
 
-def magnus(h_list, rho0, tlist, order, spin, mode, o_change_of_picture):
-    """
-    Magnus expansion solver. 
-
-    Parameters: 
-    -----------
-    - `h_list`: Iterable[Qobj]
-                List of Hamiltonians at each time in `tlist`.
-    - `rho0`: Qobj
-              Initial density matrix 
-    - `tlist`: Iterable[float]
-               List of times at which the system will be solved. 
-    - `order`: int
-                the order number for magnus
-    - `spin`: NuclearSpin
-            Spin under study.
-    - `mode`: pandas.DataFrame
-            Table of the parameters of each electromagnetic mode in the pulse.
-    - o_change_of_picture: Qobj
-                Operator which generates the change to the new picture.
-    Returns:
-    --------
-    qutip.Result instance with the evolved density matrix. 
-    """
-
-    if order > 3:
-        raise ValueError('Magnus expansion solver does not support order > 3. ' +
-                         f'Given order {order}.')
-    output = Result()
-    output.times = tlist
-    output.solver = 'magnus'
-    time_step = (tlist[-1] - tlist[0])/(len(tlist)-1)
-    T = tlist[-1] - tlist[0]
-
-    magnus_exp, h_list = magnus_expansion_1st_term(h_list, tlist, time_step, spin, mode, o_change_of_picture)
-    if order > 1:
-        magnus_exp = magnus_exp + magnus_expansion_2nd_term(h_list, time_step)
-        if order > 2:
-            magnus_exp = magnus_exp + \
-                magnus_expansion_3rd_term(h_list, time_step)
-
-    dm_evolved_new_picture = rho0.transform((magnus_exp/T).expm())
-    output.states = [rho0, dm_evolved_new_picture]
-    return output
-
-
 def _ed_evolve_solve_t(t, h, rho0, e_ops):
     """
     Helper function for `ed_evolve`; uses exact diagonalization to evolve 
@@ -1856,12 +1811,8 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
     """
     if type(h) is not Qobj and type(h) is list:
         h = Qobj(sum(h), dims=h[0].dims)
-
     if fid:
-        e_ops.append(Qobj(np.array(spin.I['+'])))
-
-    rhot = []
-    e_opst = []
+        e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
 
     decay_envelopes = []
     try:
@@ -1899,7 +1850,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
 
         e_opst = np.concatenate(e_opst, axis=1)
 
-    elif e_ops == []:
+    elif not e_ops:
         rhot = []
         for t in tlist:
             rhot.append(_ed_evolve_solve_t(t, h, rho0, None))
