@@ -41,48 +41,6 @@ def h_zeeman(spin, theta_z, phi_z, B_0):
     return Qobj(h_z)
 
 
-def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q):
-    """
-    Computes the term of the Hamiltonian associated with the quadrupolar interaction.  
-
-    Parameters
-    ----------
-    - spin: NuclearSpin
-            Spin under study;
-    - e2qQ: float
-            Product of the quadrupole moment constant, eQ, and the eigenvalue of the EFG tensor
-            which is greatest in absolute value, eq. e2qQ is measured in MHz;
-    - eta: float in the interval [0, 1]
-           Asymmetry parameter of the EFG;
-    - alpha_q, beta_q, gamma_q: float
-                                Euler angles for the conversion from the system of the principal
-                                axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
-
-    Returns
-    -------
-    If the quantum number of the spin is 1/2, the whole calculation is skipped and a null Observable object is returned.
-    Otherwise, the function returns the Observable object which correctly represents the quadrupolar Hamiltonian in the
-    laboratory reference frame (expressed in MHz).
-
-    """
-    if np.isclose(spin.quantum_number, 1 / 2, rtol=1e-10):
-        return Qobj(spin.d) * 0
-    I = spin.quantum_number
-    h_q = (e2qQ / (I * (2 * I - 1))) * \
-          ((1 / 2) * (3 * (spin.I['z'] ** 2) - Qobj(np.eye(spin.d)) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q,
-                                                                                            gamma_q) +
-           (np.sqrt(6) / 4) *
-           ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) *
-            v1_EFG(-1, eta, alpha_q, beta_q, gamma_q) +
-            (spin.I['z'] * spin.I['-'] + spin.I['-'] * spin.I['z']) *
-            v1_EFG(+1, eta, alpha_q, beta_q, gamma_q) +
-            (spin.I['+'] ** 2) *
-            v2_EFG(-2, eta, alpha_q, beta_q, gamma_q) +
-            (spin.I['-'] ** 2) *
-            v2_EFG(2, eta, alpha_q, beta_q, gamma_q)))
-    return Qobj(h_q)
-
-
 def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     """
     Returns the component V0 of the EFG tensor (divided by eq) as seen in the LAB system. This quantity is expressed
@@ -110,6 +68,51 @@ def v0_EFG(eta, alpha_q, beta_q, gamma_q):
     v0 = (1 / 2) * (((3 * (np.cos(beta_q)) ** 2 - 1) / 2) -
                     (eta * (np.sin(beta_q)) ** 2) * (np.cos(2 * gamma_q)) / 2)
     return v0
+
+
+def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q, component_order=0):
+    """
+    Computes the term of the Hamiltonian associated with the quadrupolar interaction.
+
+    Parameters
+    ----------
+    - spin: NuclearSpin
+            Spin under study;
+    - e2qQ: float
+            Product of the quadrupole moment constant, eQ, and the eigenvalue of the EFG tensor
+            which is greatest in absolute value, eq. e2qQ is measured in MHz;
+    - eta: float in the interval [0, 1]
+           Asymmetry parameter of the EFG;
+    - alpha_q, beta_q, gamma_q: float
+                                Euler angles for the conversion from the system of the principal
+                                axes of the EFG tensor (PAS) to the lab system (LAB) (expressed in radians).
+    - component_order = 0: Int
+            Order of the quadrupolar interaction in the LAB frame.
+    Returns
+    -------
+    If the quantum number of the spin is 1/2, the whole calculation is skipped and a null Observable object is returned.
+    Otherwise, the function returns the Observable object which correctly represents the quadrupolar Hamiltonian in the
+    laboratory reference frame (expressed in MHz).
+
+    """
+    if np.isclose(spin.quantum_number, 1 / 2, rtol=1e-10):
+        return Qobj(spin.d) * 0
+    I = spin.quantum_number
+    h_q = (e2qQ / (I * (2 * I - 1))) * \
+          ((1 / 2) * (3 * (spin.I['z'] ** 2) - Qobj(np.eye(spin.d)) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q,
+                                                                                            gamma_q))
+    if component_order > 0:
+        h_q += (e2qQ / (I * (2 * I - 1))) * ((np.sqrt(6) / 4) *
+                                             ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) *
+                                              v1_EFG(-1, eta, alpha_q, beta_q, gamma_q) +
+                                              (spin.I['z'] * spin.I['-'] + spin.I['-'] * spin.I['z']) *
+                                              v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)))
+    if component_order > 1:
+        h_q += (e2qQ / (I * (2 * I - 1))) * ((spin.I['+'] ** 2) *
+                                             v2_EFG(-2, eta, alpha_q, beta_q, gamma_q) +
+                                             (spin.I['-'] ** 2) *
+                                             v2_EFG(2, eta, alpha_q, beta_q, gamma_q))
+    return Qobj(h_q)
 
 
 def v1_EFG(sign, eta, alpha_q, beta_q, gamma_q):
@@ -722,17 +725,19 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
     h = []
     integral = 0
     for t in trange(len(tlist)):
-        h.append(h_changed_picture(
-            spin, mode, h_total, o_change_of_picture, tlist[t]))
+        H = h_changed_picture(
+            spin, mode, h_total, o_change_of_picture, tlist[t])
         # Trapezoid Rule
-        if t == 0:
-            integral = h[t] * 2j * np.pi * time_step / 2
-        elif t == len(tlist) - 1:
-            integral += h[t] * 2j * np.pi * time_step / 2
+        factor = 1
+        if t == 0 or t == len(tlist) - 1:
+            factor *= 1
         else:
-            integral += 2 * h[t] * 2j * np.pi * time_step / 2
+            factor *= 2
+
+        integral += factor * H * 2j * np.pi * time_step / 2
 
         if order >= 2:
+            h.append(H)
             for t2 in range(t + 1):
                 factor = 1
 
@@ -750,7 +755,7 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
                             ((2 * np.pi * time_step) ** 2) * (1 / 2)
 
             if order >= 3:
-                for t3 in range(t2 + 1):
+                for t3 in range(1, t2 + 1):
                     factor = 1
 
                     if t == 0 or t == len(tlist) - 1:

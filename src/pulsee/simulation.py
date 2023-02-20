@@ -79,6 +79,7 @@ def nuclear_system_setup(spin_par,
       |        'alpha_q'        |       float        |
       |        'beta_q'         |       float        |
       |        'gamma_q'        |       float        |
+      |         'order'         |       int        |
 
       where 'coupling constant' stands for the product e2qQ in the expression of
       the quadrupole term of the Hamiltonian (to be provided in MHz), 'asymmetry
@@ -279,7 +280,8 @@ def nuclear_system_setup(spin_par,
                                     quad_par[i]['asymmetry parameter'],
                                     quad_par[i]['alpha_q'],
                                     quad_par[i]['beta_q'],
-                                    quad_par[i]['gamma_q']))
+                                    quad_par[i]['gamma_q'],
+                                    quad_par[i]['order']))
         else:
             h_q.append(h_quadrupole(spins[i], 0., 0., 0., 0., 0.))
 
@@ -462,7 +464,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True,
+def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=None, ylim=None,
                                    fig_dpi=400, save=False, name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding
@@ -484,6 +486,14 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
             displayed.
 
             Default value is True.
+
+    - `xlim`: 2-element iterable or `None`
+              Lower and upper x-axis limits of the plot.
+              When `None` uses `matplotlib` default.
+
+    - `ylim`: 2-element iterable or `None`
+              Lower and upper y-axis limits of the plot.
+              When `None` uses `matplotlib` default.
 
     - fig_dpi: int
 
@@ -528,6 +538,12 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
     plt.xlabel("\N{GREEK SMALL LETTER NU} (MHz)")
     plt.ylabel("Power absorption (a. u.)")
+
+    if xlim is not None:
+        plt.xlim(left=xlim[0], right=xlim[1])
+
+    if ylim is not None:
+        plt.xlim(left=ylim[0], right=ylim[1])
 
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
@@ -662,7 +678,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 
     times, tm = np.linspace(0, pulse_time, num=max(3, int(n_points)), retstep=True)
-
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 1
 
@@ -1671,7 +1686,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
 
     if norm:
         for i in range(n_plots):
-            fourier_data[i] = fourier_data[i] / np.amax(fourier_data[i])
+            fourier_data[i] = fourier_data[i] / np.amax(np.abs(fourier_data[i]))
 
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
@@ -1729,7 +1744,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     - `rho0`: Qobj
               The initial state of the system as a density matrix. 
     - `e_ops`: List[Qobj]:
-               List of operators for which to return the expectation values. 
+               List of oeprators for which to return the expectation values. 
 
     Returns
     ------
@@ -1740,18 +1755,17 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
     u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
 
-    # why not use rho0.transform() ?
-    rho_t = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
+    rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
 
     if e_ops == None:
-        return rho_t
+        return rho
 
-    exp = np.transpose([[expect(op, rho_t) for op in e_ops]])
+    exp = np.transpose([[expect(op, rho) for op in e_ops]])
 
-    return rho_t, exp
+    return rho, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=False,
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
               all_t=False, T2=100):
     """
     Evolve the given density matrix with the interactions given by the provided 
@@ -1777,7 +1791,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
              Whether to return the free induction decay (FID) signal as 
              an expectation value. If True, appends FID signal to the end of 
              the `e_ops` expectation value list. 
-    - `parallel`: Boolean
+    - `par`: Boolean
              Whether to use QuTiP's parallel computing implementation `parallel_map` 
              to evolve the system.
     - `all_t`: Boolean 
@@ -1811,25 +1825,24 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list:
-        h = Qobj(sum(h), dims = h[0].dims)
-
+        h = Qobj(sum(h), dims=h[0].dims)
     if fid:
         e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
 
     decay_envelopes = []
     try:
         for d in T2:
-            if not callable(d):  # d is a float for the T2 value
+            if not callable(d):
                 decay_envelopes.append(lambda t: np.exp(-t / d))
-            else:  # d is a function given by user
+            else:
                 decay_envelopes.append(d)
     except TypeError:
-        if not callable(T2):  # T2 is a float for the T2 value
+        if not callable(T2):
             decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else:  # T2 is a function given by user
+        else:
             decay_envelopes.append(T2)
 
-    if parallel:
+    if par:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         # Better method than calling 'get_ipython()' since this requires calling un un-imported function
         if 'ipykernel' in sys.modules:
@@ -1843,6 +1856,9 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
         else:
             res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,), progress_bar=True)
 
+        rhot = []
+        e_opst = []
+        # change this to unzip
         for r, e in res:
             rhot.append(r)
             e_opst.append(e)
