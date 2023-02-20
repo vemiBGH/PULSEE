@@ -17,19 +17,19 @@ def exp_diagonalize(q):
     A list of Qobjs including the eigenvector matrix, the diagonal eigenvalue 
     matrix, and the exponent of the diagonal eigenvalue matrix. 
     """
-    eigvals, eigvects = q.eigenstates()
-    d = np.zeros((len(eigvals), len(eigvals)), dtype=np.complex128)
-    dexp = np.zeros((len(eigvals), len(eigvals)), dtype=np.complex128)
+    evals, evects = q.eigenstates()
+    d = np.zeros((len(evals), len(evals)), dtype=np.complex128)
+    dexp = np.zeros((len(evals), len(evals)), dtype=np.complex128)
 
     i = 0
-    for e in eigvals:
+    for e in evals:
         d[i, i] = e
         dexp[i, i] = np.exp(e)
         i += 1
 
     d = Qobj(d)
     dexp = Qobj(dexp)
-    u = Qobj(np.concatenate(eigvects, axis=1))
+    u = Qobj(np.concatenate(evects, axis=1))
 
     return u, d, dexp
 
@@ -184,7 +184,8 @@ def commutator(A, B, kind='normal'):
     Parameters
     ----------
     - A, B: Operator
-
+    - kind: Str
+        (normal, anti)
     Returns
     -------
     An Operator representing the commutator of A and B.
@@ -216,5 +217,11 @@ def canonical_density_matrix(hamiltonian, temperature):
 
     exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6) / temperature
     numerator = exponent.expm()
-    canonical_dm = numerator.unit()
+    try:
+        canonical_dm = numerator.unit()
+    except ValueError:
+        print('Most likely exponent cannot be taken because the value is too high. '
+              'Either hamiltonian has a very strong interaction in MHz, or the temperature'
+              'is too low.')
+        raise ValueError
     return canonical_dm
