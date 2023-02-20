@@ -15,7 +15,7 @@ from pulsee.operators import random_operator, random_density_matrix, random_obse
                             commutator, magnus_expansion_1st_term, \
                             magnus_expansion_2nd_term, \
                             magnus_expansion_3rd_term, \
-                            canonical_density_matrix, changed_picture, free_evolution,\
+                            canonical_density_matrix, changed_picture, evolve_by_hamiltonian,\
                             positivity, unit_trace
 
 @given(d = st.integers(min_value=1, max_value=16))
@@ -138,7 +138,7 @@ def test_free_evolution_conserves_dm_properties(d):
     dm = random_density_matrix(d)
     h = random_observable(d)
     try:
-        evolved_dm = free_evolution(dm, h, 4)
+        evolved_dm = evolve_by_hamiltonian(dm, h, 4)
     except ValueError as ve:
         if "The input array lacks the following properties: \n" in ve.args[0]:
             error_message = ve.args[0][49:]
@@ -189,9 +189,9 @@ def test_linearity_evolution(d):
     dm2 = random_density_matrix(d)
     h = random_observable(d)
     dm_sum = 0.5*(dm1+dm2)
-    evolved_dm_sum = free_evolution(dm_sum, h, 5)
-    evolved_dm1 = free_evolution(dm1, h, 5)
-    evolved_dm2 = free_evolution(dm2, h, 5)
+    evolved_dm_sum = evolve_by_hamiltonian(dm_sum, h, 5)
+    evolved_dm1 = evolve_by_hamiltonian(dm1, h, 5)
+    evolved_dm2 = evolve_by_hamiltonian(dm2, h, 5)
     left_hand_side = evolved_dm_sum.full()
     right_hand_side = (0.5 * (evolved_dm1 + evolved_dm2)).full()
     note("dm1 = %r" % (dm1.full()))
