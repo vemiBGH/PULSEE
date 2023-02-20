@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm, rand_dm
+from qutip import Qobj, rand_herm, rand_dm, commutator as com
 
 
 def exp_diagonalize(q):
@@ -43,8 +43,8 @@ def changed_picture(q, h_change_of_picture, time, invert=False):
     ----------
     - q: Qobj
     - h_change_of_picture: Qobj
-                                Operator which generates the change to the new picture. Typically,
-                                this operator is a term of the Hamiltonian (measured in MHz).
+                Operator which generates the change to the new picture. Typically,
+                this operator is a term of the Hamiltonian (measured in MHz).
     - time: float
                 Instant of evaluation of the operator in the new picture, expressed in microseconds.
     - invert: bool
@@ -58,8 +58,8 @@ def changed_picture(q, h_change_of_picture, time, invert=False):
     A new Operator object equivalent to the owner object but expressed in a different picture.
     """
     t = Qobj(-1j * 2 * np.pi * h_change_of_picture * time)
-    if invert: t = -t
-    return q.transform(t.expm())
+    # if invert: t = -t
+    return q.transform(t.expm(), inverse=invert)
 
 
 def unit_trace(q):
@@ -134,8 +134,8 @@ def random_operator(d):
      with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
-    real_part = round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
-    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d)-1/2), 2)
+    real_part = round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
+    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
     random_array = real_part + imaginary_part
     return Qobj(random_array)
 
@@ -177,7 +177,7 @@ def random_density_matrix(d):
     return rand_dm(d)
 
 
-def commutator(A, B):
+def commutator(A, B, kind='normal'):
     """
     Returns the commutator of operators A and B.
 
@@ -189,89 +189,7 @@ def commutator(A, B):
     -------
     An Operator representing the commutator of A and B.
     """
-    return A * B - B * A
-
-
-def magnus_expansion_1st_term(h, time_step):
-    """
-    Returns the 1st order term of the Magnus expansion of the passed time-dependent Hamiltonian.
-
-    Parameters
-    ----------
-    - h: np.ndarray of Observable
-         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable
-          objects which correspond to the Hamiltonian evaluated at successive instants of time.
-          The start and end points of the array are taken as the extremes of integration 0 and t;
-    - time_step: float 
-                 Time difference between adjacent points of the array h, expressed in microseconds.
-
-    Returns
-    -------
-    An adimensional Operator object resulting from the integral of h over the whole array size,
-     multiplied by -1j*2*np.pi. The integration is carried out through the traditional trapezoidal rule.
-    """
-    integral = h[0]
-    for t in range(len(h) - 2):
-        integral = integral + 2 * h[t + 1]
-    integral = (integral + h[-1]) * (time_step) / 2
-    magnus_1st_term = Qobj(-1j * 2 * np.pi * integral)
-    return magnus_1st_term
-
-
-def magnus_expansion_2nd_term(h, time_step):
-    """
-    Returns the 2nd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
-
-    Parameters
-    ----------
-    - h: np.ndarray of Observable
-         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable objects
-         which correspond to the Hamiltonian evaluated at successive instants of time. The start and
-          end points of the array are taken as the extremes of integration 0 and t;
-    - time_step: float
-                 Time difference between adjacent points of the array h, expressed in microseconds.
-
-    Returns
-    -------
-    An adimensional Operator object representing the 2nd order Magnus term of the Hamiltonian,
-    calculated applying Commutator to the elements in h and summing them.
-    """
-    integral = (h[0]*0)
-    for t1 in range(len(h)-1):
-        for t2 in range(t1+1):
-            integral = integral + (commutator(h[t1], h[t2]))*(time_step ** 2)
-    magnus_2nd_term = ((2 * np.pi) ** 2) * Qobj(-(1 / 2) * integral)
-    return magnus_2nd_term
-
-
-def magnus_expansion_3rd_term(h, time_step):
-    """
-    Returns the 3rd order term of the Magnus expansion of the passed time-dependent Hamiltonian.
-
-    Parameters
-    ----------
-
-    - h: np.ndarray of Observable
-         Time-dependent Hamiltonian (expressed in MHz). Technically, an array of Observable objects
-         which correspond to the Hamiltonian evaluated at successive instants of time. The start and end
-         points of the array are taken as the extremes of integration 0 and t;
-    - time_step: float
-                 Time difference between adjacent points of the array h, expressed in microseconds.
-
-    Returns
-    -------
-    An adimensional Operator object representing the 3rd order Magnus term of the Hamiltonian,
-    calculated applying nested Commutator to the elements in h and summing them.
-    """
-    integral = (h[0] * 0)
-    for t1 in range(len(h) - 1):
-        for t2 in range(t1 + 1):
-            for t3 in range(t2 + 1):
-                integral = integral + \
-                    ((commutator(h[t1], commutator(h[t2], h[t3])) +
-                      commutator(h[t3], commutator(h[t2], h[t1])))) * (time_step ** 3)
-    magnus_3rd_term = Qobj((1j / 6) * ((2 * np.pi) ** 3) * integral)
-    return magnus_3rd_term
+    return com(A, B, kind=kind)
 
 
 def canonical_density_matrix(hamiltonian, temperature):
@@ -296,8 +214,7 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    # don't forget we need to multiply factor of 2 * np.pi back into the hamiltonian
-    exponent = - ((Planck/Boltzmann) * hamiltonian * 2 * np.pi * 1e6) / temperature
+    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6) / temperature
     numerator = exponent.expm()
     canonical_dm = numerator.unit()
     return canonical_dm
