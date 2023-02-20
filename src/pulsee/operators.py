@@ -17,19 +17,19 @@ def exp_diagonalize(q):
     A list of Qobjs including the eigenvector matrix, the diagonal eigenvalue 
     matrix, and the exponent of the diagonal eigenvalue matrix. 
     """
-    evals, evects = q.eigenstates()
-    d = np.zeros((len(evals), len(evals)), dtype=np.complex128)
-    dexp = np.zeros((len(evals), len(evals)), dtype=np.complex128)
+    eigvals, eigvects = q.eigenstates()
+    d = np.zeros((len(eigvals), len(eigvals)), dtype=np.complex128)
+    dexp = np.zeros((len(eigvals), len(eigvals)), dtype=np.complex128)
 
     i = 0
-    for e in evals:
+    for e in eigvals:
         d[i, i] = e
         dexp[i, i] = np.exp(e)
         i += 1
 
     d = Qobj(d)
     dexp = Qobj(dexp)
-    u = Qobj(np.concatenate(evects, axis=1))
+    u = Qobj(np.concatenate(eigvects, axis=1))
 
     return u, d, dexp
 
