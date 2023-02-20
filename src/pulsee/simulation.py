@@ -1776,6 +1776,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
     u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
 
+    # why not use rho0.transform() ?
     rho_t = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
 
     if e_ops == None:
