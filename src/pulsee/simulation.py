@@ -14,7 +14,7 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.patches import Patch
 
 from .operators import canonical_density_matrix, \
-    free_evolution, \
+    evolve_by_hamiltonian, \
     changed_picture, exp_diagonalize
 
 from .nuclear_spin import NuclearSpin, ManySpins
@@ -555,8 +555,9 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=Non
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0,
-                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None,
+           pulse_time=0, picture='RRF', 
+           RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0}, 
+           n_points=30, order=None, opts=None,
            ret_allstates=False):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -1272,17 +1273,17 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
     Iy = spin.I['y']
-    I_plus_rotated = (1j * phi * Iz).expm() * (1j * theta * Iy).expm() \
-                     * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
-    for t in times:
+    I_plus_rotated = spin.I['+'].transform((1j * theta * Iy).expm())\
+                                .transform((1j * phi * Iz).expm())
 
+    for t in times:
         # Obtain total decay envelope at that time.
         env = 1
         for dec in decay_envelopes:
             env *= dec(t)  # Different name to avoid bizarre variable scope bug
             # (can't have same name as iteration var in line 1117.)
 
-        dm_t = free_evolution(dm, Qobj(sum(h_unperturbed)), t)
+        dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
         FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env *
                     np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
 
@@ -1854,7 +1855,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
                 raise OSError
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,), progress_bar=True)
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
 
         rhot = []
         e_opst = []
@@ -1884,12 +1885,12 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
         fids = e_opst[-1]
         for i in range(len(fids)):
             # Obtain total decay envelope at that time.
-            env = 1
-            for dec in decay_envelopes:
+            envelope = 1
+            for decay in decay_envelopes:
                 # Different name to avoid bizarre variable scope bug
-                env *= dec(tlist[i])
+                envelope *= decay(tlist[i])
                 # (can't have same name as iteration var in line 1117.)
-            fid_exp.append(fids[i] * env)
+            fid_exp.append(fids[i] * envelope)
 
         e_opst[-1] = fid_exp
 

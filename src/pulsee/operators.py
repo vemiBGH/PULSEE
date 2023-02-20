@@ -98,15 +98,18 @@ def positivity(q):
     return np.all(np.real(eigenvalues) >= -1e-10)
 
 
-def free_evolution(q, static_hamiltonian, time):
+def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
     Returns the density matrix represented by the owner object evolved through a
     time interval time under the action of the stationary Hamiltonian static_hamiltonian.
 
     Parameters
     ----------
-    - static_hamiltonian: Observable or in general a hermitian Operator
-                            Time-independent Hamiltonian of the system, in MHz.
+    - dm: QObj
+          The initial density matrix
+    - static_hamiltonian: Qobj
+                          Observable or in general a hermitian Operator
+                          Time-independent Hamiltonian of the system, in MHz.
     - time: float
                 Duration of the evolution, expressed in microseconds.
 
@@ -115,7 +118,8 @@ def free_evolution(q, static_hamiltonian, time):
     A DensityMatrix object representing the evolved state converted to rads.
     """
     iHt = 1j * 2 * np.pi * static_hamiltonian * time
-    evolved_dm = q.transform(iHt.expm())
+    # dm.transform(U) = U * dm * U_dagger
+    evolved_dm = dm.transform(iHt.expm()) 
     return evolved_dm
 
 
