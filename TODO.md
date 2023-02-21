@@ -10,6 +10,13 @@ Ilija
 - [ ] Check magnus higher order integral approx
 - [ ] Add noetbook selective pulse
 
+### General Features
+- [ ] Gradient pulses & Arbitrary shape pulses
+- [ ] GRAPE
+- [ ] Automatically find the \pi pulse
+- [ ] Similate dissipation?
+- [ ] Noise spectroscopy  
+
 ### Project status
 
 - [x] Check the demo for hyperfine (small errors) 
