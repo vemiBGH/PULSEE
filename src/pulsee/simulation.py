@@ -1745,7 +1745,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     - `rho0`: Qobj
               The initial state of the system as a density matrix. 
     - `e_ops`: List[Qobj]:
-               List of oeprators for which to return the expectation values. 
+               List of operators for which to return the expectation values. 
 
     Returns
     ------
@@ -1756,17 +1756,17 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
     u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
 
-    rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
+    rho_t = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
 
     if e_ops == None:
-        return rho
+        return rho_t
 
-    exp = np.transpose([[expect(op, rho) for op in e_ops]])
+    exp = np.transpose([[expect(op, rho_t) for op in e_ops]])
 
-    return rho, exp
+    return rho_t, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=False,
               all_t=False, T2=100):
     """
     Evolve the given density matrix with the interactions given by the provided 
@@ -1826,30 +1826,31 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list:
-        h = Qobj(sum(h), dims=h[0].dims)
+        h = Qobj(sum(h), dims = h[0].dims)
     if fid:
         e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
 
     decay_envelopes = []
     try:
-        for d in T2:
+        for d in T2: # d is a float for the T2 value
             if not callable(d):
                 decay_envelopes.append(lambda t: np.exp(-t / d))
-            else:
+            else: # d is a function given by user
                 decay_envelopes.append(d)
     except TypeError:
-        if not callable(T2):
+        if not callable(T2): # T2 is a float for the T2 value
             decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else:
+        else: # T2 is a function given by user
             decay_envelopes.append(T2)
 
-    if par:
+    if parallel:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         # Better method than calling 'get_ipython()' since this requires calling un un-imported function
         if 'ipykernel' in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+                res = ipynb_parallel_map(_ed_evolve_solve_t, 
+                                         tlist, (h, rho0, e_ops), progress_bar=True)
             except OSError:
                 print('Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
                 raise OSError
@@ -1859,7 +1860,6 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
 
         rhot = []
         e_opst = []
-        # change this to unzip
         for r, e in res:
             rhot.append(r)
             e_opst.append(e)
