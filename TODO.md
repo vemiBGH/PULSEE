@@ -17,6 +17,7 @@ Ilija
 - [ ] Similate dissipation?
 - [ ] Noise spectroscopy  
 - [ ] Add a function that generates CNOT gate based on some interaction? (Is it possible)? Not theoretically, but using pulses...
+- [ ] Pulse diagram after pulses are sent to sim.evolve
 
 ### Project status
 
