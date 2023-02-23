@@ -119,8 +119,7 @@ def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
     iHt = 1j * 2 * np.pi * static_hamiltonian * time
     # dm.transform(U) = U * dm * U_dagger
-    evolved_dm = dm.transform(iHt.expm()) 
-    return evolved_dm
+    return dm.transform(iHt.expm()) 
 
 
 def random_operator(d):
