@@ -1167,7 +1167,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
     return fig, ax
 
 
-def old_fid_signal(times, decay_functions, dm, h_unperturbed, ref_freq, I_plus_rotated):
+def legacy_FID_signal(times, decay_functions, dm, h_unperturbed, ref_freq, I_plus_rotated):
     """
     For debugging purposes
     """
