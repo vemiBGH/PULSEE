@@ -14,7 +14,7 @@ from matplotlib.pyplot import xticks, yticks
 from matplotlib.patches import Patch
 
 from .operators import canonical_density_matrix, \
-    free_evolution, \
+    evolve_by_hamiltonian, \
     changed_picture, exp_diagonalize
 
 from .nuclear_spin import NuclearSpin, ManySpins
@@ -555,8 +555,9 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=Non
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           pulse_time=0, picture='RRF', RRF_par={'nu_RRF': 0, 'theta_RRF': 0,
-                                                 'phi_RRF': 0}, n_points=30, order=None, opts=None,
+           pulse_time=0, picture='RRF', 
+           RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0}, 
+           n_points=30, order=None, opts=None,
            ret_allstates=False):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -1272,17 +1273,17 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
     Iy = spin.I['y']
-    I_plus_rotated = (1j * phi * Iz).expm() * (1j * theta * Iy).expm() \
-                     * spin.I['+'] * (-1j * theta * Iy).expm() * (-1j * phi * Iz).expm()
-    for t in times:
+    I_plus_rotated = spin.I['+'].transform((1j * theta * Iy).expm())\
+                                .transform((1j * phi * Iz).expm())
 
+    for t in times:
         # Obtain total decay envelope at that time.
         env = 1
         for dec in decay_envelopes:
             env *= dec(t)  # Different name to avoid bizarre variable scope bug
             # (can't have same name as iteration var in line 1117.)
 
-        dm_t = free_evolution(dm, Qobj(sum(h_unperturbed)), t)
+        dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
         FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env *
                     np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
 
@@ -1744,7 +1745,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     - `rho0`: Qobj
               The initial state of the system as a density matrix. 
     - `e_ops`: List[Qobj]:
-               List of oeprators for which to return the expectation values. 
+               List of operators for which to return the expectation values. 
 
     Returns
     ------
@@ -1755,17 +1756,17 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
     u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
 
-    rho = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
+    rho_t = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
 
     if e_ops == None:
-        return rho
+        return rho_t
 
-    exp = np.transpose([[expect(op, rho) for op in e_ops]])
+    exp = np.transpose([[expect(op, rho_t) for op in e_ops]])
 
-    return rho, exp
+    return rho_t, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
+def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=False,
               all_t=False, T2=100):
     """
     Evolve the given density matrix with the interactions given by the provided 
@@ -1825,40 +1826,40 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list:
-        h = Qobj(sum(h), dims=h[0].dims)
+        h = Qobj(sum(h), dims = h[0].dims)
     if fid:
         e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
 
     decay_envelopes = []
     try:
-        for d in T2:
+        for d in T2: # d is a float for the T2 value
             if not callable(d):
                 decay_envelopes.append(lambda t: np.exp(-t / d))
-            else:
+            else: # d is a function given by user
                 decay_envelopes.append(d)
     except TypeError:
-        if not callable(T2):
+        if not callable(T2): # T2 is a float for the T2 value
             decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else:
+        else: # T2 is a function given by user
             decay_envelopes.append(T2)
 
-    if par:
+    if parallel:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         # Better method than calling 'get_ipython()' since this requires calling un un-imported function
         if 'ipykernel' in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+                res = ipynb_parallel_map(_ed_evolve_solve_t, 
+                                         tlist, (h, rho0, e_ops), progress_bar=True)
             except OSError:
                 print('Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
                 raise OSError
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops,), progress_bar=True)
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
 
         rhot = []
         e_opst = []
-        # change this to unzip
         for r, e in res:
             rhot.append(r)
             e_opst.append(e)
@@ -1884,12 +1885,12 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, par=False,
         fids = e_opst[-1]
         for i in range(len(fids)):
             # Obtain total decay envelope at that time.
-            env = 1
-            for dec in decay_envelopes:
+            envelope = 1
+            for decay in decay_envelopes:
                 # Different name to avoid bizarre variable scope bug
-                env *= dec(tlist[i])
+                envelope *= decay(tlist[i])
                 # (can't have same name as iteration var in line 1117.)
-            fid_exp.append(fids[i] * env)
+            fid_exp.append(fids[i] * envelope)
 
         e_opst[-1] = fid_exp
 
