@@ -1,7 +1,6 @@
 # PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)
 
-## Original developer: Davide Candoli (Università di Bologna)
-## Contributors: Ilija N., Jiwoo S., Lucas B., Stephen C. (Brown University)
+## Developers: Ilija N., Jiwoo S., Lucas B., Stephen C. (Brown University), Davide Candoli (Università di Bologna)
 
 PULSEE is an open-source software for the simulation of typical nuclear quadrupole/magnetic resonance experiments on a solid-state sample, describing the dynamics of nuclear spins in condensed matter under the effect of external magnetic fields and reproducing the traditional results observed in laboratory.
 
@@ -460,4 +459,4 @@ plot_fourier_transform(f, ft, ft_n)
 
 The program presented above was made possible thanks to professors Samuele Sanna (Università di Bologna) and Vesna Mitrovic (Brown University), who have been a great help in the interpretation of the physics simulated by the software.
 
-Further contributions to the development of the program have been the advices given by Stephen Carr (Brown University) and professor Enrico Giampieri (Università di Bologna).
+Further contributions to the development of the program have been the advices given by professor Enrico Giampieri (Università di Bologna).

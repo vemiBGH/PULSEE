@@ -450,7 +450,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
 
                 intensity_nu = nu * \
-                               (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
+                    (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
 
                 if not normalized:
                     p_i = dm_initial[i, i]
@@ -555,8 +555,8 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=Non
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           pulse_time=0, picture='RRF', 
-           RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0}, 
+           pulse_time=0, picture='RRF',
+           RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
            n_points=30, order=None, opts=None,
            ret_allstates=False):
     """
@@ -678,7 +678,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         mode = pd.DataFrame([(0., 0., 0., 0., 0)],
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 
-    times, tm = np.linspace(0, pulse_time, num=max(3, int(n_points)), retstep=True)
+    times, tm = np.linspace(0, pulse_time, num=max(
+        3, int(n_points)), retstep=True)
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 1
 
@@ -693,7 +694,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
         h_total = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
-        result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
+        result = magnus(h_total, Qobj(dm_initial), times,
+                        order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
             result.states[-1], o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
@@ -723,7 +725,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         else:
             # return last time step of density matrix evolution.
             return result.states[-1]
-
 
     elif type(solver) == str:
         raise ValueError('Invalid solver: ' + solver)
@@ -917,8 +918,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
                 for k in range(d_sub[i]):
                     for l in range(d_downhill):
                         tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                                                                                     ', ' + tick_label[j * d_sub[
-                            i] * d_downhill + k * d_downhill + l]
+                            ', ' + tick_label[j * d_sub[
+                                i] * d_downhill + k * d_downhill + l]
 
         for i in range(d):
             tick_label[i] = '|' + tick_label[i]
@@ -1138,8 +1139,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
                 for k in range(d_sub[i]):
                     for l in range(d_downhill):
                         tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                                                                                     ', ' + tick_label[j * d_sub[
-                            i] * d_downhill + k * d_downhill + l]
+                            ', ' + tick_label[j * d_sub[
+                                i] * d_downhill + k * d_downhill + l]
 
         for i in range(d):
             tick_label[i] = '|' + tick_label[i]
@@ -1166,8 +1167,30 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
     return fig, ax
 
 
+def old_fid_signal(times, decay_functions, dm, h_unperturbed, ref_freq, I_plus_rotated):
+    """
+    For debugging purposes
+    """
+    FID = []
+    for t in times:
+        # Obtain total decay envelope at that time.
+        env = 1
+        for dec in decay_functions:
+            env *= dec(t)  # Different name to avoid bizarre variable scope bug
+            # (can't have same name as iteration var in line 1117.)
+
+        dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
+
+        # default value is 1
+        measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq * t)
+        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env
+                    * measurement_direction).tr())
+
+    return times, np.array(FID)
+
+
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, reference_frequency=0, n_points=30):
+               phi=0, ref_freq=0, n_points=100, old_method=False):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1194,16 +1217,16 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                         Duration of the acquisition of the signal, expressed in
                         microseconds.
 
-    - T2: iterable[float or function with signature (float) -> float] or float
-            or function with signature (float) -> float
+    - T2: iterable[float] or 
+          iterable[function with signature (float) -> float] or 
+          float or 
+          function with signature (float) -> float
 
           If float, characteristic time of relaxation of the component of the
           magnetization on the plane of detection vanishing, i.e., T2. It is
           measured in
           microseconds.
-
           If function, the decay envelope. 
-
           If iterable, total decay envelope will be product of decays in list.
 
           Default value is 100 (microseconds).
@@ -1215,12 +1238,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
                   Default values are theta=0, phi=0.
 
-    - reference_frequency: float
+    - ref_freq: float
 
-                           Specifies the frequency of rotation of the
-                           measurement apparatus with respect to the LAB system.
-                           (in MHz)
-                           Default value is 0.
+                Specifies the frequency of rotation of the measurement apparatus
+                with respect to the LAB system. (in MHz)
+                Default value is 0.
 
     - n_points: float
 
@@ -1249,25 +1271,31 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     [1]: numpy.ndarray
 
          FID signal evaluated at the discrete times reported in the first output
-         (in arbitrary units).  
+         (in arbitrary units). Each signal value is a complex number, where
+         the real part and the imaginary part are quadrature detections.
     """
     times = np.linspace(start=0, stop=acquisition_time,
                         num=int(acquisition_time * n_points))
 
-    FID = []
-
-    decay_envelopes = []
+    decay_functions = []
     try:
         for d in T2:
-            if not callable(d):
-                decay_envelopes.append(lambda t: np.exp(-t / d))
-            else:
-                decay_envelopes.append(d)
+            if not callable(d):  # T2 is a list of floats
+                decay_functions.append(lambda t: np.exp(-t / d))
+            else:  # T2 is a list of functions given by the user
+                decay_functions.append(d)
     except TypeError:
-        if not callable(T2):
-            decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else:
-            decay_envelopes.append(T2)
+        if not callable(T2):  # T2 is a float
+            decay_functions.append(lambda t: np.exp(-t / T2))
+        else:  # T2 is a function given by user
+            decay_functions.append(T2)
+
+    decay_array = []
+    for decay_fun in decay_functions:
+        decay_array.append(decay_fun(times))
+    # decay_array is now a 2D array with shape (len(decay_functions), len(times))
+    # Multiply all the decay functions together to make it into 1D array with same length as times
+    decay_t = np.prod(np.array(decay_array), axis=0)
 
     # Computes the FID assuming that the detection coils record the time-dependence of the
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
@@ -1276,25 +1304,25 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     I_plus_rotated = spin.I['+'].transform((1j * theta * Iy).expm())\
                                 .transform((1j * phi * Iz).expm())
 
-    for t in times:
-        # Obtain total decay envelope at that time.
-        env = 1
-        for dec in decay_envelopes:
-            env *= dec(t)  # Different name to avoid bizarre variable scope bug
-            # (can't have same name as iteration var in line 1117.)
+    # Leaving the old slow method here for debugging & comparison purposes
+    if old_method:
+        return old_fid_signal(times, decay_functions, dm,
+                              h_unperturbed, ref_freq, I_plus_rotated)
 
-        dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
-        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env *
-                    np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
-    if np.max(FID) < 0.09:
+    # Measuring the expectation value of I_plus allows us to get the expectation of
+    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
+    result = mesolve(2*np.pi*sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated])
+    fid = np.array(result.expect)[0] * decay_t
+
+    if np.max(fid) < 0.09:
         import warnings
-        warnings.warn(
-            'Unreliable FID: Weak signal, check simulation!',
-            stacklevel=0)
-    return times, np.array(FID)
+        warnings.warn('Unreliable FID: Weak signal, check simulation!',
+                      stacklevel=0)
+    return result.times, fid
 
 
-def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False, name='FIDSignal', destination=''):
+def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
+                              name='FIDSignal', destination=''):
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -1357,7 +1385,7 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False, na
     plt.plot(times, np.real(FID), label='Real part')
 
     plt.xlabel("time (\N{GREEK SMALL LETTER MU}s)")
-    plt.ylabel("Re(FID) (a. u.)")
+    plt.ylabel("Real(FID) (a.u.)")
 
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
@@ -1482,7 +1510,7 @@ def legacy_fourier_transform_signal(times, signal, frequency_start,
 
     fourier = [[], []]
 
-    if opposite_frequency == False:
+    if not opposite_frequency:
         sign_options = 1
     else:
         sign_options = 2
@@ -1492,11 +1520,11 @@ def legacy_fourier_transform_signal(times, signal, frequency_start,
             integral = np.zeros(sign_options, dtype=complex)
             for t in range(len(times)):
                 integral[s] = integral[s] + \
-                              np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
-                                     nu * times[t]) * signal[t] * dt
+                    np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
+                           nu * times[t]) * signal[t] * dt
             fourier[s].append(integral[s])
 
-    if opposite_frequency == False:
+    if not opposite_frequency:
         return frequencies, np.array(fourier[0])
     else:
         return frequencies, np.array(fourier[0]), np.array(fourier[1])
@@ -1691,7 +1719,8 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
 
     if norm:
         for i in range(n_plots):
-            fourier_data[i] = fourier_data[i] / np.amax(np.abs(fourier_data[i]))
+            fourier_data[i] = fourier_data[i] / \
+                np.amax(np.abs(fourier_data[i]))
 
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
@@ -1836,16 +1865,19 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
 
     decay_envelopes = []
     try:
-        for d in T2: # d is a float for the T2 value
-            if not callable(d):
+        for d in T2:
+            if not callable(d):  # T2 is a list of floats
                 decay_envelopes.append(lambda t: np.exp(-t / d))
-            else: # d is a function given by user
+            else:  # T2 is a list of functions
                 decay_envelopes.append(d)
     except TypeError:
-        if not callable(T2): # T2 is a float for the T2 value
+        if not callable(T2):  # T2 is a float
             decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else: # T2 is a function given by user
+        else:  # T2 is a function given by user
             decay_envelopes.append(T2)
+
+    rho_t = []
+    e_ops_t = []
 
     if parallel:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
@@ -1853,40 +1885,38 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
         if 'ipykernel' in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t, 
+                res = ipynb_parallel_map(_ed_evolve_solve_t,
                                          tlist, (h, rho0, e_ops), progress_bar=True)
             except OSError:
-                print('Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
+                print(
+                    'Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
                 raise OSError
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+            res = parallel_map(_ed_evolve_solve_t, tlist,
+                               (h, rho0, e_ops), progress_bar=True)
 
-        rhot = []
-        e_opst = []
         for r, e in res:
-            rhot.append(r)
-            e_opst.append(e)
+            rho_t.append(r)
+            e_ops_t.append(e)
 
-        e_opst = np.concatenate(e_opst, axis=1)
+        e_ops_t = np.concatenate(e_ops_t, axis=1)
 
     elif not e_ops:
-        rhot = []
         for t in tlist:
-            rhot.append(_ed_evolve_solve_t(t, h, rho0, None))
-        e_opst = []
+            rho_t.append(_ed_evolve_solve_t(t, h, rho0, None))
+        e_ops_t = []
 
     else:
-        rhot = []
-        e_opst = [[] for _ in range(len(e_ops))]
+        e_ops_t = [[] for _ in range(len(e_ops))]
         for t in tlist:
             rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
-            e_opst = np.concatenate([e_opst, exp], axis=1)
-            rhot.append(rho)
+            e_ops_t = np.concatenate([e_ops_t, exp], axis=1)
+            rho_t.append(rho)
 
     if fid:
         fid_exp = []
-        fids = e_opst[-1]
+        fids = e_ops_t[-1]
         for i in range(len(fids)):
             # Obtain total decay envelope at that time.
             envelope = 1
@@ -1896,15 +1926,15 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
                 # (can't have same name as iteration var in line 1117.)
             fid_exp.append(fids[i] * envelope)
 
-        e_opst[-1] = fid_exp
+        e_ops_t[-1] = fid_exp
 
     if not state:
-        return e_opst
+        return e_ops_t
 
     if all_t:
-        return rhot, e_opst
+        return rho_t, e_ops_t
     else:
-        return rhot[-1], e_opst
+        return rho_t[-1], e_ops_t
 
 
 def apply_rot_pulse(rho, duration, rot_axis):
