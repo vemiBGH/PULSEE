@@ -10,6 +10,15 @@ Ilija
 - [ ] Check magnus higher order integral approx
 - [ ] Add noetbook selective pulse
 
+### General Features
+- [ ] Gradient pulses & Arbitrary shape pulses
+- [ ] GRAPE
+- [ ] Automatically find the \pi pulse
+- [ ] Similate dissipation?
+- [ ] Noise spectroscopy  
+- [ ] Add a function that generates CNOT gate based on some interaction? (Is it possible)? Not theoretically, but using pulses...
+- [ ] Pulse diagram after pulses are sent to sim.evolve
+
 ### Project status
 
 - [x] Check the demo for hyperfine (small errors) 

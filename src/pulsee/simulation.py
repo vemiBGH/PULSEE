@@ -1314,6 +1314,10 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     result = mesolve(2*np.pi*sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated])
     fid = np.array(result.expect)[0] * decay_t
 
+    if np.max(fid) < 0.09:
+        import warnings
+        warnings.warn('Unreliable FID: Weak signal, check simulation!',
+                      stacklevel=0)
     return result.times, fid
 
 
