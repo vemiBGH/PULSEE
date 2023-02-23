@@ -353,7 +353,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # is the identity, add those together
                 for n in range(spin.n_spins):
                     term_n = pulse_t_independent_op(spin.spin[n], B[i],
-                                                    theta[i], phi[i] + angle)
+                                                    theta[i], phi[i])
                     for m in range(spin.n_spins)[:n]:
                         term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
