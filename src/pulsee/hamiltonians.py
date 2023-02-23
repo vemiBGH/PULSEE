@@ -193,7 +193,7 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     return v2
 
 
-def pulse_time_dep_coeff(frequency, phase):
+def pulse_time_dep_coeff(frequency, phase, pulse_time):
     """
     Return the time-dependent coefficient of a pulse Hamiltonian. 
 
@@ -203,6 +203,8 @@ def pulse_time_dep_coeff(frequency, phase):
                  Frequency of the monochromatic wave (expressed in rad/sec).
     - phase: float
              Inital phase of the wave (at t=0) (expressed in radians).
+    - pulse_time: float
+            Time duration of the pulse (in microseconds).
 
     Returns
     -------
@@ -210,7 +212,10 @@ def pulse_time_dep_coeff(frequency, phase):
     """
 
     def time_dependence_function(t, args):
-        return np.cos(frequency * t - phase)
+        if t <= pulse_time:
+            return np.cos(frequency * t - phase)
+        else:
+            return 0
 
     return time_dependence_function
 
@@ -238,7 +243,7 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
            + np.cos(theta_1) * spin.I['z'])
 
 
-def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
+def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_time,
                         factor_t_dependence=False):
     """
     Computes the term of the Hamiltonian describing the interaction with a monochromatic
@@ -282,7 +287,7 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t,
 
     # Notice the following does not depend on spin
     t_dependence = pulse_time_dep_coeff(
-        frequency, phase)  # this variable is a function!
+        frequency, phase, pulse_time)  # this variable is a function!
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence:
         return Qobj(h_t_independent), t_dependence
@@ -310,13 +315,13 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                            time-dependence of the Hamiltonian as a function.
                            Does not evaluate f(t) at the given time.
 
-    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
-    | ----- | ------------- | ------------- | --------- | ----------- | --------- |
-    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |
-    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |
-    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |
-    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
-    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |
+    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  | 'pulse_time' |
+    | ----- | ------------- | ------------- | --------- | ----------- | --------- | ------------ |
+    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |    (mus)     |
+    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |    tau_0     |
+    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |    tau_1     |
+    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |     ...      |
+    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |    tau_N     |
 
     where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
 
@@ -336,12 +341,13 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     phase = mode['phase']
     theta = mode['theta_p']
     phi = mode['phi_p']
+    pulse_time = mode['pulse_time']
     if factor_t_dependence:
         # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                t_dependence = pulse_time_dep_coeff(omega[i], phase[i])
+                t_dependence = pulse_time_dep_coeff(omega[i], phase[i], pulse_time[i])
                 # dimensions of vector inputs to tensor; should be same as dual vector
                 # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
                 # to matrix being square.
@@ -365,7 +371,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
-                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i],
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], pulse_time[i],
                                                              t, factor_t_dependence=True))
                 # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
                 # (which returns cos(w0*t)))]
@@ -386,7 +392,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # is the identity, add those together
                 for n in range(spin.n_spins):
                     term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i],
-                                                 phase[i], theta[i], phi[i], t, factor_t_dependence=False)
+                                                 phase[i], theta[i], phi[i], t, pulse_time, factor_t_dependence=False)
                     for m in range(spin.n_spins)[:n]:
                         term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
@@ -394,7 +400,8 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                     h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
-                h_pulse += h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t)
+                h_pulse += h_single_mode_pulse(spin, omega[i], B[i], phase[i],
+                                               theta[i], phi[i], t, pulse_time,  factor_t_dependence=False)
 
         return Qobj(h_pulse)
 

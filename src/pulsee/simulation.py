@@ -418,26 +418,26 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
 
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
-    h_unperturbed = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
+    dims = [s.d for s in spin.spin]
+    h_unperturbed = Qobj(sum(h_unperturbed), dims=[dims, dims])
     energies, o_change_of_basis = h_unperturbed.eigenstates()
-
     transition_frequency = []
 
     transition_intensity = []
 
     # assume that this Hamiltonian is a rank-1 tensor
-    d = h_unperturbed.dims[0][0]
-
+    d = sum(h_unperturbed.dims[0])
     # Operator of the magnetic moment of the spin system
     if isinstance(spin, ManySpins):
-        magnetic_moment = Qobj(qeye(spin.d)) * 0
+
+        magnetic_moment = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I['x']
             for j in range(i):
                 mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
             for k in range(spin.n_spins)[i + 1:]:
                 mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
-            magnetic_moment = magnetic_moment + mm_i
+            magnetic_moment += mm_i
     else:
         magnetic_moment = spin.gyro_ratio_over_2pi * spin.I['x']
 
@@ -555,7 +555,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=Non
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           pulse_time=0, picture='RRF',
+           evolution_time=0, picture='RRF',
            RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
            n_points=30, order=None, opts=None,
            ret_allstates=False):
@@ -585,13 +585,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
             Table of the parameters of each electromagnetic mode in the pulse.
             It is organised according to the following template:
 
-    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  |
-    | ----- | ------------- | ------------- | --------- | ----------- | --------- |
-    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |
-    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |
-    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |
-    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |
-    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |
+    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  | 'pulse_time' |
+    | ----- | ------------- | ------------- | --------- | ----------- | --------- | ------------ |
+    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |    (mus)     |
+    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |    tau_0     |
+    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |    tau_1     |
+    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |     ...      |
+    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |    tau_N     |
 
             where the meaning of each column is analogous to the corresponding
             parameters in h_single_mode_pulse.
@@ -603,11 +603,12 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
             given time duration without any applied pulse.
 
             The default value is None.
-    - `pulse_time`: float
-                  Duration of the pulse of radiation sent onto the sample (in
-                  microseconds).
+    - `evolution_time`: float
+                  Duration of the evolution (in microseconds).
 
-                  The default value is 0.
+                  The default value is 0 or the max of pulses specified in mode,
+                  whichever is bigger.
+
     - `picture`: string
                Sets the dynamical picture where the density matrix of the system
                is evolved for the `magnus` solver. May take the values:
@@ -652,7 +653,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     Action
     ------
     If
-    - pulse_time is equal to 0;
+    - evolution_time is equal to 0;
     - dm_initial is very close to the identity (with an error margin of 1e-10
         for each element)
 
@@ -670,13 +671,18 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     the specified pulse.  
     """
 
+    if mode is None:
+        mode = pd.DataFrame([(0., 0., 0., 0., 0., 0.)],
+                            columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p', 'pulse_time'])
+
+    if np.min(mode['pulse_time']) < 0:
+        raise ValueError('Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
+
+    pulse_time = max(np.max(mode['pulse_time']), evolution_time)
+
     if pulse_time == 0 or np.all(np.absolute((dm_initial.full()
                                               - np.eye(spin.d))) < 1e-10):
         return dm_initial
-
-    if mode is None:
-        mode = pd.DataFrame([(0., 0., 0., 0., 0)],
-                            columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
 
     times, tm = np.linspace(0, pulse_time, num=max(
         3, int(n_points)), retstep=True)
@@ -1311,7 +1317,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
-    result = mesolve(2*np.pi*sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated])
+    result = mesolve(2*np.pi*sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
     fid = np.array(result.expect)[0] * decay_t
 
     if np.max(fid) < 0.09:
@@ -1888,9 +1894,8 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
                 res = ipynb_parallel_map(_ed_evolve_solve_t,
                                          tlist, (h, rho0, e_ops), progress_bar=True)
             except OSError:
-                print(
-                    'Make sure to have a running cluster. Try opening a new cmd and running ipcluster start.')
-                raise OSError
+                raise OSError('Make sure to have a running cluster. ' +
+                              'Try opening a new cmd and running ipcluster start.')
 
         else:
             res = parallel_map(_ed_evolve_solve_t, tlist,
