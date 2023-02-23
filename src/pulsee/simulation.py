@@ -1306,7 +1306,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     # Leaving the old slow method here for debugging & comparison purposes
     if old_method:
-        return old_fid_signal(times, decay_functions, dm,
+        return legacy_FID_signal(times, decay_functions, dm,
                               h_unperturbed, ref_freq, I_plus_rotated)
 
     # Measuring the expectation value of I_plus allows us to get the expectation of
