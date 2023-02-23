@@ -1,6 +1,6 @@
 Jiwoo: 
-- [ ] FID parallelizable
-- [ ] Timd dependent Hamiltonians during FID and as ``pulses''
+- [x] FID parallelizable
+- [ ] Time dependent Hamiltonians during FID and as ``pulses''
 - [ ] Arbitrary pulse shape (not just square pulse)
 - [ ] Test, QA
 
@@ -8,7 +8,7 @@ Ilija
 - [ ] Update notebooks
 - [x] Add notebook simple 1/2 case
 - [ ] Check magnus higher order integral approx
-- [ ] Add noetbook selective pulse
+- [ ] Add notebook selective pulse
 
 ### General Features
 - [ ] Gradient pulses & Arbitrary shape pulses
