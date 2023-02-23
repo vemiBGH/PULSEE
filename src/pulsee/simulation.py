@@ -1286,7 +1286,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
         FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env *
                     np.exp(-1j * 2 * np.pi * reference_frequency * t)).tr())
-
+    if np.max(FID) < 0.09:
+        import warnings
+        warnings.warn(
+            'Unreliable FID: Weak signal, check simulation!',
+            stacklevel=0)
     return times, np.array(FID)
 
 
