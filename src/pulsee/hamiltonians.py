@@ -290,8 +290,7 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_ti
         frequency, phase, pulse_time)  # this variable is a function!
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence:
-        # TODO: Check this minus sign for qutip
-        return -Qobj(h_t_independent), t_dependence
+        return Qobj(h_t_independent), t_dependence
     else:
         # Need pass empty list because of QuTiP compatability necessary
         # arguments of t_dependence; `args` argument functionless
@@ -356,12 +355,16 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term_n = pulse_t_independent_op(spin.spin[n], amplitudes[i],
+                    term = pulse_t_independent_op(spin.spin[n], amplitudes[i],
                                                     thetas[i], phis[i])
-                    for m in range(spin.n_spins)[:n]:
-                        term_n = tensor(qeye(spin.spin[m].d), term_n)
-                    for l in range(spin.n_spins)[n + 1:]:
-                        term_n = tensor(term_n, qeye(spin.spin[l].d))
+                    ops = []
+                    for m in range(spin.n_spins):
+                        if m == n:
+                            ops.append(term)
+                        else:
+                            ops.append(qeye(spin.spin[m].d))
+                    term_n = tensor(ops)
+
                     h_t_independent += term_n
 
                 # Append total hamiltonian for this mode to mode_hamiltonians
@@ -369,8 +372,10 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
-                mode_hamiltonians.append(h_single_mode_pulse(spin, omegas[i], amplitudes[i], phases[i], thetas[i], phis[i], t,
-                                                             pulse_times[i], factor_t_dependence=True))
+                mode_hamiltonians.append(
+                    h_single_mode_pulse(spin, omegas[i], amplitudes[i], phases[i],
+                                        thetas[i], phis[i], t, pulse_times[i],
+                                        factor_t_dependence=True))
                 # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
                 # (which returns cos(w0*t)))]
 
@@ -378,20 +383,22 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     else:
         h_pulse = Qobj(np.zeros((spin.d, spin.d)))
         if isinstance(spin, ManySpins):
+            h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
             for i in mode.index:
-                h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
-
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term_n = h_single_mode_pulse(spin.spin[n], omegas[i], amplitudes[i],
-                                                 phases[i], thetas[i], phis[i], t, pulse_times[i], 
-                                                 factor_t_dependence=False)
-                    for m in range(spin.n_spins)[:n]:
-                        term_n = tensor(qeye(spin.spin[m].d), term_n)
-                    for l in range(spin.n_spins)[n + 1:]:
-                        term_n = tensor(term_n, qeye(spin.spin[l].d))
+                    term = h_single_mode_pulse(spin.spin[n], omegas[i], amplitudes[i],
+                                               phases[i], thetas[i], phis[i], t, pulse_times[i],
+                                               factor_t_dependence=False)
+                    ops = []
+                    for m in range(spin.n_spins):
+                        if m == n:
+                            ops.append(term)
+                        else:
+                            ops.append(qeye(spin.spin[m].d))
+                    term_n = tensor(ops)
                     h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
