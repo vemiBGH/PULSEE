@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from fractions import Fraction
 import sys
+from tqdm import tqdm, trange
 
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
@@ -418,8 +419,10 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
 
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
-    dims = [s.d for s in spin.spin]
-    h_unperturbed = Qobj(sum(h_unperturbed), dims=[dims, dims])
+    # dims = [s.d for s in spin.spin]
+    dims = h_unperturbed[0].dims
+    shape = h_unperturbed[0].shape
+    h_unperturbed = Qobj(sum(h_unperturbed), dims=dims)
     energies, o_change_of_basis = h_unperturbed.eigenstates()
     transition_frequency = []
 
@@ -430,7 +433,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     # Operator of the magnetic moment of the spin system
     if isinstance(spin, ManySpins):
 
-        magnetic_moment = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
+        magnetic_moment = Qobj(np.zeros(shape), dims=dims)
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I['x']
             for j in range(i):
@@ -450,7 +453,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
 
                 intensity_nu = nu * \
-                    (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
+                               (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
 
                 if not normalized:
                     p_i = dm_initial[i, i]
@@ -555,7 +558,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True, xlim=Non
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           evolution_time=0, picture='RRF',
+           evolution_time=0, picture='IP',
            RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
            n_points=30, order=None, opts=None,
            ret_allstates=False):
@@ -617,7 +620,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         2.'RRF' (or anything else), which sets the picture corresponding to a
         rotating reference frame whose features are specified in argument
         RRF_par.
-               The default value is RRF.
+               The default value is IP. For LAB frame, use picture='RRF' and
+               give no RRF_par.
 
                The choice of picture has no effect on solvers other than `magnus`.
     - `RRF_par`: dict
@@ -670,6 +674,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     Schroedinger picture) evolved through a time pulse_time under the action of
     the specified pulse.  
     """
+    dims = spin.dims
 
     if mode is None:
         mode = pd.DataFrame([(0., 0., 0., 0., 0., 0.)],
@@ -696,10 +701,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if solver == magnus or solver == 'magnus':
         if picture == 'IP':
             o_change_of_picture = Qobj(
-                sum(h_unperturbed), dims=h_unperturbed[0].dims)
+                sum(h_unperturbed), dims=dims)
         else:
             o_change_of_picture = RRF_operator(spin, RRF_par)
-        h_total = Qobj(sum(h_unperturbed), dims=h_unperturbed[0].dims)
+        h_total = Qobj(sum(h_unperturbed), dims=dims)
         result = magnus(h_total, Qobj(dm_initial), times,
                         order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
@@ -723,7 +728,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                 scaled_h.append([h_term[0] * 2 * np.pi, h_term[1]])
             else:  # of the form: H0
                 scaled_h.append(2 * np.pi * h_term)
-
         result = mesolve(scaled_h, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
         if ret_allstates:
@@ -774,7 +778,9 @@ def RRF_operator(spin, RRF_par):
     nu = RRF_par['nu_RRF']
     theta = RRF_par['theta_RRF']
     phi = RRF_par['phi_RRF']
-    RRF_o = nu * (spin.I['z'] * np.cos(theta) +
+    # The minus sign is to take care of the `Interaction picture' problem when rotating
+    # the system
+    RRF_o = -nu * (spin.I['z'] * np.cos(theta) +
                   spin.I['x'] * np.sin(theta) * np.cos(phi) +
                   spin.I['y'] * np.sin(theta) * np.sin(phi))
     return Qobj(RRF_o)
@@ -899,38 +905,40 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
     d = data_array.shape[0]
     tick_label = []
 
-    if many_spin_indexing is None:
-        for i in range(d):
-            tick_label.append('|' + str(Fraction((d - 1) / 2 - i)) + '>')
+    if not many_spin_indexing:
+        many_spin_indexing = dm.dims[0]
 
-    else:
-        d_sub = many_spin_indexing
-        n_sub = len(d_sub)
-        m_dict = []
+    d_sub = many_spin_indexing
+    n_sub = len(d_sub)
+    m_dict = []
 
-        for i in range(n_sub):
-            m_dict.append({})
-            for j in range(d_sub[i]):
-                m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
+    for i in range(n_sub):
+        m_dict.append({})
+        for j in range(d_sub[i]):
+            m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
 
-        for i in range(d):
-            tick_label.append('>')
+    for i in range(d):
+        tick_label.append('>')
 
-        for i in range(n_sub)[::-1]:
-            d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
-            d_uphill = int(np.prod(d_sub[0:i]))
+    for i in range(n_sub)[::-1]:
+        d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
+        d_uphill = int(np.prod(d_sub[0:i]))
 
-            for j in range(d_uphill):
-                for k in range(d_sub[i]):
-                    for l in range(d_downhill):
-                        tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                            ', ' + tick_label[j * d_sub[
-                                i] * d_downhill + k * d_downhill + l]
+        for j in range(d_uphill):
+            for k in range(d_sub[i]):
+                for l in range(d_downhill):
+                    comma = ', '
+                    if j == n_sub - 1:
+                        comma = ''
+                    tick_label[j * d_sub[i] * d_downhill + \
+                               k * d_downhill + l] = m_dict[i][k] + \
+                                                     comma + tick_label[j * d_sub[i] * d_downhill + \
+                                                    k * d_downhill + l]
 
-        for i in range(d):
-            tick_label[i] = '|' + tick_label[i]
+    for i in range(d):
+        tick_label[i] = '|' + tick_label[i]
 
-        ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.tick_params(axis='both', which='major', labelsize=6)
 
     xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
@@ -1077,6 +1085,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
         data_array = np.array(dm)
     else:
         data_array = dm
+    if not many_spin_indexing:
+        many_spin_indexing = dm.dims[0]
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
@@ -1120,38 +1130,37 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
     d = data_array.shape[0]
     tick_label = []
 
-    if many_spin_indexing is None:
-        for i in range(d):
-            tick_label.append('|' + str(Fraction((d - 1) / 2 - i)) + '>')
+    d_sub = many_spin_indexing
+    n_sub = len(d_sub)
+    m_dict = []
 
-    else:
-        d_sub = many_spin_indexing
-        n_sub = len(d_sub)
-        m_dict = []
+    for i in range(n_sub):
+        m_dict.append({})
+        for j in range(d_sub[i]):
+            m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
 
-        for i in range(n_sub):
-            m_dict.append({})
-            for j in range(d_sub[i]):
-                m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
+    for i in range(d):
+        tick_label.append('>')
 
-        for i in range(d):
-            tick_label.append('>')
+    for i in range(n_sub)[::-1]:
+        d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
+        d_uphill = int(np.prod(d_sub[0:i]))
 
-        for i in range(n_sub)[::-1]:
-            d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
-            d_uphill = int(np.prod(d_sub[0:i]))
+        for j in range(d_uphill):
+            for k in range(d_sub[i]):
+                for l in range(d_downhill):
+                    comma = ', '
+                    if j == n_sub - 1:
+                        comma = ''
+                    tick_label[j * d_sub[i] * d_downhill +\
+                               k * d_downhill + l] = m_dict[i][k] + \
+                                                     comma + tick_label[j * \
+                                                     d_sub[i] * d_downhill + k * d_downhill + l]
 
-            for j in range(d_uphill):
-                for k in range(d_sub[i]):
-                    for l in range(d_downhill):
-                        tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = m_dict[i][k] + \
-                            ', ' + tick_label[j * d_sub[
-                                i] * d_downhill + k * d_downhill + l]
+    for i in range(d):
+        tick_label[i] = '|' + tick_label[i]
 
-        for i in range(d):
-            tick_label[i] = '|' + tick_label[i]
-
-        ax.tick_params(axis='both', which='major', labelsize=labelsize)
+    ax.tick_params(axis='both', which='major', labelsize=labelsize)
 
     xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=1., stop=data_array.shape[0] + 1.), tick_label)
@@ -1307,18 +1316,20 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
     Iy = spin.I['y']
-    I_plus_rotated = spin.I['+'].transform((1j * theta * Iy).expm())\
-                                .transform((1j * phi * Iz).expm())
+    I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
+        .transform((-1j * phi * Iz).expm())
 
     # Leaving the old slow method here for debugging & comparison purposes
     if old_method:
         return legacy_FID_signal(times, decay_functions, dm,
-                              h_unperturbed, ref_freq, I_plus_rotated)
+                                 h_unperturbed, ref_freq, I_plus_rotated)
 
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
-    result = mesolve(2*np.pi*sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
-    fid = np.array(result.expect)[0] * decay_t
+    #TODO: check this minus factor
+    result = mesolve(-2 * np.pi * sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
+    measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq) * decay_t
+    fid = np.array(result.expect)[0] * measurement_direction
 
     if np.max(fid) < 0.09:
         import warnings
@@ -1526,8 +1537,8 @@ def legacy_fourier_transform_signal(times, signal, frequency_start,
             integral = np.zeros(sign_options, dtype=complex)
             for t in range(len(times)):
                 integral[s] = integral[s] + \
-                    np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
-                           nu * times[t]) * signal[t] * dt
+                              np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
+                                     nu * times[t]) * signal[t] * dt
             fourier[s].append(integral[s])
 
     if not opposite_frequency:
@@ -1726,7 +1737,7 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     if norm:
         for i in range(n_plots):
             fourier_data[i] = fourier_data[i] / \
-                np.amax(np.abs(fourier_data[i]))
+                              np.amax(np.abs(fourier_data[i]))
 
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
@@ -1865,7 +1876,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list:
-        h = Qobj(sum(h), dims = h[0].dims)
+        h = Qobj(sum(h), dims=h[0].dims)
     if fid:
         e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
 
@@ -1914,7 +1925,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
 
     else:
         e_ops_t = [[] for _ in range(len(e_ops))]
-        for t in tlist:
+        for t in tqdm(tlist):
             rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
             e_ops_t = np.concatenate([e_ops_t, exp], axis=1)
             rho_t.append(rho)
@@ -1922,7 +1933,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     if fid:
         fid_exp = []
         fids = e_ops_t[-1]
-        for i in range(len(fids)):
+        for i in trange(len(fids)):
             # Obtain total decay envelope at that time.
             envelope = 1
             for decay in decay_envelopes:
