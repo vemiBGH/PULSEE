@@ -1,6 +1,6 @@
 import numpy as np
 from tqdm import trange
-from qutip import Qobj, tensor
+from qutip import Qobj, tensor, qeye
 from qutip.solver import Result
 
 from .nuclear_spin import NuclearSpin, ManySpins
@@ -99,8 +99,8 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q, component_order=0):
         return Qobj(spin.d) * 0
     I = spin.quantum_number
     h_q = (e2qQ / (I * (2 * I - 1))) * \
-          ((1 / 2) * (3 * (spin.I['z'] ** 2) - Qobj(np.eye(spin.d)) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q,
-                                                                                            gamma_q))
+          ((1 / 2) * (3 * (spin.I['z'] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q,
+                                                                                    gamma_q))
     if component_order > 0:
         h_q += (e2qQ / (I * (2 * I - 1))) * ((np.sqrt(6) / 4) *
                                              ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) *
@@ -283,14 +283,15 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_ti
     # must be a positive quantity")
     if B_1 < 0:
         raise ValueError(
-            "The amplitude of the electromagnetic wave must be a positive quantity")
+            "The amplitude of the electromagnetic wave must be positive.")
 
     # Notice the following does not depend on spin
     t_dependence = pulse_time_dep_coeff(
         frequency, phase, pulse_time)  # this variable is a function!
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence:
-        return Qobj(h_t_independent), t_dependence
+        # TODO: Check this minus sign for qutip
+        return -Qobj(h_t_independent), t_dependence
     else:
         # Need pass empty list because of QuTiP compatability necessary
         # arguments of t_dependence; `args` argument functionless
@@ -335,6 +336,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     OR 
     A list of tuples of the form (H_m, f_m(t)) for each mode m. 
     """
+    dims = spin.dims
 
     omega = mode['frequency']
     B = mode['amplitude']
@@ -342,17 +344,14 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     theta = mode['theta_p']
     phi = mode['phi_p']
     pulse_time = mode['pulse_time']
+
     if factor_t_dependence:
         # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
                 t_dependence = pulse_time_dep_coeff(omega[i], phase[i], pulse_time[i])
-                # dimensions of vector inputs to tensor; should be same as dual vector
-                # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
-                # to matrix being square.
-                dims = [s.d for s in spin.spin]
-                h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
+                h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
@@ -361,9 +360,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                     term_n = pulse_t_independent_op(spin.spin[n], B[i],
                                                     theta[i], phi[i])
                     for m in range(spin.n_spins)[:n]:
-                        term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
+                        term_n = tensor(qeye(spin.spin[m].d), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
-                        term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
+                        term_n = tensor(term_n, qeye(spin.spin[l].d))
                     h_t_independent += term_n
 
                 # Append total hamiltonian for this mode to mode_hamiltonians
@@ -371,9 +370,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
-                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], pulse_time[i],
-                                                             t, factor_t_dependence=True))
-                # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t,
+                                                             pulse_time[i], factor_t_dependence=True))
+                # for a simple pulse in the transverse plane: [(-gamma/2pi * 2 * B1 * Ix, 'time_dependence_function'
                 # (which returns cos(w0*t)))]
 
         return mode_hamiltonians
@@ -381,27 +380,24 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         h_pulse = Qobj(np.zeros((spin.d, spin.d)))
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                # dimensions of vector inputs to tensor; should be same as dual vector
-                # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
-                # to matrix being square.
-                dims = [s.d for s in spin.spin]
-                h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=[dims, dims])
+                h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
                     term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i],
-                                                 phase[i], theta[i], phi[i], t, pulse_time, factor_t_dependence=False)
+                                                 phase[i], theta[i], phi[i], t,
+                                                 pulse_time[i], factor_t_dependence=False)
                     for m in range(spin.n_spins)[:n]:
-                        term_n = tensor(Qobj(np.eye(spin.spin[m].d)), term_n)
+                        term_n = tensor(qeye(spin.spin[m].d), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
-                        term_n = tensor(term_n, Qobj(np.eye(spin.spin[l].d)))
+                        term_n = tensor(term_n, qeye(spin.spin[l].d))
                     h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 h_pulse += h_single_mode_pulse(spin, omega[i], B[i], phase[i],
-                                               theta[i], phi[i], t, pulse_time,  factor_t_dependence=False)
+                                               theta[i], phi[i], t, pulse_time[i], factor_t_dependence=False)
 
         return Qobj(h_pulse)
 
@@ -426,7 +422,7 @@ def h_changed_picture(spin, mode, h_unperturbed, h_change_of_picture, t):
     Observable object representing the Hamiltonian of the pulse evaluated at time t in the new picture (in MHz).
     # """
     h_pulse = h_multiple_mode_pulse(spin, mode, t)
-    h_cp = changed_picture((h_unperturbed - h_change_of_picture + h_pulse),
+    h_cp = changed_picture((h_unperturbed + h_pulse - h_change_of_picture),
                            h_change_of_picture, t)
     return Qobj(h_cp)
 
@@ -484,8 +480,8 @@ def h_j_coupling(spins, j_matrix):
     # dimensions of vector inputs to tensor; should be same as dual vector
     # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv.
     # to matrix being square.
-    dims = [s.d for s in spins.spin]
-    h_j = Qobj(np.zeros((spins.d, spins.d)), dims=[dims, dims])
+    dims = spins.dims
+    h_j = Qobj(np.zeros((spins.d, spins.d)), dims=dims)
 
     # row
     for m in range(j_matrix.shape[0]):
@@ -493,12 +489,12 @@ def h_j_coupling(spins, j_matrix):
         for n in range(m):
             term_nm = j_matrix[n, m] * spins.spin[n].I['z']
             for l in range(n):
-                term_nm = tensor(Qobj(np.eye(spins.spin[l].d)), term_nm)
+                term_nm = tensor(qeye(spins.spin[l].d), term_nm)
             for k in range(m)[n + 1:]:
-                term_nm = tensor(term_nm, Qobj(np.eye(spins.spin[k].d)))
+                term_nm = tensor(term_nm, qeye(spins.spin[k].d))
             term_nm = tensor(term_nm, spins.spin[m].I['z'])
             for j in range(spins.n_spins)[m + 1:]:
-                term_nm = tensor(term_nm, Qobj(np.eye(spins.spin[j].d)))
+                term_nm = tensor(term_nm, qeye(spins.spin[j].d))
 
             h_j = h_j + term_nm
 
@@ -662,8 +658,8 @@ def h_tensor_coupling(spins, t):
 
     # Initialize empty operator of appropriate dimension as base case for
     # for loop.
-    dims = [s.d for s in spins.spin]
-    h = Qobj(np.zeros((spins.d, spins.d)), dims=[dims, dims])
+    dims = spins.dims
+    h = Qobj(np.zeros((spins.d, spins.d)), dims=dims)
 
     for m in range(len(i_1)):
         for n in range(len(i_2)):

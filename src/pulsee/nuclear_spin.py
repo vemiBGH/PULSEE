@@ -1,6 +1,6 @@
 import numpy as np
 
-from qutip import Qobj, tensor
+from qutip import Qobj, tensor, spin_J_set, qeye
 
 class NuclearSpin:
     """
@@ -58,6 +58,7 @@ class NuclearSpin:
         |  z  | cartesian_operator()[2]   |
         |  +  | raising_operator()        |
         |  -  | lowering_operator()       |
+        |  I  | quantum number            |
 
     Returns
     -------
@@ -73,67 +74,41 @@ class NuclearSpin:
             raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
-        self.I = {'-': self.lowering_operator(),
-                  '+': self.raising_operator(),
-                  'x': self.cartesian_operator()[0],
-                  'y': self.cartesian_operator()[1],
-                  'z': self.cartesian_operator()[2]}
+
+        # Spin operators
+        self.Ix, self.Iy, self.Iz = spin_J_set(self.quantum_number)
+        # Raising & lowering operators
+        self.Ip, self.Im = (self.Ix + 1j*self.Iy, self.Ix - 1j*self.Iy)
+        # Pack everything into a dict
+        self.I = {'-': self.Im,
+                  '+': self.Ip,
+                  'x': self.Ix,
+                  'y': self.Iy,
+                  'z': self.Iz,
+                  'I': self.quantum_number}
 
         self.gyro_ratio_over_2pi = float(gamma_over_2pi)
-    
+        # Helper dimension size of the space
+        self.shape = self.I['-'].shape
+        self.dims = self.I['-'].dims
     def multiplicity(self):
         """
-        Returns the spin states' multiplicity, namely 2*quantum_number+1 (cast to int).
+        Returns the spin states' multiplicity: 2*quantum_number+1 (cast to int).
         """
         return int((2*self.quantum_number)+1)
-
-    def raising_operator(self):
-        """
-        Returns an Operator object representing the raising operator I+ of the spin,
-         expressing its matrix attribute with respect to the basis of the eigenstates of Iz.
-        """
-        I_raising = np.zeros((self.d, self.d))
-        for m in range(self.d):
-            for n in range(self.d):
-                if n - m == 1:
-                    I_raising[m, n] = np.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n + 1))
-        return Qobj(I_raising)
-
-    def lowering_operator(self):
-        """
-        Returns an Operator object representing the lowering operator I- of the spin,
-        expressing its matrix attribute with respect to the basis of the eigenstates of Iz.
-        """
-        I_lowering = np.zeros((self.d, self.d))
-        for m in range(self.d):
-            for n in range(self.d):
-                if n - m == -1:
-                    I_lowering[m, n] = np.sqrt(self.quantum_number*(self.quantum_number+1) - (self.quantum_number-n)*(self.quantum_number-n - 1))
-        return Qobj(I_lowering)
 
     def cartesian_operator(self):
         """
         Returns a list of 3 Observable objects representing in the order the x, y and z
-        components of the spin. The first two are built up exploiting their relation with
-         the raising and lowering operators (see the formulas above), while the third is
-         simply expressed in its diagonal form, since the chosen basis of representation
-         is made up of its eigenstates.
-        
-        Returns
+        components of the spin.
+        Returns:
         -------
+        List:
         - [0]: an Observable object standing for the x component of the spin;
         - [1]: an Observable object standing for the y component of the spin;
         - [2]: an Observable object standing for the z component of the spin;
         """
-        I = []
-        I.append(Qobj(((self.raising_operator() + self.lowering_operator())/2)))
-        I.append(Qobj(((self.raising_operator() - self.lowering_operator())/(2j))))
-        I.append(Qobj(np.eye(self.d)))
-        for m in range(self.d):
-            I[2].data[m, m] = self.quantum_number - m
-        return I    
-
-
+        return [self.Ix, self.Iy, self.Iz]
 class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins, and its
@@ -164,24 +139,20 @@ class ManySpins(NuclearSpin):
         The initialised ManySpins object.
         """        
         self.n_spins = len(spins)
-        
-        self.spin = []
-                
-        self.d = 1
-                
-        self.I = {}
-        
-        for x in spins:
+
+        self.spin, self.d, self.dims = ([spins[0]], spins[0].d, spins[0].dims)
+        for x in spins[1:]:
             self.spin.append(x)
-            
             self.d = self.d*x.d
-            
-        self.I['-'] = self.many_spin_operator('-')
-        self.I['+'] = self.many_spin_operator('+')
-        self.I['x'] = self.many_spin_operator('x')
-        self.I['y'] = self.many_spin_operator('y')
-        self.I['z'] = self.many_spin_operator('z')
-    
+            self.dims = np.concatenate([self.dims, x.dims], axis=1)
+
+        if type(self.dims) != list:
+            self.dims = self.dims.tolist()
+        self.shape = (self.d, self.d)
+        self.I = {'-': self.many_spin_operator('-'), '+': self.many_spin_operator('+'),
+                  'x': self.many_spin_operator('x'), 'y': self.many_spin_operator('y'),
+                  'z': self.many_spin_operator('z')}
+
     def many_spin_operator(self, component):
         """
         Returns the specified spherical or cartesian component of the spin operator of the
@@ -201,29 +172,14 @@ class ManySpins(NuclearSpin):
         component is returned.
         """
 
-        # dimensions of vector inputs to tensor; should be same as dual vector 
-        # inputs, i.e., tensor valence/rank should be (r, k) with r = k. equiv. 
-        # to matrix being square.
-        dims = [s.d for s in self.spin]
-        many_spin_op = Qobj(np.zeros((self.d, self.d)), dims=[dims, dims])
+        many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
         
         for i in range(self.n_spins):
             term = self.spin[i].I[component]
             for j in range(self.n_spins)[:i]:
-                term = tensor(Qobj(np.eye(self.spin[j].d)), term)
+                term = tensor(qeye(self.spin[j].d), term)
             for k in range(self.n_spins)[i+1:]:
-                term = tensor(term, Qobj(np.eye(self.spin[k].d)))
-            many_spin_op = many_spin_op + Qobj(term.full(), dims=[dims, dims])
-            # Force proper dimensions due to mystery bug
+                term = tensor(term, qeye(self.spin[k].d))
+            many_spin_op += Qobj(term.full(), dims=self.dims)
 
-        # Below deprecated since QuTiP integration; not sure what it was doing
-        # other than typecasting, anyway. 
-        # if component in 'xyz':
-        #     many_spin_op = many_spin_op.cast_to_observable()
-        
         return many_spin_op
-            
-            
-            
-            
-            
