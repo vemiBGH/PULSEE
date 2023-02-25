@@ -44,3 +44,9 @@
 #     for m in range(self.d):
 #         I[2].data[m, m] = self.quantum_number - m
 #     return I
+
+'''Old calculate tensor'''
+# for m in range(spin.n_spins)[:n]:
+#     term_n = tensor(qeye(spin.spin[m].d), term_n)
+# for l in range(spin.n_spins)[n + 1:]:
+#     term_n = tensor(term_n, qeye(spin.spin[l].d))

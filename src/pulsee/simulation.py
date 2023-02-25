@@ -709,7 +709,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                         order, spin, mode, o_change_of_picture)
         dm_evolved = changed_picture(
             result.states[-1], o_change_of_picture, pulse_time, invert=True)
-        return dm_evolved
+        # TODO: Problem of the conj
+        return dm_evolved.conj()
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
     h_perturbation = h_multiple_mode_pulse(
