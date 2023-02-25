@@ -338,27 +338,26 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
     """
     dims = spin.dims
 
-    omega = mode['frequency']
-    B = mode['amplitude']
-    phase = mode['phase']
-    theta = mode['theta_p']
-    phi = mode['phi_p']
-    pulse_time = mode['pulse_time']
-
+    omegas = mode['frequency']
+    amplitudes = mode['amplitude']
+    phases = mode['phase']
+    thetas = mode['theta_p']
+    phis = mode['phi_p']
+    pulse_times = mode['pulse_time']
     if factor_t_dependence:
         # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                t_dependence = pulse_time_dep_coeff(omega[i], phase[i], pulse_time[i])
+                t_dependence = pulse_time_dep_coeff(omega[i], phase[i], pulse_times[i])
                 h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term_n = pulse_t_independent_op(spin.spin[n], B[i],
-                                                    theta[i], phi[i])
+                    term_n = pulse_t_independent_op(spin.spin[n], amplitudes[i],
+                                                    thetas[i], phis[i])
                     for m in range(spin.n_spins)[:n]:
                         term_n = tensor(qeye(spin.spin[m].d), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
@@ -370,9 +369,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
-                mode_hamiltonians.append(h_single_mode_pulse(spin, omega[i], B[i], phase[i], theta[i], phi[i], t,
-                                                             pulse_time[i], factor_t_dependence=True))
-                # for a simple pulse in the transverse plane: [(-gamma/2pi * 2 * B1 * Ix, 'time_dependence_function'
+                mode_hamiltonians.append(h_single_mode_pulse(spin, omegas[i], amplitudes[i], phases[i], thetas[i], phis[i], t,
+                                                             pulse_times[i], factor_t_dependence=True))
+                # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
                 # (which returns cos(w0*t)))]
 
         return mode_hamiltonians
@@ -386,9 +385,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term_n = h_single_mode_pulse(spin.spin[n], omega[i], B[i],
-                                                 phase[i], theta[i], phi[i], t,
-                                                 pulse_time[i], factor_t_dependence=False)
+                    term_n = h_single_mode_pulse(spin.spin[n], omegas[i], amplitudes[i],
+                                                 phases[i], thetas[i], phis[i], t, pulse_times[i], 
+                                                 factor_t_dependence=False)
                     for m in range(spin.n_spins)[:n]:
                         term_n = tensor(qeye(spin.spin[m].d), term_n)
                     for l in range(spin.n_spins)[n + 1:]:
@@ -396,9 +395,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                     h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
-                h_pulse += h_single_mode_pulse(spin, omega[i], B[i], phase[i],
-                                               theta[i], phi[i], t, pulse_time[i], factor_t_dependence=False)
-
+                h_pulse += h_single_mode_pulse(spin, omegas[i], amplitudes[i], phases[i],
+                                               thetas[i], phis[i], t, pulse_times[i],
+                                               factor_t_dependence=False)
         return Qobj(h_pulse)
 
 
