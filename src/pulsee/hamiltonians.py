@@ -349,7 +349,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                t_dependence = pulse_time_dep_coeff(omega[i], phase[i], pulse_times[i])
+                t_dependence = pulse_time_dep_coeff(omegas[i], phases[i], pulse_times[i])
                 h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
