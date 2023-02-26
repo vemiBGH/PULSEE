@@ -305,9 +305,9 @@ def nuclear_system_setup(spin_par,
     for i in range(spin_system.n_spins):
         h_i = h_q[i] + h_z[i]
         for j in range(i):
-            h_i = tensor(Qobj(qeye(spin_system.spin[j].d)), h_i)
+            h_i = tensor(qeye(spin_system.spin[j].d), h_i)
         for k in range(spin_system.n_spins)[i + 1:]:
-            h_i = tensor(h_i, Qobj(qeye(spin_system.spin[k].d)))
+            h_i = tensor(h_i, qeye(spin_system.spin[k].d))
         h_unperturbed = h_unperturbed + [Qobj(h_i)]
 
     if j_matrix is not None:
@@ -315,7 +315,7 @@ def nuclear_system_setup(spin_par,
         h_unperturbed = h_unperturbed + [Qobj(h_j)]
 
     if D1_param is not None:
-        if ((D1_param['b_D'] == 0.) and (D1_param['theta'] == 0.)):
+        if (D1_param['b_D'] == 0.) and (D1_param['theta'] == 0.):
             pass
         else:
             h_d1 = h_D1(spin_system, D1_param['b_D'],
@@ -323,7 +323,7 @@ def nuclear_system_setup(spin_par,
             h_unperturbed = h_unperturbed + [Qobj(h_d1)]
 
     if D2_param is not None:
-        if ((D2_param['b_D'] == 0.) and (D2_param['theta'] == 0.)):
+        if (D2_param['b_D'] == 0.) and (D2_param['theta'] == 0.):
             pass
         else:
             h_d2 = h_D2(spin_system, D2_param['b_D'],
@@ -331,7 +331,7 @@ def nuclear_system_setup(spin_par,
             h_unperturbed = h_unperturbed + [Qobj(h_d2)]
 
     if hf_param is not None:
-        if ((hf_param['A'] == 0.) and (hf_param['B'] == 0.)):
+        if (hf_param['A'] == 0.) and (hf_param['B'] == 0.):
             pass
         else:
             h_hf = h_HF_secular(spin_system, hf_param['A'],
@@ -339,7 +339,7 @@ def nuclear_system_setup(spin_par,
             h_unperturbed = h_unperturbed + [Qobj(h_hf)]
 
     if j_sec_param is not None:
-        if (j_sec_param['J'] == 0.0):
+        if j_sec_param['J'] == 0.0:
             pass
         else:
             h_j = h_j_secular(spin_system, j_sec_param['J'])
@@ -668,6 +668,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     Magnus expansion of the full Hamiltonian of the system (truncated to the
     order specified by the same-named argument).
 
+    Note:
+    QuTiP should be the preferred solver.
+
+    Magnus works best if each pulse is evaluated individually because it is dependent on the
+    time array. Advised  not use evolution_time with magnus,  rather call another instance
+    of the evolve function.
+
     Returns
     -------
     The DensityMatrix object representing the state of the system (in the
@@ -684,7 +691,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         raise ValueError('Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
-
     if pulse_time == 0 or np.all(np.absolute((dm_initial.full()
                                               - np.eye(spin.d))) < 1e-10):
         return dm_initial
@@ -710,7 +716,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         dm_evolved = changed_picture(
             result.states[-1], o_change_of_picture, pulse_time, invert=True)
         # TODO: Problem of the conj
-        return dm_evolved.conj()
+        # return dm_evolved.conj()
+        return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
     h_perturbation = h_multiple_mode_pulse(
@@ -1328,7 +1335,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
     #TODO: check this minus factor
-    result = mesolve(-2 * np.pi * sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
+    result = mesolve(2 * np.pi * sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq) * decay_t
     fid = np.array(result.expect)[0] * measurement_direction
 

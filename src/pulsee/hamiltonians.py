@@ -284,7 +284,6 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_ti
     if B_1 < 0:
         raise ValueError(
             "The amplitude of the electromagnetic wave must be positive.")
-
     # Notice the following does not depend on spin
     t_dependence = pulse_time_dep_coeff(
         frequency, phase, pulse_time)  # this variable is a function!
@@ -356,7 +355,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                 # is the identity, add those together
                 for n in range(spin.n_spins):
                     term = pulse_t_independent_op(spin.spin[n], amplitudes[i],
-                                                    thetas[i], phis[i])
+                                                  thetas[i], phis[i])
                     ops = []
                     for m in range(spin.n_spins):
                         if m == n:
@@ -381,9 +380,8 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
 
         return mode_hamiltonians
     else:
-        h_pulse = Qobj(np.zeros((spin.d, spin.d)))
+        h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
         if isinstance(spin, ManySpins):
-            h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
             for i in mode.index:
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
@@ -630,7 +628,7 @@ def h_j_secular(spins, J):
    Observable object acting on the full Hilbert space of the 2-spin system representing the Hamiltonian.
 
     """
-    h_j = 2 * np.pi * J * tensor(spins.spin[0].I['z'], spins.spin[1].I['z'])
+    h_j = J * tensor(spins.spin[0].I['z'], spins.spin[1].I['z'])
     return Qobj(h_j)
 
 
