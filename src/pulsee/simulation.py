@@ -16,7 +16,8 @@ from matplotlib.patches import Patch
 
 from .operators import canonical_density_matrix, \
     evolve_by_hamiltonian, \
-    changed_picture, exp_diagonalize
+    changed_picture, exp_diagonalize, \
+    apply_exp_op, apply_op
 
 from .nuclear_spin import NuclearSpin, ManySpins
 
@@ -1324,8 +1325,12 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
     Iz = spin.I['z']
     Iy = spin.I['y']
-    I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
-        .transform((-1j * phi * Iz).expm())
+
+    # I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
+    #     .transform((-1j * phi * Iz).expm())
+
+    rot1, rot2 = (-1j * theta * Iy, -1j * phi * Iz)
+    I_plus_rotated = apply_exp_op(apply_exp_op(spin.I['+'], rot1), rot2)
 
     # Leaving the old slow method here for debugging & comparison purposes
     if old_method:
@@ -1981,4 +1986,7 @@ def apply_rot_pulse(rho, duration, rot_axis):
     --------
     The transformed density matrix as a Qobj. 
     """
-    return rho.transform((-1j * duration * rot_axis).expm())
+
+    rot_op = (-1j * duration * rot_axis).expm()
+    return apply_op(rho, rot_op)
+    # return rho.transform((-1j * duration * rot_axis).expm())
