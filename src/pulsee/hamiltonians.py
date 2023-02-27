@@ -4,7 +4,7 @@ from qutip import Qobj, tensor, qeye
 from qutip.solver import Result
 
 from .nuclear_spin import NuclearSpin, ManySpins
-from .operators import changed_picture, commutator
+from .operators import changed_picture, commutator, apply_exp_op
 
 
 def h_zeeman(spin, theta_z, phi_z, B_0):
@@ -785,6 +785,8 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
                                   commutator(h[t3], commutator(h[t2], h[t]))) * \
                         ((2 * np.pi * time_step) ** 3) * (-1j / 6)
 
-    dm_evolved_new_picture = rho0.transform(- integral.expm())
+    # dm_evolved_new_picture = rho0.transform((- integral).expm())
+    # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()
+    dm_evolved_new_picture = apply_exp_op(rho0, - integral)
     output.states = [rho0, dm_evolved_new_picture]
     return output

@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm, rand_dm, commutator as com
+from qutip import Qobj, rand_herm
 
 
 def exp_diagonalize(q):
@@ -58,8 +58,9 @@ def changed_picture(q, h_change_of_picture, time, invert=False):
     A new Operator object equivalent to the owner object but expressed in a different picture.
     """
     t = Qobj(-1j * 2 * np.pi * h_change_of_picture * time)
-    # if invert: t = -t
-    return q.transform(t.expm(), inverse=invert)
+    if invert:
+        t = -t
+    return t.expm() * q * (t.expm()).dag()
 
 
 def unit_trace(q):
@@ -97,6 +98,33 @@ def positivity(q):
     eigenvalues = q.eigenenergies()
     return np.all(np.real(eigenvalues) >= -1e-10)
 
+def apply_op(q, U):
+    """
+    Applies the operator U onto the density matrix q
+
+    Parameters
+    ----------
+    - q: Qobj
+
+    Returns
+    -------
+    apply_op(U) = U * dm * U_dagger
+    """
+    return U * q * U.dag()
+
+def apply_exp_op(q, U):
+    """
+    Applies the operator U.expm() onto the density matrix q
+
+    Parameters
+    ----------
+    - q: Qobj
+
+    Returns
+    -------
+    apply_op(U) = U.expm() * dm * U.expm()_dagger
+    """
+    return U.expm() * q * (U.expm()).dag()
 
 def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
@@ -119,7 +147,8 @@ def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
     iHt = 1j * 2 * np.pi * static_hamiltonian * time
     # dm.transform(U) = U * dm * U_dagger
-    return dm.transform(iHt.expm()) 
+    # not sure if above is true
+    return apply_exp_op(dm, iHt)
 
 
 def random_operator(d):
