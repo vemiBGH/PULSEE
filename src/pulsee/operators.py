@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm
+from qutip import Qobj, rand_herm, rand_dm, commutator as com
 
 
 def exp_diagonalize(q):
