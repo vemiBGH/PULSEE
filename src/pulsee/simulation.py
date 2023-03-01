@@ -569,96 +569,97 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     Parameters
     ----------
-    - `spin`: NuclearSpin
-            Spin under study.
+    - spin: NuclearSpin
+        Spin under study.
 
-    - `h_unperturbed`: List[Qobj or (Qobj, function)]
-                     Hamiltonian of the nucleus at equilibrium (in MHz).
+    - h_unperturbed: List[Qobj or (Qobj, function)]
+        Hamiltonian of the nucleus at equilibrium (in MHz).
 
-    - `dm_initial`: Qobj
-                  Density matrix of the system at time t=0, just before the
-                  application of the pulse.
+    - dm_initial: Qobj
+        Density matrix of the system at time t=0, just before the application 
+        of the pulse.
 
-    - `solver`: function (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
-                OR 
-                String
-                Solution method to be used when calculating time evolution of
-                state. If string, must be either `mesolve` or `magnus.`
+    - solver: Function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
+              OR 
+              String
+        Solution method to be used when calculating time evolution of
+        state. If string, must be either `mesolve` or `magnus.`
 
-    - `mode`: pandas.DataFrame
-            Table of the parameters of each electromagnetic mode in the pulse.
-            It is organised according to the following template:
+    - mode: pandas.DataFrame
+        Table of the parameters of each electromagnetic mode in the pulse.
+        It is organised according to the following template:
 
-    | index |  'frequency'  |  'amplitude'  |  'phase'  |  'theta_p'  |  'phi_p'  | 'pulse_time' |
-    | ----- | ------------- | ------------- | --------- | ----------- | --------- | ------------ |
-    |       |   (rad/sec)   |      (T)      |   (rad)   |    (rad)    |   (rad)   |    (mus)     |
-    |   0   |    omega_0    |      B_0      |  phase_0  |   theta_0   |   phi_0   |    tau_0     |
-    |   1   |    omega_1    |      B_1      |  phase_1  |   theta_1   |   phi_1   |    tau_1     |
-    |  ...  |      ...      |      ...      |    ...    |     ...     |    ...    |     ...      |
-    |   N   |    omega_N    |      B_N      |  phase_N  |   theta_N   |   phi_N   |    tau_N     |
+    |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|
+    |-----|-----------|-----------|---------|---------|-------|------------|
+    |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |
+    |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |
+    |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |
+    | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |
+    |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |
 
-            where the meaning of each column is analogous to the corresponding
-            parameters in h_single_mode_pulse.
+        where the meaning of each column is analogous to the corresponding
+        parameters in h_single_mode_pulse.
 
-            Important: The amplitude value is B_1, not 2*B_1. The code will
-            automatically multiply by 2!
+        Important: The amplitude value is B_1, not 2*B_1. The code will
+        automatically multiply by 2!
 
-            When it is None, the evolution of the system is performed for the
-            given time duration without any applied pulse.
+        When it is None, the evolution of the system is performed for the
+        given time duration without any applied pulse.
 
-            The default value is None.
-    - `evolution_time`: float
-                  Duration of the evolution (in microseconds).
+        The default value is None.
 
-                  The default value is 0 or the max of pulses specified in mode,
-                  whichever is bigger.
+    - evolution_time: float
+        Duration of the evolution (in microseconds).
 
-    - `picture`: string
-               Sets the dynamical picture where the density matrix of the system
-               is evolved for the `magnus` solver. May take the values:
+        The default value is 0 or the max of pulses specified in mode,
+        whichever is bigger.
 
-        1. IP', which sets the interaction picture;
-        2.'RRF' (or anything else), which sets the picture corresponding to a
-        rotating reference frame whose features are specified in argument
-        RRF_par.
-               The default value is IP. For LAB frame, use picture='RRF' and
-               give no RRF_par.
+    - picture: string
+        Sets the dynamical picture where the density matrix of the system
+        is evolved for the `magnus` solver. May take the values:
+            1.'IP', which sets the interaction picture;
+            2.'RRF' (or anything else), which sets the picture corresponding to a
+            rotating reference frame whose features are specified in argument
+            RRF_par.
 
-               The choice of picture has no effect on solvers other than `magnus`.
-    - `RRF_par`: dict
-               Specifies the properties of the rotating reference frame where
-               evolution is carried out when picture='RRF.' The
-               keys and values required to this argument are shown in the table
-               below:
-               |      key      |  value  |
-               |      ---      |  -----  |
-               |'nu_RRF' (MHz) |  float  |
-               |  'theta_RRF'  |  float  |
-               |   'phi_RRF'   |  float  |
-               where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
-               'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
-               to the plane of rotation in the LAB frame (in radians).
-               By default, all the values in this map are set to 0 (RRF equivalent
-               to the LAB frame).
+        The default value is 'IP'. For LAB frame, use picture='RRF' and
+        give no RRF_par.
+        The choice of picture has no effect on solvers other than `magnus`.
 
-    - `n_points`: float
-                Factor that multiplies the number of points, # points = [pulse_time * n_points]
-                in which the time interval [0, pulse_time] is sampled in the discrete approximation
-                of the time-dependent Hamiltonian of the system.  Default value is 10.
+    - RRF_par: dict
+        Specifies the properties of the rotating reference frame where
+        evolution is carried out when picture='RRF.' The
+        keys and values required to this argument are shown in the table
+        below:
+        |      key      |  value  |
+        |      ---      |  -----  |
+        |'nu_RRF' (MHz) |  float  |
+        |  'theta_RRF'  |  float  |
+        |   'phi_RRF'   |  float  |
+        where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
+        'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
+        to the plane of rotation in the LAB frame (in radians).
+        By default, all the values in this map are set to 0 (RRF equivalent
+        to the LAB frame).
 
-    - `order`: float
-               The order of the simulation method to use. For `magnus` must be <= 3. 
-               Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
+    - n_points: float
+        Factor that multiplies the number of points, # points = [pulse_time * n_points]
+        in which the time interval [0, pulse_time] is sampled in the discrete approximation
+        of the time-dependent Hamiltonian of the system.  Default value is 10.
 
-    - 'ret_allstates': boolean
-                    Specify whether to return every calculated state or only last one.
-                    Default False --> returns only last state.
-                    [Magnus solver only returns final state]
+    - order: float
+        The order of the simulation method to use. For `magnus` must be <= 3. 
+        Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
+
+    - ret_allstates: boolean
+        Specify whether to return every calculated state or only last one.
+        Default False --> returns only last state.
+        [Magnus solver only returns final state]
 
     Action
     ------
     If
-    - evolution_time is equal to 0;
+    - evolution_time is equal to 0, or
     - dm_initial is very close to the identity (with an error margin of 1e-10
         for each element)
 
@@ -696,8 +697,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                                               - np.eye(spin.d))) < 1e-10):
         return dm_initial
 
-    times, tm = np.linspace(0, pulse_time, num=max(
-        3, int(n_points)), retstep=True)
+    times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 1
 
@@ -721,10 +721,11 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
-    h_perturbation = h_multiple_mode_pulse(
-        spin, mode, t=0, factor_t_dependence=True)
-    # h_unperturbed and h_perturbation are both lists. If H = H0 + H1*f1(t) + H2*f1(t) + ..., then
-    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...] (refer to QuTiP's mesolve documentation for further detail)
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, factor_t_dependence=True)
+    
+    # Given that H = H0 + H1*f1(t) + H2*f1(t) + ..., 
+    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...] 
+    # (refer to QuTiP's mesolve documentation for further detail)
     h = h_unperturbed + h_perturbation
 
     if solver == mesolve or solver == 'mesolve':
@@ -1214,7 +1215,8 @@ def legacy_FID_signal(times, decay_functions, dm, h_unperturbed, ref_freq, I_plu
 
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, ref_freq=0, n_points=100, old_method=False):
+               phi=0, ref_freq=0, n_points=100, pulse_mode=None, 
+               old_method=False):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1225,56 +1227,65 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     ----------
     - spin: NuclearSpin
 
-            Spin under study.
+        Spin under study.
 
     - h_unperturbed: Operator
 
-                     Unperturbed Hamiltonian of the system (in MHz).
+        Unperturbed Hamiltonian of the system (in MHz).
 
     - dm: DensityMatrix
 
-          Density matrix representing the state of the system at the beginning
-          of the acquisition of the signal.
+        Density matrix representing the state of the system at the beginning
+        of the acquisition of the signal.
 
     - acquisition_time: float
 
-                        Duration of the acquisition of the signal, expressed in
-                        microseconds.
+        Duration of the acquisition of the signal, expressed in
+        microseconds.
 
     - T2: iterable[float] or 
-          iterable[function with signature (float) -> float] or 
-          float or 
-          function with signature (float) -> float
+        iterable[function with signature (float) -> float] or 
+        float or 
+        function with signature (float) -> float
 
-          If float, characteristic time of relaxation of the component of the
-          magnetization on the plane of detection vanishing, i.e., T2. It is
-          measured in
-          microseconds.
-          If function, the decay envelope. 
-          If iterable, total decay envelope will be product of decays in list.
+        If float, characteristic time of relaxation of the component of the
+        magnetization on the plane of detection vanishing, i.e., T2. It is
+        measured in
+        microseconds.
+        If function, the decay envelope. 
+        If iterable, total decay envelope will be product of decays in list.
 
-          Default value is 100 (microseconds).
+        Default value is 100 (microseconds).
 
     - theta, phi: float
 
-                  Polar and azimuthal angles which specify the normal to the
-                  plane of detection of the FID signal (in radians).
-
-                  Default values are theta=0, phi=0.
+        Polar and azimuthal angles which specify the normal to the
+        plane of detection of the FID signal (in radians).
+        Default values are theta=0, phi=0.
 
     - ref_freq: float
 
-                Specifies the frequency of rotation of the measurement apparatus
-                with respect to the LAB system. (in MHz)
-                Default value is 0.
+        Specifies the frequency of rotation of the measurement apparatus
+        with respect to the LAB system. (in MHz)
+        Default value is 0.
 
     - n_points: float
 
-                Factor that multiplies the number of points, # points = [acquisition_time * n_points]
-                per microsecond in which the time interval [0, acquisition_time] is sampled for the
-                generation of the FID signal.
+        Factor that multiplies the number of points, # points = [acquisition_time * n_points]
+        per microsecond in which the time interval [0, acquisition_time] is sampled for the
+        generation of the FID signal.
+        Default value is 100.
 
-                Default value is 100.
+    - pulse_mode: pandas.DataFrame
+        The user can decide to apply a pulse during the measurement of the FID.
+        Although unusual, this is necessary for axion simulations.
+        Refer to the argument 'mode' in the function evolve() for details about 
+        this pulse_mode argument.
+
+    - old_method: bool
+        For debugging & comparison purposes. Should be ignored for anyone who's
+        not a developer.
+        Default value is False 
 
     Action
     ------
@@ -1289,14 +1300,14 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     -------
     [0]: numpy.ndarray
 
-         Vector of equally spaced sampled instants of time in the interval [0,
-         acquisition_time] (in microseconds).
+        Vector of equally spaced sampled instants of time in the interval [0,
+        acquisition_time] (in microseconds).
 
     [1]: numpy.ndarray
 
-         FID signal evaluated at the discrete times reported in the first output
-         (in arbitrary units). Each signal value is a complex number, where
-         the real part and the imaginary part are quadrature detections.
+        FID signal evaluated at the discrete times reported in the first output
+        (in arbitrary units). Each signal value is a complex number, where
+        the real part and the imaginary part are quadrature detections.
     """
     times = np.linspace(start=0, stop=acquisition_time,
                         num=int(acquisition_time * n_points))
@@ -1326,10 +1337,12 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     Iz = spin.I['z']
     Iy = spin.I['y']
 
+    # Measuring the expectation value of I_plus allows us to get the expectation of
+    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
+
     # I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
     #     .transform((-1j * phi * Iz).expm())
-
-    rot1, rot2 = (-1j * theta * Iy, -1j * phi * Iz)
+    rot1, rot2 = (-1j * theta * Iy), (-1j * phi * Iz)
     I_plus_rotated = apply_exp_op(apply_exp_op(spin.I['+'], rot1), rot2)
 
     # Leaving the old slow method here for debugging & comparison purposes
@@ -1337,12 +1350,18 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         return legacy_FID_signal(times, decay_functions, dm,
                                  h_unperturbed, ref_freq, I_plus_rotated)
 
-    # Measuring the expectation value of I_plus allows us to get the expectation of
-    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
+    hamiltonian = 2 * np.pi * sum(h_unperturbed)
+    if pulse_mode is not None:
+        # copying the method from function evolve()
+        h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0, 
+                                               factor_t_dependence=True)
+        hamiltonian = hamiltonian + h_perturbation
+    
+
     #TODO: check this minus factor
-    result = mesolve(2 * np.pi * sum(h_unperturbed), dm, times, e_ops=[I_plus_rotated], progress_bar=True)
-    measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq) * decay_t
-    fid = np.array(result.expect)[0] * measurement_direction
+    result = mesolve(hamiltonian, dm, times, e_ops=[I_plus_rotated], progress_bar=True)
+    measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
+    fid = np.array(result.expect)[0] * decay_t * measurement_direction
 
     if np.max(fid) < 0.09:
         import warnings
@@ -1749,8 +1768,8 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
 
     if norm:
         for i in range(n_plots):
-            fourier_data[i] = fourier_data[i] / \
-                              np.amax(np.abs(fourier_data[i]))
+            fourier_data[i] = (fourier_data[i] /
+                               np.amax(np.abs(fourier_data[i])))
 
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
