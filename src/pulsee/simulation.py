@@ -730,7 +730,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     if solver == mesolve or solver == 'mesolve':
         scaled_h = []
-
         # Magnus expansion solver includes 2 pi factor in exponentiations;
         # scale Hamiltonians by this factor for `mesolve` for consistency.
         for h_term in h:
@@ -738,6 +737,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
                 scaled_h.append([h_term[0] * 2 * np.pi, h_term[1]])
             else:  # of the form: H0
                 scaled_h.append(2 * np.pi * h_term)
+
+        #TODO: check this minus factor
         result = mesolve(scaled_h, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
         if ret_allstates:
@@ -1355,7 +1356,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         # copying the method from function evolve()
         h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0, 
                                                factor_t_dependence=True)
-        hamiltonian = hamiltonian + h_perturbation
+        hamiltonian = [hamiltonian] + h_perturbation
     
 
     #TODO: check this minus factor
