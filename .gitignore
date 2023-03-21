@@ -11,3 +11,4 @@ src/pulsee/__pycache__/
 __pycache__
 /demos/archive
 /demos/archive/.ipynb_checkpoints
+src/pulsee.egg-info/PKG-INFO

@@ -11,7 +11,7 @@ from matplotlib.pyplot import xticks, yticks
 import hypothesis.strategies as st
 from hypothesis import given, assume
 
-from pulsee.operators import random_density_matrix, changed_picture
+from pulsee.operators import changed_picture
 
 from pulsee.nuclear_spin import NuclearSpin
 
@@ -195,8 +195,8 @@ def test_j_coupling_refocusing_sequence():
                 'theta_z' : 0,
                 'phi_z' : 0}
     
-    initial_state1 = random_density_matrix(2)
-    initial_state2 = random_density_matrix(2)
+    initial_state1 = rand_dm(2)
+    initial_state2 = rand_dm(2)
     initial_state = tensor(initial_state1, initial_state2)
     
     spins, h_zeeman, initial_dm = nuclear_system_setup([spin_par1, spin_par2], \
@@ -246,8 +246,8 @@ def test_magnus_j_coupling_refocusing_sequence():
                 'theta_z' : 0,
                 'phi_z' : 0}
     
-    initial_state1 = random_density_matrix(2)
-    initial_state2 = random_density_matrix(2)
+    initial_state1 = rand_dm(2)
+    initial_state2 = rand_dm(2)
     initial_state = tensor(initial_state1, initial_state2)
     
     spins, h_zeeman, initial_dm = nuclear_system_setup([spin_par1, spin_par2], \

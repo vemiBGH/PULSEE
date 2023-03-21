@@ -4,17 +4,17 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from qutip import tensor
+from qutip import tensor, rand_dm
 
-from pulsee.operators import random_operator, random_density_matrix, random_observable
+from pulsee.operators import random_operator, random_observable
 
 from pulsee.many_body import ptrace_subspace
 
 @given(d = st.integers(min_value=2, max_value=8))
 @settings(deadline = None)
 def test_tensor_product_conserves_density_matrix_properties(d):
-    A = random_density_matrix(d)
-    B = random_density_matrix(d)
+    A = rand_dm(d)
+    B = rand_dm(d)
     
     try:
         C = tensor(A, B)
