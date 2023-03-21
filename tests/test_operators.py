@@ -6,12 +6,12 @@ from scipy.linalg import eig, LinAlgError
 from scipy.integrate import quad
 from scipy.constants import Planck, Boltzmann
 
-from qutip import Qobj, expect
+from qutip import Qobj, expect, rand_dm
 
 import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume
 
-from pulsee.operators import random_operator, random_density_matrix, random_observable, \
+from pulsee.operators import random_operator, random_observable, \
                             commutator, magnus_expansion_1st_term, \
                             magnus_expansion_2nd_term, \
                             magnus_expansion_3rd_term, \
@@ -135,7 +135,7 @@ def test_reversibility_change_picture(d):
 @given(d = st.integers(min_value=2, max_value=8))
 @settings(deadline = None)
 def test_free_evolution_conserves_dm_properties(d):
-    dm = random_density_matrix(d)
+    dm = rand_dm(d)
     h = random_observable(d)
     try:
         evolved_dm = evolve_by_hamiltonian(dm, h, 4)
@@ -159,9 +159,9 @@ def test_random_observable_is_hermitian(d):
 
 @given(d = st.integers(min_value=1, max_value=16))
 @settings(deadline = None)
-def test_random_density_matrix_satisfies_dm_properties(d):
+def test_rand_dm_satisfies_dm_properties(d):
     try:
-        dm_random = random_density_matrix(d)
+        dm_random = rand_dm(d)
     except ValueError as ve:
         if "The input array lacks the following properties: \n" in ve.args[0]:
             error_message = ve.args[0][49:]
@@ -175,8 +175,8 @@ def test_random_density_matrix_satisfies_dm_properties(d):
 @given(d = st.integers(min_value=2, max_value=16))
 @settings(deadline = None)
 def test_convexity_density_matrix_space(d):
-    dm1 = random_density_matrix(d)
-    dm2 = random_density_matrix(d)
+    dm1 = rand_dm(d)
+    dm2 = rand_dm(d)
     a = np.random.random()
     b = 1-a
     hyp_dm = a*dm1 + b*dm2
@@ -185,8 +185,8 @@ def test_convexity_density_matrix_space(d):
 @given(d = st.integers(min_value=2, max_value=16))
 @settings(deadline = None)
 def test_linearity_evolution(d):
-    dm1 = random_density_matrix(d)
-    dm2 = random_density_matrix(d)
+    dm1 = rand_dm(d)
+    dm2 = rand_dm(d)
     h = random_observable(d)
     dm_sum = 0.5*(dm1+dm2)
     evolved_dm_sum = evolve_by_hamiltonian(dm_sum, h, 5)
@@ -209,7 +209,7 @@ def test_linearity_evolution(d):
 def test_variance_formula(d):
     ob = random_observable(d)
     i = Qobj(np.eye(d))
-    dm = random_density_matrix(d)
+    dm = rand_dm(d)
     ob_ev = expect(ob, dm)
     sq_dev = (ob - ob_ev*i) ** 2
     left_hand_side = expect(sq_dev, dm)

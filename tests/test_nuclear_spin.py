@@ -4,7 +4,7 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee.operators import random_operator, random_density_matrix, \
+from pulsee.operators import random_operator,\
                              random_observable, commutator
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins

@@ -5,9 +5,9 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from qutip import Qobj
+from qutip import Qobj, rand_dm
 
-from pulsee.operators import random_operator, random_density_matrix, random_observable
+from pulsee.operators import random_operator, random_observable
 
 from pulsee.many_body import ptrace_subspace
 

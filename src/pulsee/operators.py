@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm, rand_dm, commutator as com
+from qutip import Qobj, rand_herm, commutator as com
 
 
 def exp_diagonalize(q):
@@ -189,24 +189,6 @@ def random_observable(d):
     and imaginary parts in the half-open interval [-10., 10.].
     """
     return rand_herm(d)
-
-
-def random_density_matrix(d):
-    """
-    Returns a randomly generated density matrix of dimensions d. Wrapper for 
-    QuTiP's `rand_dm()`.
-
-    Parameters
-    ----------
-
-    - d: int
-         Dimensions of the DensityMatrix to be generated.
-
-    Returns
-    -------
-    A DensityMatrix object whose matrix is d-dimensional and has randomly generated eigenvalues.
-    """
-    return rand_dm(d)
 
 
 def commutator(A, B, kind='normal'):
