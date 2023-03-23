@@ -51,7 +51,7 @@ def nuclear_system_setup(spin_par,
 
     Parameters
     ----------
-    spin_par: dict / list of dict
+    spin_par : dict / list of dict
         Map/list of maps containing information about the nuclear spin/spins under
         consideration. The keys and values required to each dictionary in this
         argument are shown in the table below.
@@ -66,7 +66,7 @@ def nuclear_system_setup(spin_par,
 
         E.g., spin_par = {'quantum number': 1 / 2, 'gamma2/pi': 1}
 
-    quad_par: dict / list of dict
+    quad_par : dict / list of dict
         Map/maps containing information about the quadrupolar interaction between
         the electric quadrupole moment and the EFG for each nucleus in the system.
         The keys and values required to each dictionary in this argument are shown
@@ -79,7 +79,7 @@ def nuclear_system_setup(spin_par,
         |        'alpha_q'        |       float        |
         |        'beta_q'         |       float        |
         |        'gamma_q'        |       float        |
-        |         'order'         |       int        |
+        |         'order'         |       int          |
 
         where 'coupling constant' stands for the product e2qQ in the expression of
         the quadrupole term of the Hamiltonian (to be provided in MHz), 'asymmetry
@@ -89,9 +89,10 @@ def nuclear_system_setup(spin_par,
         (PAS) (to be expressed in radians).
 
         When it is None, the quadrupolar interaction of all the spins in the
-        system is not taken into account.  Default value is None.
+        system is not taken into account.
+        Default value is None.
 
-    zeem_par: dict
+    zeem_par : dict
         Map containing information about the magnetic field interacting with the
         magnetic moment of each nucleus in the system. The keys and values
         required to this argument are shown in the table below:
@@ -109,7 +110,7 @@ def nuclear_system_setup(spin_par,
         When it is None, the Zeeman interaction is not taken into account.
         Default value is None.
 
-    j_matrix: np.ndarray
+    j_matrix : np.ndarray
         Array whose elements represent the coefficients Jmn which determine the
         strength of the J-coupling between each pair of spins in the system. For
         the details on these data, see the description of the same-named parameter
@@ -119,7 +120,7 @@ def nuclear_system_setup(spin_par,
         When it is None, the J-coupling effects are not taken into account.      
         Default value is None.
 
-    cs_param: dict
+    cs_param : dict
         Map containing information about the chemical shift. The keys and values
         required to this argument are shown in the table below:
 
@@ -132,8 +133,7 @@ def nuclear_system_setup(spin_par,
         When it is None, the chemical shift is not taken into account.      
         Default value is None.
 
-        - D1_param: dict
-
+    D1_param : dict
         Map containing information about the dipolar interaction in the secular
         approximation for homonuclear & heteronuclear spins. The keys and values
         required to this argument are shown in the table below:
@@ -147,11 +147,11 @@ def nuclear_system_setup(spin_par,
         \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle
         between the two spins (expressed in radians).
 
-        When it is None, the dipolar interaction in the secular approximation  for
-        homonuclear & heteronuclear spins is not taken into account. Default
-        value is None.
+        When it is None, the dipolar interaction in the secular approximation
+        for homonuclear & heteronuclear spins is not taken into account. 
+        Default value is None.
 
-    D2_param: dict
+    D2_param : dict
         Map containing information about the dipolar interaction in the secular
         approximation for heteronuclear spins. The keys and values required to this
         argument are shown in the table below:
@@ -165,10 +165,11 @@ def nuclear_system_setup(spin_par,
         \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle
         between the two spins (expressed in radians).
 
-        When it is None, the dipolar interaction in the secular approximation  for
-        heteronuclear spins is not taken into account. Default value is None.
+        When it is None, the dipolar interaction in the secular approximation
+        for heteronuclear spins is not taken into account. 
+        Default value is None.
 
-    hf_param: dict
+    hf_param : dict
         Map containing information about the hyperfine interaction in the secular
         approximation between two spins. The keys and values required to this
         argument are shown in the table below:
@@ -184,16 +185,15 @@ def nuclear_system_setup(spin_par,
         When it is None, the hyperfine interaction in the secular approximation
         between two spins is not taken into account.      Default value is None.
 
-    h_tensor_inter: numpy.ndarray  or a list of numpy.ndarrays
+    h_tensor_inter : numpy.ndarray  or a list of numpy.ndarrays
         Rank-2 tensor describing a two-spin interaction of the form 
         $\mathbf{I}_1 J \mathbf{I}_2$ where $J$ is the tensor and $\mathbf{I}_i$
-        are vector spin operators
+        are vector spin operators.
 
         When it is None, the interaction is not taken into account. 
-
         Default value is None.
 
-    j_sec_param: dict
+    j_sec_param : dict
         Map containing information about the J-couping in the secular
         approximation. The keys and values required to this argument are shown in
         the table below:
@@ -207,14 +207,13 @@ def nuclear_system_setup(spin_par,
         When it is None, the J-couping in the secular approximation is not taken
         into account. Default value is None.
 
-    h_userDef: numpy.ndarray
+    h_userDef : numpy.ndarray
         Square matrix array which will give the hamiltonian of the system, adding to
         previous terms (if any). When passing, must ensure compability with the rest
         of the system.
-
         Default value is None.
 
-    initial_state: either string or numpy.ndarray
+    initial_state : string or numpy.ndarray
         Specifies the state of the system at time t=0.
 
         If the keyword canonical is passed, the function will return a
@@ -226,9 +225,8 @@ def nuclear_system_setup(spin_par,
 
         Default value is 'canonical'.
 
-    temperature: float
+    temperature : float
         Temperature of the system (in kelvin).
-
         Default value is 1e-4.
 
     Returns
@@ -361,22 +359,21 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
 
     Parameters
     ----------
-    spin: NuclearSpin / ManySpins
+    spin : NuclearSpin / ManySpins
         Single spin/spin system under study.
 
-    h_unperturbed: Operator
+    h_unperturbed : Operator
         Unperturbed Hamiltonian of the system (in MHz).
 
-    normalized: bool
+    normalized : bool
         Specifies whether the difference between the states' populations are 
         to be taken into account in the calculation of the line intensities. 
         When normalized=True, they are not, when normalized=False, 
         the intensities are weighted by the differences p(b)-p(a) 
         just like in the formula above.
-
         Default value is True.
 
-    dm_initial: DensityMatrix or None
+    dm_initial : DensityMatrix or None
         Density matrix of the system at time t=0, just before the
         application of the pulse.
 
@@ -448,51 +445,51 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(
-        frequencies, intensities, show=True, xlim=None, ylim=None,
-        fig_dpi=400, save=False, name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(frequencies, intensities, show=True, 
+        xlim=None, ylim=None, fig_dpi=400, save=False, 
+        name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding
     frequencies.
 
     Parameters
     ----------
-    frequencies: array-like
+    frequencies : array-like
         Frequencies of the transitions (in MHz).
 
-    intensities: array-like
+    intensities : array-like
         Intensities of the transitions (in a.u.).
 
-    show: bool
+    show : bool
         When False, the graph constructed by the function will not be
         displayed.
 
         Default value is True.
 
-    xlim: 2-element iterable or `None`
+    xlim : 2-element iterable or `None`
         Lower and upper x-axis limits of the plot.
         When `None` uses `matplotlib` default.
 
-    ylim: 2-element iterable or `None`
+    ylim : 2-element iterable or `None`
         Lower and upper y-axis limits of the plot.
         When `None` uses `matplotlib` default.
 
-    fig_dpi: int
+    fig_dpi : int
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    save: bool
+    save : bool
         When False, the plotted graph will not be saved on disk. When True,
         it will be saved with the name passed as name and in the directory
         passed as destination.
 
         Default value is False.
 
-    name: string
+    name : string
         Name with which the graph will be saved.
         Default value is 'PowerAbsorptionSpectrum'.
 
-    destination: string
+    destination : string
         Path of the directory where the graph will be saved (starting
         from the current directory). The name of the directory must
         be terminated with a slash /.
@@ -512,19 +509,15 @@ def plot_power_absorption_spectrum(
     fig = plt.figure()
 
     plt.vlines(frequencies, 0, intensities, colors='b')
-
     plt.xlabel("\N{GREEK SMALL LETTER NU} (MHz)")
     plt.ylabel("Power absorption (a. u.)")
 
     if xlim is not None:
         plt.xlim(left=xlim[0], right=xlim[1])
-
     if ylim is not None:
         plt.xlim(left=ylim[0], right=ylim[1])
-
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
-
     if show:
         plt.show()
 
@@ -542,23 +535,23 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     Parameters
     ----------
-    spin: NuclearSpin
+    spin : NuclearSpin
         Spin under study.
 
-    h_unperturbed: List[Qobj or (Qobj, function)]
+    h_unperturbed : List[Qobj] or List[(Qobj, function)]
         Hamiltonian of the nucleus at equilibrium (in MHz).
 
-    dm_initial: Qobj
+    dm_initial : Qobj
         Density matrix of the system at time t=0, just before the application 
         of the pulse.
 
-    solver: Function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
-            OR 
-            String
+    solver : function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
+             OR 
+             string
         Solution method to be used when calculating time evolution of
         state. If string, must be either `mesolve` or `magnus.`
 
-    mode: pandas.DataFrame
+    mode : pandas.DataFrame
         Table of the parameters of each electromagnetic mode in the pulse.
         It is organised according to the following template:
 
@@ -581,13 +574,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
         The default value is None.
 
-    evolution_time: float
+    evolution_time : float
         Duration of the evolution (in microseconds).
 
         The default value is 0 or the max of pulses specified in mode,
         whichever is bigger.
 
-    picture: string
+    picture : string
         Sets the dynamical picture where the density matrix of the system
         is evolved for the `magnus` solver. May take the values:
             1.'IP', which sets the interaction picture;
@@ -599,11 +592,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         give no RRF_par.
         The choice of picture has no effect on solvers other than `magnus`.
 
-    RRF_par: dict
+    RRF_par : dict
         Specifies the properties of the rotating reference frame where
         evolution is carried out when picture='RRF.' The
-        keys and values required to this argument are shown in the table
-        below:
+        keys and values required to this argument are shown in the table below:
         |      key      |  value  |
         |      ---      |  -----  |
         |'nu_RRF' (MHz) |  float  |
@@ -615,16 +607,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         By default, all the values in this map are set to 0 (RRF equivalent
         to the LAB frame).
 
-    n_points: float
-        Factor that multiplies the number of points, # points = [pulse_time * n_points]
+    n_points : float
+        Factor that multiplies the number of points, (points = [pulse_time * n_points])
         in which the time interval [0, pulse_time] is sampled in the discrete approximation
-        of the time-dependent Hamiltonian of the system.  Default value is 10.
+        of the time-dependent Hamiltonian of the system.
+        Default value is 10.
 
-    order: float
+    order : float
         The order of the simulation method to use. For `magnus` must be <= 3. 
         Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
 
-    ret_allstates: boolean
+    ret_allstates : boolean
         Specify whether to return every calculated state or only last one.
         Default False --> returns only last state.
         [Magnus solver only returns final state]
@@ -633,12 +626,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     ------
     If
     - evolution_time is equal to 0, or
-    - dm_initial is very close to the identity (with an error margin of 1e-10
-        for each element)
+    - dm_initial is very close to the identity 
+      (with an error margin of 1e-10 for each element)
 
-    the function returns dm_initial without performing any evolution.
+        the function returns dm_initial without performing any evolution.
 
-    Otherwise, evolution is carried out in the picture determined by the
+    Otherwise, 
+    evolution is carried out in the picture determined by the
     same-named parameter. The evolution operator is built up appealing to the
     Magnus expansion of the full Hamiltonian of the system (truncated to the
     order specified by the same-named argument).
@@ -740,10 +734,10 @@ def RRF_operator(spin, RRF_par):
 
     Parameters
     ----------
-    spin: NuclearSpin
-            Spin under study.
+    spin : NuclearSpin
+        Spin under study.
             
-    RRF_par: dict
+    RRF_par : dict
         Specifies the properties of the rotating reference frame. The
         keys and values required to this argument are shown in the table
         below:
@@ -785,10 +779,10 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
 
     Parameters
     ----------
-    dm: DensityMatrix/numpy array as a square matrix
+    dm : DensityMatrix / numpy array as a square matrix
         Density matrix to be plotted.
 
-    many_spin_indexing: either None or list
+    many_spin_indexing : None or list
         If not None, the density matrix dm is interpreted as the state of 
         a many spins' system, and this parameter provides the list of the 
         dimensions of the subspaces of the full Hilbert space related to the
@@ -797,36 +791,32 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
         the single spins' density matrices in their tensor product 
         resulting in dm. Default value is None.
 
-    show: bool
+    show : bool
         When False, the graph constructed by the function will not be
         displayed.
-
         Default value is True.
 
-    fig_dpi: int
+    fig_dpi : int
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    save: bool
+    save : bool
         When False, the plotted graph will not be saved on disk. When True,
         it will be saved with the name passed as name and in the directory
         passed as destination.
-
         Default value is False.
 
-    xmin, xmax, ymin, ymax : Float
+    xmin, xmax, ymin, ymax : float
         Set axis limits of the graph.
 
-    name: string
+    name : string
         Name with which the graph will be saved.
-
         Default value is 'RealPartDensityMatrix'.
 
-    destination: string
+    destination : string
         Path of the directory where the graph will be saved (starting
         from the current directory). The name of the directory must
         be terminated with a slash /.
-
         Default value is the empty string (current directory).
 
     Action
@@ -947,13 +937,12 @@ def complex_phase_cmap():
     """
     Create a cyclic colormap for representing the phase of complex variables
 
-    From QuTiP 4.0
-    https://qutip.org.
+    From QuTiP 4.0:
+    https://qutip.org
 
     Returns
     -------
-    cmap :
-        A matplotlib linear segmented colormap.
+    cmap : A matplotlib linear segmented colormap.
     """
     cdict = {'blue': ((0.00, 0.0, 0.0),
                       (0.25, 0.0, 0.0),
@@ -976,9 +965,10 @@ def complex_phase_cmap():
     return cmap
 
 
-def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_limits=None, phi_label=r'$\phi$',
-                                show_legend=True, fig_dpi=400, save=False, name='ComplexDensityMatrix', destination='',
-                                figsize=None, labelsize=6):
+def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, 
+        phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400, 
+        save=False, name='ComplexDensityMatrix', destination='', 
+        figsize=None, labelsize=6):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -988,10 +978,10 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
 
     Parameters
     ----------
-    dm: DensityMatrix/numpy array as a square matrix
+    dm : DensityMatrix / numpy array as a square matrix
         Density matrix to be plotted.
 
-    many_spin_indexing: either None or list
+    many_spin_indexing : None or list
         If not None, the density matrix dm is interpreted as the state of 
         a many spins' system, and this parameter provides the list of the 
         dimensions of the subspaces of the full Hilbert space related to the
@@ -999,45 +989,41 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
         The ordering of the elements of many_spin_indexing should match that of
         the single spins' density matrices in their tensor product 
         resulting in dm.
-
         Default value is None.
 
-    show: bool
+    show : bool
         When False, the graph constructed by the function will not be
         displayed.
-
         Default value is True.
 
-    phase_limits: list/array with two float numbers
+    phase_limits : list/array with two float numbers
         The phase-axis (colorbar) limits [min, max] (optional)
 
-    phi_label: str
+    phi_label : str
         Label for the legend for the angle of the complex number.
 
-    show_legend: bool
+    show_legend : bool
         Show the legend for the complex angle.
 
-    fig_dpi: int
+    fig_dpi : int
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    save: bool
+    save : bool
         When False, the plotted graph will not be saved on disk. When True,
         it will be saved with the name passed as name and in the directory
         passed as destination.
 
         Default value is False.
 
-    name: string
+    name : string
         Name with which the graph will be saved.
-
         Default value is 'RealPartDensityMatrix'.
 
-    destination: string
+    destination : string
         Path of the directory where the graph will be saved (starting
         from the current directory). The name of the directory must
         be terminated with a slash /.
-
         Default value is the empty string (current directory).
 
     Action
@@ -1151,32 +1137,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, phase_li
 
     return fig, ax
 
-
-def legacy_FID_signal(times, decay_functions, dm, h_unperturbed, ref_freq, I_plus_rotated):
-    """
-    For debugging purposes
-    """
-    FID = []
-    for t in times:
-        # Obtain total decay envelope at that time.
-        env = 1
-        for dec in decay_functions:
-            env *= dec(t)  # Different name to avoid bizarre variable scope bug
-            # (can't have same name as iteration var in line 1117.)
-
-        dm_t = evolve_by_hamiltonian(dm, Qobj(sum(h_unperturbed)), t)
-
-        # default value is 1
-        measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq * t)
-        FID.append((Qobj(np.array(dm_t)) * Qobj(np.array(I_plus_rotated)) * env
-                    * measurement_direction).tr())
-
-    return times, np.array(FID)
-
-
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, ref_freq=0, n_points=100, pulse_mode=None,
-               old_method=False):
+               phi=0, ref_freq=0, n_points=100, pulse_mode=None):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1185,22 +1147,22 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     Parameters
     ----------
-    spin: NuclearSpin
+    spin : NuclearSpin
         Spin under study.
 
-    h_unperturbed: List[Qobj]
+    h_unperturbed : List[Qobj]
         Unperturbed Hamiltonian of the system (in MHz). (Most likely an output
         of the 'nuclear_system_setup' function above)
 
-    dm: DensityMatrix
+    dm : DensityMatrix
         Density matrix representing the state of the system at the beginning
         of the acquisition of the signal.
 
-    acquisition_time: float
+    acquisition_time : float
         Duration of the acquisition of the signal, expressed in
         microseconds.
 
-    T2: iterable[float] or 
+    T2 : iterable[float] or 
         iterable[function with signature (float) -> float] or 
         float or 
         function with signature (float) -> float
@@ -1214,32 +1176,27 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
         Default value is 100 (microseconds).
 
-    theta, phi: float
+    theta, phi : float
         Polar and azimuthal angles which specify the normal to the
         plane of detection of the FID signal (in radians).
         Default values are theta=0, phi=0.
 
-    ref_freq: float
+    ref_freq : float
         Specifies the frequency of rotation of the measurement apparatus
         with respect to the LAB system. (in MHz)
         Default value is 0.
 
-    n_points: float
+    n_points : float
         Factor that multiplies the number of points, # points = [acquisition_time * n_points]
         per microsecond in which the time interval [0, acquisition_time] is sampled for the
         generation of the FID signal.
         Default value is 100.
 
-    pulse_mode: pandas.DataFrame
+    pulse_mode : pandas.DataFrame
         The user can decide to apply a pulse during the measurement of the FID.
         Although unusual, this is necessary for axion simulations.
         Refer to the argument 'mode' in the function evolve() for details about 
         this pulse_mode argument.
-
-    old_method: bool
-        For debugging & comparison purposes. Should be ignored for anyone who's
-        not a developer.
-        Default value is False 
 
     Action
     ------
@@ -1252,11 +1209,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     Returns
     -------
-    [0]: numpy.ndarray
+    [0] : numpy.ndarray
         Vector of equally spaced sampled instants of time in the interval [0,
         acquisition_time] (in microseconds).
 
-    [1]: numpy.ndarray
+    [1] : numpy.ndarray
         FID signal evaluated at the discrete times reported in the first output
         (in arbitrary units). Each signal value is a complex number, where
         the real part and the imaginary part are quadrature detections.
@@ -1297,11 +1254,6 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     rot1, rot2 = (-1j * theta * Iy), (-1j * phi * Iz)
     I_plus_rotated = apply_exp_op(apply_exp_op(spin.I['+'], rot1), rot2)
 
-    # Leaving the old slow method here for debugging & comparison purposes
-    if old_method:
-        return legacy_FID_signal(times, decay_functions, dm,
-                                 h_unperturbed, ref_freq, I_plus_rotated)
-
     hamiltonian = sum(h_unperturbed)
     if pulse_mode is not None:
         # copying the method from function evolve()
@@ -1329,39 +1281,35 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
 
     Parameters
     ----------
-    time: array-like
+    time : array-like
         Sampled instants of time (in microseconds).
 
-    FID: array-like
+    FID : array-like
         Sampled FID values (in arbitrary units).
 
-    show: bool
+    show : bool
         When False, the graph constructed by the function will not be
         displayed.
-
         Default value is True.
 
-    fig_dpi: int
+    fig_dpi : int
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    save: bool
+    save : bool
         When False, the plotted graph will not be saved on disk. When True,
         it will be saved with the name passed as name and in the directory
         passed as destination.
-
         Default value is False.
 
-    name: string
+    name : string
         Name with which the graph will be saved.
-
         Default value is 'FIDSignal'.
 
-    destination: string
+    destination : string
         Path of the directory where the graph will be saved (starting
         from the current directory). The name of the directory must
         be terminated with a slash /.
-
         Default value is the empty string (current directory).
 
     Action
@@ -1395,13 +1343,13 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
 
     Parameters
     ----------
-    signal: array-like
+    signal : array-like
         Sampled signal to be transformed in the frequency domain (in a.u.).
-    times: array-like
+    times : array-like
         Sampled time domain (in microseconds).
-    abs: Boolean 
+    abs : Boolean 
         Whether to return the absolute value of the computer Fourier transform. 
-    padding: Integer
+    padding : Integer
         Amount of zero-padding to add to signal in the power of zeroes.
 
     Returns
@@ -1454,17 +1402,17 @@ def legacy_fourier_transform_signal(times, signal, frequency_start,
 
     Parameters
     ----------
-    times: array-like
+    times : array-like
         Sampled time domain (in microseconds).
 
-    signal: array-like
+    signal : array-like
         Sampled signal to be transformed in the frequency domain (in a.u.).
 
-    frequency_start, frequency_stop: float
+    frequency_start, frequency_stop : float
         Left and right bounds of the frequency interval of interest, 
         respectively (in MHz).
 
-    opposite_frequency: bool
+    opposite_frequency : bool
         When it is True, the function computes the Fourier spectrum of the 
         signal in both the intervals 
         frequency_start -> frequency_stop and 
@@ -1526,14 +1474,14 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 
     Parameters
     ----------
-    frequencies: array-like
+    frequencies : array-like
         Sampled values of frequency (in MHz). 
 
-    fourier: array-like
+    fourier : array-like
         Values of the Fourier transform of the signal (in a.u.) sampled
         at the frequencies passed as the first argument.
 
-    fourier_neg: array-like
+    fourier_neg : array-like
         Values of the Fourier transform of the signal (in a.u.) sampled at 
         the opposite of the frequencies passed as the first argument. 
         When fourier_neg is passed, it is possible to specify a peak_frequency 
@@ -1541,12 +1489,12 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 
         Default value is None.
 
-    peak_frequency: float
+    peak_frequency : float
         Position of the peak of interest in the Fourier spectrum.
 
         Default value is 0.
 
-    int_domain_width: float
+    int_domain_width : float
         Width of the domain (centered at peak_frequency) where the 
         real and imaginary parts of the Fourier spectrum will be integrated.
 
@@ -1604,64 +1552,64 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
 
     Parameters
     ----------
-    frequencies: array-like
+    frequencies : array-like
         Sampled values of frequency (in MHz).
 
-    fourier: array-like
+    fourier : array-like
         Sampled values of the Fourier transform (in a.u.).
 
-    fourier_neg: array-like
+    fourier_neg : array-like
         Sampled values of the Fourier transform (in a.u.) evaluated
         at the frequencies in frequencies changed by sign.
 
         Default value is `None`.
 
-    square_modulus: bool
+    square_modulus : bool
         When True, makes the function plot the square modulus of
         the Fourier spectrum rather than the separate real and
         imaginary parts, which is the default option (by default,
         `square_modulus=False`).
 
-    xlim: 2-element iterable or `None`
+    xlim : 2-element iterable or `None`
         Lower and upper x-axis limits of the plot.
         When `None` uses `matplotlib` default.
 
-    ylim: 2-element iterable or `None`
+    ylim : 2-element iterable or `None`
         Lower and upper y-axis limits of the plot.
         When `None` uses `matplotlib` default.
 
-    scaling_factor: float
+    scaling_factor : float
         When it is not None, it specifies the scaling factor which
         multiplies the data to be plotted. 
         It applies simultaneously to all the plots in the resulting figure.
 
-    norm: Boolean 
+    norm : Boolean 
         Whether to normalize the fourier transform; i.e.,
         scale it such that its maximum value is 1.
 
-    fig_dpi: int
+    fig_dpi : int
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    show: bool
+    show : bool
         When False, the graph constructed by the function will not be
         displayed.
 
         Default value is `True`.
 
-    save: bool
+    save : bool
         When `False`, the plotted graph will not be saved on disk. When `True`,
         it will be saved with the name passed as name and in the directory
         passed as destination.
 
         Default value is False.
 
-    name: string
+    name : string
         Name with which the graph will be saved.
 
         Default value is `'FTSignal'`.
 
-    destination: string
+    destination : string
         Path of the directory where the graph will be saved (starting from 
         the current directory). The name of the directory must be terminated 
         with a slash /.
@@ -1748,16 +1696,13 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
     Params
     ------
-    t: float
+    t : float
         The time up to which to evolve.
-        
-    h: Qobj or List[Qobj]:
+    h : Qobj or List[Qobj]:
         The Hamiltonian describing the system in MHz.
-    
-    rho0: Qobj
+    rho0 : Qobj
         The initial state of the system as a density matrix. 
-    
-    e_ops: List[Qobj]:
+    e_ops : List[Qobj]:
         List of operators for which to return the expectation values. 
 
     Returns
@@ -1789,40 +1734,31 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
 
     Params
     ------
-    h: Qobj or List[Qobj]:
+    h : Qobj or List[Qobj]:
         The Hamiltonian describing the system in MHz.
-    
-    rho0: Qobj
+    rho0 : Qobj
         The initial state of the system as a density matrix. 
-    
-    spin: NuclearSpin
+    spin : NuclearSpin
         The NuclearSpin object representing the system under study. 
-    
-    tlist: List[float]
+    tlist : List[float]
         List of times at which the system will be evolved. 
-    
-    e_ops: List[Qobj]:
+    e_ops : List[Qobj]:
         List of operators for which to return the expectation values. 
-    
-    state: Boolean 
+    state : Boolean 
         Whether to return the density matrix at all. Default `True`.
-    
-    fid: Boolean
+    fid : Boolean
         Whether to return the free induction decay (FID) signal as 
         an expectation value. If True, appends FID signal to the end of 
         the `e_ops` expectation value list. 
-    
-    par: Boolean
+    par : Boolean
         Whether to use QuTiP's parallel computing implementation `parallel_map` 
         to evolve the system.
-    
-    all_t: Boolean 
+    all_t : Boolean 
         Whether to return the density matrix and for all times in the
         evolution (as opposed to the last state)
-    
-    T2: iterable[float or function with signature (float) -> float] or 
-        float or 
-        function with signature (float) -> float
+    T2 : iterable[float or function with signature (float) -> float] or 
+         float or 
+         function with signature (float) -> float
 
         If float, characteristic time of relaxation of the component of the
         magnetization on the plane of detection vanishing, i.e., T2. It is
@@ -1935,13 +1871,11 @@ def apply_rot_pulse(rho, duration, rot_axis):
 
     Parameters:
     -----------
-    rho: Qobj
+    rho : Qobj
         The density matrix of the state to apply the pulse to.
-    
-    duration: float
+    duration : float
         The duration of the applied pulse as an angle in radians.
-    
-    rot_axis: Qobj
+    rot_axis : Qobj
         Angular momentum operator for the corresponding axis of rotation. 
 
     Returns:
