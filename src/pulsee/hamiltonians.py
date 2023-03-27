@@ -183,14 +183,11 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
         raise ValueError(
             "The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
-    v2 = (1 / 2) * \
-         (np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q) +
-          (eta / np.sqrt(6)) * np.exp(sign * 2j * alpha_q) *
-          (
-                  np.exp(2j * gamma_q) * ((1 + sign * np.cos(beta_q)) ** 2) / 4 +
-                  np.exp(-2j * gamma_q) * ((1 - sign * np.cos(beta_q)) ** 2) / 4
-          )
-          )
+    v2 = 1/2 * (np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q) +
+                (eta / np.sqrt(6)) * np.exp(sign * 2j * alpha_q) *
+                (np.exp(2j * gamma_q) * (1 + sign * np.cos(beta_q))**2 / 4 *
+                 np.exp(-2j * gamma_q) * (1 - sign * np.cos(beta_q))**2 / 4))
+    
     return v2
 
 
@@ -540,8 +537,7 @@ def h_CS_isotropic(spin, delta_iso, B_0):
     if B_0 < 0:
         raise ValueError(
             "The modulus of the magnetic field must be a non-negative quantity")
-    h_cs = -delta_iso * spin.gyro_ratio_over_2pi * B_0 \
-           * spin.I['z']
+    h_cs = -delta_iso * spin.gyro_ratio_over_2pi * B_0 * spin.I['z']
     return Qobj(h_cs)
 
 
@@ -795,10 +791,10 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
                     else:
                         factor *= 2
 
-                    integral += \
-                        factor * (commutator(h[t], commutator(h[t2], h[t3])) +
-                                  commutator(h[t3], commutator(h[t2], h[t]))) * \
-                        ((2 * np.pi * time_step) ** 3) * (-1j / 6)
+                    integral += (factor *
+                                (commutator(h[t], commutator(h[t2], h[t3])) +
+                                 commutator(h[t3], commutator(h[t2], h[t]))) *
+                                ((2 * np.pi * time_step) ** 3) * (-1j / 6))
 
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
     # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()

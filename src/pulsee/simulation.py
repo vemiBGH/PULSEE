@@ -661,17 +661,18 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
             'Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
-    if pulse_time == 0 or np.all(np.absolute((dm_initial.full()
-                                              - np.eye(spin.d))) < 1e-10):
+    if pulse_time == 0 or \
+       np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
         return dm_initial
 
-    times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 1
 
     # match tolerance to operators.posititivity tolerance.
     if opts is None:
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+
+    times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
 
     if solver == magnus or solver == 'magnus':
         if picture == 'IP':
@@ -695,20 +696,20 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     # Given that H = H0 + H1*f1(t) + H2*f1(t) + ...,
     # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...]
     # (refer to QuTiP's mesolve documentation for further detail)
-    h = h_unperturbed + h_perturbation
+    h_unscaled = h_unperturbed + h_perturbation
 
     if solver == mesolve or solver == 'mesolve':
-        scaled_h = []
+        h_scaled = []
         # Magnus expansion solver includes 2 pi factor in exponentiations;
         # scale Hamiltonians by this factor for `mesolve` for consistency.
-        for h_term in h:
-            if type(h_term) == list or type(h_term) == tuple:  # of the form: (Hm, fm(t))
-                scaled_h.append([h_term[0] * 2 * np.pi, h_term[1]])
+        for h_term in h_unscaled:
+            if isinstance(h_term, list) or isinstance(h_term, tuple):  # of the form: (Hm, fm(t))
+                h_scaled.append([h_term[0] * 2 * np.pi, h_term[1]])
             else:  # of the form: H0
-                scaled_h.append(2 * np.pi * h_term)
+                h_scaled.append(2 * np.pi * h_term)
 
         # TODO: check this minus factor
-        result = mesolve(scaled_h, Qobj(dm_initial), times,
+        result = mesolve(h_scaled, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
         if ret_allstates:
             return result.states
@@ -716,11 +717,12 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
             # return last time step of density matrix evolution.
             return result.states[-1]
 
-    elif type(solver) == str:
-        raise ValueError('Invalid solver: ' + solver)
+
+    elif isinstance(solver, str):
+        raise ValueError(f'Invalid solver: {solver}')
 
     else:
-        result = solver(h, Qobj(dm_initial), times, options=opts)
+        result = solver(h_unscaled, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
         # return last time step of density matrix evolution.
         return final_state
@@ -1246,9 +1248,6 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     Iz = spin.I['z']
     Iy = spin.I['y']
 
-    # Measuring the expectation value of I_plus allows us to get the expectation of
-    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
-
     # I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
     #     .transform((-1j * phi * Iz).expm())
     rot1, rot2 = (-1j * theta * Iy), (-1j * phi * Iz)
@@ -1256,11 +1255,13 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     hamiltonian = sum(h_unperturbed)
     if pulse_mode is not None:
-        # copying the method from function evolve()
+        # copying the method from function 'evolve()' above
         h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0,
                                                factor_t_dependence=True)
         hamiltonian = [hamiltonian] + h_perturbation
 
+    # Measuring the expectation value of I_plus allows us to get the expectation of
+    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
     # TODO: check this minus factor
     result = mesolve(2 * np.pi * hamiltonian, dm, times, 
                      e_ops=[I_plus_rotated], progress_bar=True)

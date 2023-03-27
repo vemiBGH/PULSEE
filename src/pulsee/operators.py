@@ -165,28 +165,10 @@ def random_operator(d):
     with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
-    real_part = round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
-    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
+    real_part = round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
+    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
     random_array = real_part + imaginary_part
     return Qobj(random_array)
-
-
-def random_observable(d):
-    """
-    Returns a randomly generated observable of dimensions d. Wrapper for QuTiP's
-    `rand_herm()`.
-
-    Parameters
-    ----------
-    d : int
-        Dimensions of the Observable to be generated.
-
-    Returns
-    -------
-    An Observable object whose matrix is d-dimensional and has random complex elements with real
-    and imaginary parts in the half-open interval [-10., 10.].
-    """
-    return rand_herm(d)
 
 
 def canonical_density_matrix(hamiltonian, temperature):
@@ -211,12 +193,13 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6) / temperature
+    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 
+                  / temperature)
     numerator = exponent.expm()
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        print('Most likely exponent cannot be taken because the value is too high. '
+        print('Most likely exponent cannot be taken because the value is too large. '
               'Either hamiltonian has a very strong interaction in MHz, or the temperature'
               'is too low.')
         raise ValueError
