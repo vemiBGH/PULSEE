@@ -1,6 +1,6 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm, commutator as com
+from qutip import Qobj, rand_herm
 
 
 def exp_diagonalize(q):
@@ -8,11 +8,11 @@ def exp_diagonalize(q):
     Diagonalizes the given operator, and exponentiates the diagonal eigenvalue
     matrix. 
 
-    Parameters:
+    Parameters
     -----------
-    - q: Qobj
+    q : Qobj
 
-    Returns:
+    Returns
     --------
     A list of Qobjs including the eigenvector matrix, the diagonal eigenvalue 
     matrix, and the exponent of the diagonal eigenvalue matrix. 
@@ -41,17 +41,17 @@ def changed_picture(q, h_change_of_picture, time, invert=False):
 
     Parameters
     ----------
-    - q: Qobj
-    - h_change_of_picture: Qobj
-                Operator which generates the change to the new picture. Typically,
-                this operator is a term of the Hamiltonian (measured in MHz).
-    - time: float
-                Instant of evaluation of the operator in the new picture, expressed in microseconds.
-    - invert: bool
-                    When it is False, the owner Operator object is assumed to be expressed in the
-                    Schroedinger picture and is converted into the new one.
-                    When it is True, the owner object is thought in the new picture and the
-                    opposite operation is performed.
+    q : Qobj
+    h_change_of_picture : Qobj
+        Operator which generates the change to the new picture. Typically,
+        this operator is a term of the Hamiltonian (measured in MHz).
+    time : float
+        Instant of evaluation of the operator in the new picture, expressed in microseconds.
+    invert : bool
+        When it is False, the owner Operator object is assumed to be expressed in the
+        Schroedinger picture and is converted into the new one.
+        When it is True, the owner object is thought in the new picture and the
+        opposite operation is performed.
 
     Returns
     -------
@@ -69,12 +69,11 @@ def unit_trace(q):
     within a relative error tolerance of 10<sup>-6</sup>.
     Parameters
     ----------
-    - q: Qobj
+    q : Qobj
 
     Returns
     -------
     True, when unit trace is verified.
-
     False, when unit trace is not verified.
     """
     return np.isclose(q.tr(), 1, rtol=1e-6)
@@ -83,16 +82,16 @@ def unit_trace(q):
 def positivity(q):
     """
     Returns a boolean which expresses whether the operator is a positive operator,
-     i.e. its matrix has only non-negative eigenvalues (taking the 0 with an error margin of 10^(-10)).
+    i.e. its matrix has only non-negative eigenvalues 
+    (taking the 0 with an error margin of 10^(-10)).
 
     Parameters
     ----------
-    - q: Qobj
+    q : Qobj
 
     Returns
     -------
     True, when positivity is verified.
-
     False, when positivity is not verified.
     """
     eigenvalues = q.eigenenergies()
@@ -104,7 +103,7 @@ def apply_op(q, U):
 
     Parameters
     ----------
-    - q: Qobj
+    q : Qobj
 
     Returns
     -------
@@ -118,7 +117,7 @@ def apply_exp_op(q, U):
 
     Parameters
     ----------
-    - q: Qobj
+    q : Qobj
 
     Returns
     -------
@@ -133,13 +132,13 @@ def evolve_by_hamiltonian(dm, static_hamiltonian, time):
 
     Parameters
     ----------
-    - dm: QObj
-          The initial density matrix
-    - static_hamiltonian: Qobj
-                          Observable or in general a hermitian Operator
-                          Time-independent Hamiltonian of the system, in MHz.
-    - time: float
-                Duration of the evolution, expressed in microseconds.
+    dm : QObj
+        The initial density matrix
+    static_hamiltonian : Qobj
+        Observable or in general a hermitian Operator
+        Time-independent Hamiltonian of the system, in MHz.
+    time : float
+        Duration of the evolution, expressed in microseconds.
 
     Returns
     -------
@@ -157,54 +156,19 @@ def random_operator(d):
 
     Parameters
     ----------
-    - d: int
-         Dimensions of the Operator to be generated.
+    d : int
+        Dimensions of the Operator to be generated.
 
     Returns
     -------
     An Operator object whose matrix is d-dimensional and has random complex elements
-     with real and imaginary parts in the half-open interval [-10., 10.].
+    with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
-    real_part = round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
-    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
+    real_part = round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
+    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
     random_array = real_part + imaginary_part
     return Qobj(random_array)
-
-
-def random_observable(d):
-    """
-    Returns a randomly generated observable of dimensions d. Wrapper for QuTiP's
-    `rand_herm()`.
-
-
-    Parameters
-    ----------
-    - d: int
-         Dimensions of the Observable to be generated.
-
-    Returns
-    -------
-    An Observable object whose matrix is d-dimensional and has random complex elements with real
-    and imaginary parts in the half-open interval [-10., 10.].
-    """
-    return rand_herm(d)
-
-
-def commutator(A, B, kind='normal'):
-    """
-    Returns the commutator of operators A and B.
-
-    Parameters
-    ----------
-    - A, B: Operator
-    - kind: Str
-        (normal, anti)
-    Returns
-    -------
-    An Operator representing the commutator of A and B.
-    """
-    return com(A, B, kind=kind)
 
 
 def canonical_density_matrix(hamiltonian, temperature):
@@ -213,10 +177,10 @@ def canonical_density_matrix(hamiltonian, temperature):
 
     Parameters
     ----------
-    - hamiltonian: Operator
-                   Hamiltonian of the system at equilibrium, expressed in MHz.
-    - temperature: positive float
-                   Temperature of the system in kelvin.
+    hamiltonian : Operator
+        Hamiltonian of the system at equilibrium, expressed in MHz.
+    temperature : positive float
+        Temperature of the system in kelvin.
 
     Returns
     -------
@@ -229,12 +193,13 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6) / temperature
+    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 
+                  / temperature)
     numerator = exponent.expm()
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        print('Most likely exponent cannot be taken because the value is too high. '
+        print('Most likely exponent cannot be taken because the value is too large. '
               'Either hamiltonian has a very strong interaction in MHz, or the temperature'
               'is too low.')
         raise ValueError

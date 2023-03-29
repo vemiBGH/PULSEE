@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-import math
 
 from qutip import mesolve, Qobj, rand_dm, tensor
 

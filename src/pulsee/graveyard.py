@@ -50,3 +50,21 @@
 #     term_n = tensor(qeye(spin.spin[m].d), term_n)
 # for l in range(spin.n_spins)[n + 1:]:
 #     term_n = tensor(term_n, qeye(spin.spin[l].d))
+
+
+# def random_observable(d):
+#     """
+#     Returns a randomly generated observable of dimensions d. Wrapper for QuTiP's
+#     `rand_herm()`.
+
+#     Parameters
+#     ----------
+#     d : int
+#         Dimensions of the Observable to be generated.
+
+#     Returns
+#     -------
+#     An Observable object whose matrix is d-dimensional and has random complex elements with real
+#     and imaginary parts in the half-open interval [-10., 10.].
+#     """
+#     return rand_herm(d)

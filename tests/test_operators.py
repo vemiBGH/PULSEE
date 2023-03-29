@@ -1,4 +1,3 @@
-import math
 from numpy import log
 import numpy as np
 from scipy import linalg
@@ -12,11 +11,9 @@ import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume
 
 from pulsee.operators import random_operator, random_observable, \
-                            commutator, magnus_expansion_1st_term, \
-                            magnus_expansion_2nd_term, \
-                            magnus_expansion_3rd_term, \
-                            canonical_density_matrix, changed_picture, evolve_by_hamiltonian,\
-                            positivity, unit_trace
+    magnus_expansion_1st_term, magnus_expansion_2nd_term, \
+    magnus_expansion_3rd_term, canonical_density_matrix, changed_picture, \
+    evolve_by_hamiltonian, positivity, unit_trace
 
 @given(d = st.integers(min_value=1, max_value=16))
 @settings(deadline = None)
