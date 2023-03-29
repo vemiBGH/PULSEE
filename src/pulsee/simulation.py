@@ -26,7 +26,7 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
     h_j_coupling, \
     h_CS_isotropic, h_D1, h_D2, \
     h_HF_secular, h_j_secular, h_tensor_coupling, \
-    h_userDefined, \
+    h_userDefined, multiply_by_2pi, \
     magnus
 
 
@@ -655,10 +655,17 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if mode is None:
         mode = pd.DataFrame([(0., 0., 0., 0., 0., 0.)],
                             columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p', 'pulse_time'])
-
     if np.min(mode['pulse_time']) < 0:
         raise ValueError(
             'Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
+    
+    # In order to use the right hand rule convention, for positive gamma,
+    # we 'flip' the pulse by adding pi to the phase,
+    # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
+    if spin.gyro_ratio_over_2pi > 0:
+        mode = mode.copy() # in case the user wants to use same 'mode' variable for later uses.
+        mode.loc[:,'phase'] = mode.loc[:,'phase'].add(np.pi)
+        print('PHASE IS:', list(mode['phase']))
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
     if pulse_time == 0 or \
@@ -690,25 +697,19 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
-    h_perturbation = h_multiple_mode_pulse(
-        spin, mode, t=0, factor_t_dependence=True)
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, 
+                                           factor_t_dependence=True)
 
     # Given that H = H0 + H1*f1(t) + H2*f1(t) + ...,
-    # h is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...]
+    # h_unscaled is of the form [H0, [H1, f1(t)], [H2, f2(t)], ...]
     # (refer to QuTiP's mesolve documentation for further detail)
     h_unscaled = h_unperturbed + h_perturbation
 
     if solver == mesolve or solver == 'mesolve':
-        h_scaled = []
         # Magnus expansion solver includes 2 pi factor in exponentiations;
         # scale Hamiltonians by this factor for `mesolve` for consistency.
-        for h_term in h_unscaled:
-            if isinstance(h_term, list) or isinstance(h_term, tuple):  # of the form: (Hm, fm(t))
-                h_scaled.append([h_term[0] * 2 * np.pi, h_term[1]])
-            else:  # of the form: H0
-                h_scaled.append(2 * np.pi * h_term)
+        h_scaled = multiply_by_2pi(h_unscaled)
 
-        # TODO: check this minus factor
         result = mesolve(h_scaled, Qobj(dm_initial), times,
                          options=opts, progress_bar=True)
         if ret_allstates:
@@ -1108,8 +1109,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
             for k in range(d_sub[i]):
                 for l in range(d_downhill):
                     comma = ', '
-                    if j == n_sub - 1:
-                        comma = ''
+                    if j == n_sub - 1: comma = ''
                     tick_label[j * d_sub[i] * d_downhill +
                                k * d_downhill + l] = m_dict[i][k] + \
                         comma + tick_label[j *
@@ -1253,18 +1253,18 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     rot1, rot2 = (-1j * theta * Iy), (-1j * phi * Iz)
     I_plus_rotated = apply_exp_op(apply_exp_op(spin.I['+'], rot1), rot2)
 
-    hamiltonian = sum(h_unperturbed)
     if pulse_mode is not None:
         # copying the method from function 'evolve()' above
         h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0,
                                                factor_t_dependence=True)
-        hamiltonian = [hamiltonian] + h_perturbation
+        hamiltonian = h_unperturbed + h_perturbation
+    else:
+        hamiltonian = h_unperturbed
 
+    h_scaled = multiply_by_2pi(hamiltonian)
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
-    # TODO: check this minus factor
-    result = mesolve(2 * np.pi * hamiltonian, dm, times, 
-                     e_ops=[I_plus_rotated], progress_bar=True)
+    result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated], progress_bar=True)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
 

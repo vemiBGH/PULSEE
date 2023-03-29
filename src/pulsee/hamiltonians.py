@@ -208,7 +208,7 @@ def pulse_time_dep_coeff(frequency, phase, pulse_time):
     -------
     Function with signature f(t: float, args: iterable) -> float
     """
-
+    # The scond argument 'args' is added to match qutip's documentation convention
     def time_dependence_function(t, args):
         if t <= pulse_time:
             return np.cos(frequency * t - phase)
@@ -373,9 +373,9 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
             for i in mode.index:
                 # Ix term
                 mode_hamiltonians.append(
-                    h_single_mode_pulse(spin, omegas[i], amplitudes[i], phases[i],
-                                        thetas[i], phis[i], t, pulse_times[i],
-                                        factor_t_dependence=True))
+                    h_single_mode_pulse(
+                        spin, omegas[i], amplitudes[i], phases[i], thetas[i],
+                        phis[i], t, pulse_times[i], factor_t_dependence=True))
                 # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
                 # (which returns cos(w0*t)))]
 
@@ -801,3 +801,27 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
     dm_evolved_new_picture = apply_exp_op(rho0, - integral)
     output.states = [rho0, dm_evolved_new_picture]
     return output
+
+
+def multiply_by_2pi(h_unscaled):
+    """
+    Multiples the input 'hamiltonian structure' by 2 pi to correctly scale 
+    the Hamiltonian (which will get passed into qutip's mesolve).
+
+    Parameters
+    ----------
+    h_unscaled : list(Qobj)
+        Assumed to be in the form of the input Hamiltonain for qutip's mesolve
+        function: [H0, [H1, f1(t)], [H2, f2(t)], ...]
+
+    Returns
+    -------
+    The input Hamiltonian structure multiplied by 2pi.
+    """
+    h_scaled = []
+    for h in h_unscaled:
+        if isinstance(h, list) or isinstance(h, tuple):  # of the form: (Hm, fm(t))
+            h_scaled.append([h[0] * 2 * np.pi, h[1]])
+        else:  # of the form: H0
+            h_scaled.append(2 * np.pi * h)   
+    return h_scaled 
