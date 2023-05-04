@@ -199,8 +199,8 @@ def canonical_density_matrix(hamiltonian, temperature):
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        print('Most likely exponent cannot be taken because the value is too large. '
-              'Either hamiltonian has a very strong interaction in MHz, or the temperature'
+        print('Most likely exponent cannot be taken because the value is too large. '\
+              'Either hamiltonian has a very strong interaction in MHz, or the temperature'\
               'is too low.')
         raise ValueError
     return canonical_dm
