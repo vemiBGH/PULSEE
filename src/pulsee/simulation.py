@@ -1265,13 +1265,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     else:
         hamiltonian = h_unperturbed
 
-    opts = Options(nsteps=10000)
-
     h_scaled = multiply_by_2pi(hamiltonian)
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
     result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated],
-                     progress_bar=display_progress, options=opts)
+                     progress_bar=display_progress)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
 
@@ -1398,86 +1396,11 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
             M_fft = np.abs(M_fft)
         return freq_ax, M_fft
 
-    ft = fft(signal)
-    freq = fftfreq(len(times), (times[-1] - times[0]) / len(times))
+    ft = fftshift(fft(signal))
+    freq = fftshift(fftfreq(len(times), (times[-1] - times[0]) / len(times)))
     if abs:
         ft = np.abs(ft)
     return freq, ft
-
-
-def legacy_fourier_transform_signal(times, signal, frequency_start,
-                                    frequency_stop, opposite_frequency=False):
-    """
-    Deprecated since QuTiP integration; see simulation.fourier_transform_signal.
-
-    Computes the Fourier transform of the passed time-dependent signal over the
-    frequency interval [frequency_start, frequency_stop]. The implemented
-    Fourier transform operation is
-
-    where S is the original signal and T is its duration. In order to have a
-    reliable Fourier transform, the signal should be very small beyond time T.
-
-    Parameters
-    ----------
-    times : array-like
-        Sampled time domain (in microseconds).
-
-    signal : array-like
-        Sampled signal to be transformed in the frequency domain (in a.u.).
-
-    frequency_start, frequency_stop : float
-        Left and right bounds of the frequency interval of interest, 
-        respectively (in MHz).
-
-    opposite_frequency : bool
-        When it is True, the function computes the Fourier spectrum of the 
-        signal in both the intervals 
-        frequency_start -> frequency_stop and 
-        -frequency_start -> -frequency_stop 
-        (the arrow specifies the ordering of the Fourier transform's values 
-        when they are stored in the arrays to be returned).
-
-    Returns
-    -------
-    [0]: numpy.ndarray
-        Vector of 1000 equally spaced sampled values of frequency in the
-        interval [frequency_start, frequency_stop] (in MHz).
-
-    [1]: numpy.ndarray
-        Fourier transform of the signal evaluated at the discrete frequencies
-        reported in the first output (in a.u.).
-
-    If opposite_frequency=True, the function also returns:
-
-    [2]: numpy.ndarray
-        Fourier transform of the signal evaluated at the discrete frequencies
-        reported in the first output changed by sign (in a.u.).  
-    """
-    dt = times[1] - times[0]
-
-    frequencies = np.linspace(start=frequency_start,
-                              stop=frequency_stop, num=1000)
-
-    fourier = [[], []]
-
-    if not opposite_frequency:
-        sign_options = 1
-    else:
-        sign_options = 2
-
-    for s in range(sign_options):
-        for nu in frequencies:
-            integral = np.zeros(sign_options, dtype=complex)
-            for t in range(len(times)):
-                integral[s] = integral[s] + \
-                    np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
-                           nu * times[t]) * signal[t] * dt
-            fourier[s].append(integral[s])
-
-    if not opposite_frequency:
-        return frequencies, np.array(fourier[0])
-    else:
-        return frequencies, np.array(fourier[0]), np.array(fourier[1])
 
 
 # Finds out the phase responsible for the displacement of the real and imaginary parts of the Fourier
@@ -1503,18 +1426,15 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         the opposite of the frequencies passed as the first argument. 
         When fourier_neg is passed, it is possible to specify a peak_frequency 
         located in the range frequencies changed by sign.
-
         Default value is None.
 
     peak_frequency : float
         Position of the peak of interest in the Fourier spectrum.
-
         Default value is 0.
 
     int_domain_width : float
         Width of the domain (centered at peak_frequency) where the 
         real and imaginary parts of the Fourier spectrum will be integrated.
-
         Default value is .5.
 
     Action
@@ -1579,7 +1499,6 @@ def plot_fourier_transform(
     fourier_neg : array-like
         Sampled values of the Fourier transform (in a.u.) evaluated
         at the frequencies in frequencies changed by sign.
-
         Default value is `None`.
 
     square_modulus : bool
@@ -1588,12 +1507,8 @@ def plot_fourier_transform(
         imaginary parts, which is the default option (by default,
         `square_modulus=False`).
 
-    xlim : 2-element iterable or `None`
-        Lower and upper x-axis limits of the plot.
-        When `None` uses `matplotlib` default.
-
-    ylim : 2-element iterable or `None`
-        Lower and upper y-axis limits of the plot.
+    xlim (ylim) : 2-element iterable or `None`
+        Lower and upper x-axis (y-axis) limits of the plot.
         When `None` uses `matplotlib` default.
 
     scaling_factor : float
@@ -1612,26 +1527,22 @@ def plot_fourier_transform(
     show : bool
         When False, the graph constructed by the function will not be
         displayed.
-
         Default value is `True`.
 
     save : bool
         When `False`, the plotted graph will not be saved on disk. When `True`,
         it will be saved with the name passed as name and in the directory
         passed as destination.
-
         Default value is False.
 
     name : string
         Name with which the graph will be saved.
-
         Default value is `'FTSignal'`.
 
     destination : string
         Path of the directory where the graph will be saved (starting from 
         the current directory). The name of the directory must be terminated 
         with a slash /.
-
         Default value is the empty string (current directory).
 
     Action
@@ -1665,22 +1576,20 @@ def plot_fourier_transform(
             fourier_data[i] = (fourier_data[i] /
                                np.amax(np.abs(fourier_data[i])))
 
+    if scaling_factor is not None:
+        for i in range(n_plots):
+            fourier_data[i] = scaling_factor * fourier_data[i]
+
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
 
     if fourier_neg is None:
         ax = [ax]
 
-    if scaling_factor is not None:
-        for i in range(n_plots):
-            fourier_data[i] = scaling_factor * fourier_data[i]
-
     for i in range(n_plots):
         if not square_modulus:
-            ax[i].plot(frequencies, np.real(
-                fourier_data[i]), label='Real part')
-            ax[i].plot(frequencies, np.imag(
-                fourier_data[i]), label='Imaginary part')
+            ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part')
+            ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part')
         else:
             ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2,
                        label='Square modulus')
