@@ -3,6 +3,7 @@ import pandas as pd
 from fractions import Fraction
 import sys
 from tqdm import tqdm, trange
+from scipy.fft import fft, fftfreq, fftshift
 
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.parallel import parallel_map
@@ -56,14 +57,12 @@ def nuclear_system_setup(spin_par,
         consideration. The keys and values required to each dictionary in this
         argument are shown in the table below.
 
-
         |           key          |         value        |
         |           ---          |         -----        |
         |    'quantum number'    |  half-integer float  |
         |       'gamma/2pi'      |         float        |
 
         The second item is the gyromagnetic ratio over 2 pi, measured in MHz/T.
-
         E.g., spin_par = {'quantum number': 1 / 2, 'gamma2/pi': 1}
 
     quad_par : dict / list of dict
@@ -527,8 +526,8 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
            evolution_time=0, picture='IP',
            RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
-           n_points=30, order=None, opts=None,
-           ret_allstates=False):
+           n_points=30, order=None, opts=None, return_allstates=False,
+           display_progress=True):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
     action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -617,10 +616,14 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         The order of the simulation method to use. For `magnus` must be <= 3. 
         Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
 
-    ret_allstates : boolean
+    return_allstates : boolean
         Specify whether to return every calculated state or only last one.
         Default False --> returns only last state.
         [Magnus solver only returns final state]
+
+    display_progress: True or None
+        True: display progress bar for the mesolve method
+        None: don't display progress bar
 
     Action
     ------
@@ -665,7 +668,6 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if spin.gyro_ratio_over_2pi > 0:
         mode = mode.copy() # in case the user wants to use same 'mode' variable for later uses.
         mode.loc[:,'phase'] = mode.loc[:,'phase'].add(np.pi)
-        print('PHASE IS:', list(mode['phase']))
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
     if pulse_time == 0 or \
@@ -711,8 +713,8 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         h_scaled = multiply_by_2pi(h_unscaled)
 
         result = mesolve(h_scaled, Qobj(dm_initial), times,
-                         options=opts, progress_bar=True)
-        if ret_allstates:
+                         options=opts, progress_bar=display_progress)
+        if return_allstates:
             return result.states
         else:
             # return last time step of density matrix evolution.
@@ -1140,7 +1142,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
     return fig, ax
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, ref_freq=0, n_points=100, pulse_mode=None):
+               phi=0, ref_freq=0, n_points=100, pulse_mode=None,
+               display_progress=None):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1164,19 +1167,17 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Duration of the acquisition of the signal, expressed in
         microseconds.
 
-    T2 : iterable[float] or 
-        iterable[function with signature (float) -> float] or 
-        float or 
-        function with signature (float) -> float
+    T2 : float, or
+         iterable[float], or 
+         function with signature (float) -> float, or
+         iterable[function with signature (float) -> float]
 
         If float, characteristic time of relaxation of the component of the
-        magnetization on the plane of detection vanishing, i.e., T2. It is
-        measured in
-        microseconds.
+        magnetization on the plane of detection vanishing, i.e., T2.
         If function, the decay envelope. 
         If iterable, total decay envelope will be product of decays in list.
 
-        Default value is 100 (microseconds).
+        In units of microseconds. Default value is 100 (microseconds).
 
     theta, phi : float
         Polar and azimuthal angles which specify the normal to the
@@ -1200,6 +1201,10 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Refer to the argument 'mode' in the function evolve() for details about 
         this pulse_mode argument.
 
+    display_progress: either True or None
+        True value will display a progress bar for the mesolve function.
+        None will not display a progress bar.
+        
     Action
     ------
     Samples the time interval [0, acquisition_time] with n_points points per
@@ -1220,8 +1225,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         (in arbitrary units). Each signal value is a complex number, where
         the real part and the imaginary part are quadrature detections.
     """
-    times = np.linspace(start=0, stop=acquisition_time,
-                        num=int(acquisition_time * n_points))
+    times = np.linspace(start=0, stop=acquisition_time, num=n_points)
 
     decay_functions = []
     try:
@@ -1240,7 +1244,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     for decay_fun in decay_functions:
         decay_array.append(decay_fun(times))
     # decay_array is now a 2D array with shape (len(decay_functions), len(times))
-    # Multiply all the decay functions together to make it into 1D array with same length as times
+    # Now, multiply all the decay functions together to make it into 1D array with same length as times
     decay_t = np.prod(np.array(decay_array), axis=0)
 
     # Computes the FID assuming that the detection coils record the time-dependence of the
@@ -1264,19 +1268,20 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     h_scaled = multiply_by_2pi(hamiltonian)
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
-    result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated], progress_bar=True)
+    result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated],
+                     progress_bar=display_progress)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
 
     if np.max(fid) < 0.09:
         import warnings
-        warnings.warn('Unreliable FID: Weak signal, check simulation!',
-                      stacklevel=0)
+        warnings.warn('Unreliable FID: Weak signal, check simulation!', stacklevel=0)
     return result.times, fid
 
 
-def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
-                              name='FIDSignal', destination=''):
+def plot_real_part_FID_signal(
+        times, FID, show=True, fig_dpi=400, save=False,
+        name='FIDSignal', destination='', xlim=None, ylim=None):
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -1313,6 +1318,12 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
         be terminated with a slash /.
         Default value is the empty string (current directory).
 
+    xlim: tuple
+        x limits of plot
+
+    ylim: tuple
+        y limits of plot
+        
     Action
     ------ 
     If show=True, generates a plot of the FID signal as a function of time.
@@ -1323,15 +1334,17 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
     built up by the function.
     """
     fig = plt.figure()
-
     plt.plot(times, np.real(FID), label='Real part')
-
+    plt.title('FID signal')
     plt.xlabel("time (\N{GREEK SMALL LETTER MU}s)")
     plt.ylabel("Real(FID) (a.u.)")
 
+    if xlim is not None:
+        plt.xlim(xlim)
+    if ylim is not None:
+        plt.ylim(ylim)
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
-
     if show:
         plt.show()
 
@@ -1340,7 +1353,8 @@ def plot_real_part_FID_signal(times, FID, show=True, fig_dpi=400, save=False,
 
 def fourier_transform_signal(signal, times, abs=False, padding=None):
     """
-    Computes the Fourier transform of the passed time-dependent signal.
+    Computes the Fourier transform of the passed time-dependent signal using
+    the scipy library.
 
     Parameters
     ----------
@@ -1377,91 +1391,16 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
         # axis goes from - Fs / 2 to Fs / 2, with N_z steps
         freq_ax = ((np.linspace(0, N_z, N_z) - 1 / 2) / N_z - 1 / 2) * Fs
 
-        M_fft = np.fft.fftshift(np.fft.fft(np.fft.fftshift(M0_trunc_z)))
+        M_fft = fftshift(fft(fftshift(M0_trunc_z)))
         if abs:
             M_fft = np.abs(M_fft)
         return freq_ax, M_fft
 
-    ft = np.fft.fft(signal)
-    freq = np.fft.fftfreq(len(times), (times[-1] - times[0]) / len(times))
+    ft = fftshift(fft(signal))
+    freq = fftshift(fftfreq(len(times), (times[-1] - times[0]) / len(times)))
     if abs:
         ft = np.abs(ft)
     return freq, ft
-
-
-def legacy_fourier_transform_signal(times, signal, frequency_start,
-                                    frequency_stop, opposite_frequency=False):
-    """
-    Deprecated since QuTiP integration; see simulation.fourier_transform_signal.
-
-    Computes the Fourier transform of the passed time-dependent signal over the
-    frequency interval [frequency_start, frequency_stop]. The implemented
-    Fourier transform operation is
-
-    where S is the original signal and T is its duration. In order to have a
-    reliable Fourier transform, the signal should be very small beyond time T.
-
-    Parameters
-    ----------
-    times : array-like
-        Sampled time domain (in microseconds).
-
-    signal : array-like
-        Sampled signal to be transformed in the frequency domain (in a.u.).
-
-    frequency_start, frequency_stop : float
-        Left and right bounds of the frequency interval of interest, 
-        respectively (in MHz).
-
-    opposite_frequency : bool
-        When it is True, the function computes the Fourier spectrum of the 
-        signal in both the intervals 
-        frequency_start -> frequency_stop and 
-        -frequency_start -> -frequency_stop 
-        (the arrow specifies the ordering of the Fourier transform's values 
-        when they are stored in the arrays to be returned).
-
-    Returns
-    -------
-    [0]: numpy.ndarray
-        Vector of 1000 equally spaced sampled values of frequency in the
-        interval [frequency_start, frequency_stop] (in MHz).
-
-    [1]: numpy.ndarray
-        Fourier transform of the signal evaluated at the discrete frequencies
-        reported in the first output (in a.u.).
-
-    If opposite_frequency=True, the function also returns:
-
-    [2]: numpy.ndarray
-        Fourier transform of the signal evaluated at the discrete frequencies
-        reported in the first output changed by sign (in a.u.).  
-    """
-    dt = times[1] - times[0]
-
-    frequencies = np.linspace(start=frequency_start,
-                              stop=frequency_stop, num=1000)
-
-    fourier = [[], []]
-
-    if not opposite_frequency:
-        sign_options = 1
-    else:
-        sign_options = 2
-
-    for s in range(sign_options):
-        for nu in frequencies:
-            integral = np.zeros(sign_options, dtype=complex)
-            for t in range(len(times)):
-                integral[s] = integral[s] + \
-                    np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
-                           nu * times[t]) * signal[t] * dt
-            fourier[s].append(integral[s])
-
-    if not opposite_frequency:
-        return frequencies, np.array(fourier[0])
-    else:
-        return frequencies, np.array(fourier[0]), np.array(fourier[1])
 
 
 # Finds out the phase responsible for the displacement of the real and imaginary parts of the Fourier
@@ -1487,18 +1426,15 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         the opposite of the frequencies passed as the first argument. 
         When fourier_neg is passed, it is possible to specify a peak_frequency 
         located in the range frequencies changed by sign.
-
         Default value is None.
 
     peak_frequency : float
         Position of the peak of interest in the Fourier spectrum.
-
         Default value is 0.
 
     int_domain_width : float
         Width of the domain (centered at peak_frequency) where the 
         real and imaginary parts of the Fourier spectrum will be integrated.
-
         Default value is .5.
 
     Action
@@ -1545,9 +1481,10 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 # If another set of data is passed as fourier_neg, the function plots a couple of graphs, with the
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
-def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulus=False, xlim=None, ylim=None,
-                           scaling_factor=None, norm=True, fig_dpi=400, show=True, save=False,
-                           name='FTSignal', destination=''):
+def plot_fourier_transform(
+        frequencies, fourier, fourier_neg=None, square_modulus=False,
+        xlim=None, ylim=None, scaling_factor=None, norm=True, fig_dpi=400,
+        show=True, save=False, name='FTSignal', destination=''):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
@@ -1562,7 +1499,6 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     fourier_neg : array-like
         Sampled values of the Fourier transform (in a.u.) evaluated
         at the frequencies in frequencies changed by sign.
-
         Default value is `None`.
 
     square_modulus : bool
@@ -1571,12 +1507,8 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
         imaginary parts, which is the default option (by default,
         `square_modulus=False`).
 
-    xlim : 2-element iterable or `None`
-        Lower and upper x-axis limits of the plot.
-        When `None` uses `matplotlib` default.
-
-    ylim : 2-element iterable or `None`
-        Lower and upper y-axis limits of the plot.
+    xlim (ylim) : 2-element iterable or `None`
+        Lower and upper x-axis (y-axis) limits of the plot.
         When `None` uses `matplotlib` default.
 
     scaling_factor : float
@@ -1595,26 +1527,22 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
     show : bool
         When False, the graph constructed by the function will not be
         displayed.
-
         Default value is `True`.
 
     save : bool
         When `False`, the plotted graph will not be saved on disk. When `True`,
         it will be saved with the name passed as name and in the directory
         passed as destination.
-
         Default value is False.
 
     name : string
         Name with which the graph will be saved.
-
         Default value is `'FTSignal'`.
 
     destination : string
         Path of the directory where the graph will be saved (starting from 
         the current directory). The name of the directory must be terminated 
         with a slash /.
-
         Default value is the empty string (current directory).
 
     Action
@@ -1648,31 +1576,31 @@ def plot_fourier_transform(frequencies, fourier, fourier_neg=None, square_modulu
             fourier_data[i] = (fourier_data[i] /
                                np.amax(np.abs(fourier_data[i])))
 
+    if scaling_factor is not None:
+        for i in range(n_plots):
+            fourier_data[i] = scaling_factor * fourier_data[i]
+
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
 
     if fourier_neg is None:
         ax = [ax]
 
-    if scaling_factor is not None:
-        for i in range(n_plots):
-            fourier_data[i] = scaling_factor * fourier_data[i]
-
     for i in range(n_plots):
         if not square_modulus:
-            ax[i].plot(frequencies, np.real(
-                fourier_data[i]), label='Real part')
-            ax[i].plot(frequencies, np.imag(
-                fourier_data[i]), label='Imaginary part')
+            ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part')
+            ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part')
         else:
-            ax[i].plot(frequencies, np.abs(fourier_data[i])
-                       ** 2, label='Square modulus')
+            ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2,
+                       label='Square modulus')
 
         if n_plots > 1:
             ax[i].title.set_text(plot_title[i])
+        else:
+            ax[i].set_title('Frequency Spectrum')
 
         ax[i].legend(loc='upper left')
-        ax[i].set_xlabel("frequency (MHz)")
+        ax[i].set_xlabel("Frequency (MHz)")
         ax[i].set_ylabel("FT signal (a. u.)")
 
         if xlim is not None:

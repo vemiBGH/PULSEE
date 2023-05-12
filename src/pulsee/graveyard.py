@@ -68,3 +68,79 @@
 #     and imaginary parts in the half-open interval [-10., 10.].
 #     """
 #     return rand_herm(d)
+
+'''legay fourier transform'''
+
+# def legacy_fourier_transform_signal(times, signal, frequency_start,
+#                                     frequency_stop, opposite_frequency=False):
+#     """
+#     Deprecated since QuTiP integration; see simulation.fourier_transform_signal.
+
+#     Computes the Fourier transform of the passed time-dependent signal over the
+#     frequency interval [frequency_start, frequency_stop]. The implemented
+#     Fourier transform operation is
+
+#     where S is the original signal and T is its duration. In order to have a
+#     reliable Fourier transform, the signal should be very small beyond time T.
+
+#     Parameters
+#     ----------
+#     times : array-like
+#         Sampled time domain (in microseconds).
+
+#     signal : array-like
+#         Sampled signal to be transformed in the frequency domain (in a.u.).
+
+#     frequency_start, frequency_stop : float
+#         Left and right bounds of the frequency interval of interest, 
+#         respectively (in MHz).
+
+#     opposite_frequency : bool
+#         When it is True, the function computes the Fourier spectrum of the 
+#         signal in both the intervals 
+#         frequency_start -> frequency_stop and 
+#         -frequency_start -> -frequency_stop 
+#         (the arrow specifies the ordering of the Fourier transform's values 
+#         when they are stored in the arrays to be returned).
+
+#     Returns
+#     -------
+#     [0]: numpy.ndarray
+#         Vector of 1000 equally spaced sampled values of frequency in the
+#         interval [frequency_start, frequency_stop] (in MHz).
+
+#     [1]: numpy.ndarray
+#         Fourier transform of the signal evaluated at the discrete frequencies
+#         reported in the first output (in a.u.).
+
+#     If opposite_frequency=True, the function also returns:
+
+#     [2]: numpy.ndarray
+#         Fourier transform of the signal evaluated at the discrete frequencies
+#         reported in the first output changed by sign (in a.u.).  
+#     """
+#     dt = times[1] - times[0]
+
+#     frequencies = np.linspace(start=frequency_start,
+#                               stop=frequency_stop, num=1000)
+
+#     fourier = [[], []]
+
+#     if not opposite_frequency:
+#         sign_options = 1
+#     else:
+#         sign_options = 2
+
+#     for s in range(sign_options):
+#         for nu in frequencies:
+#             integral = np.zeros(sign_options, dtype=complex)
+#             for t in range(len(times)):
+#                 integral[s] = integral[s] + \
+#                     np.exp(-1j * 2 * np.pi * (1 - 2 * s) *
+#                            nu * times[t]) * signal[t] * dt
+#             fourier[s].append(integral[s])
+
+#     if not opposite_frequency:
+#         return frequencies, np.array(fourier[0])
+#     else:
+#         return frequencies, np.array(fourier[0]), np.array(fourier[1])
