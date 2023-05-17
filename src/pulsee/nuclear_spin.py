@@ -130,7 +130,7 @@ class ManySpins(NuclearSpin):
         """        
         self.n_spins = len(spins)
 
-        self.spin, self.d, self.dims = ([spins[0]], spins[0].d, spins[0].dims)
+        self.spin, self.d, self.dims = [spins[0]], spins[0].d, spins[0].dims
         for x in spins[1:]:
             self.spin.append(x)
             self.d = self.d*x.d
@@ -145,6 +145,9 @@ class ManySpins(NuclearSpin):
                   'x': self.many_spin_operator('x'),
                   'y': self.many_spin_operator('y'),
                   'z': self.many_spin_operator('z')}
+
+        # SHOULD FIX THIS
+        self.gyro_ratio_over_2pi = spins[0].gyro_ratio_over_2pi
 
     def many_spin_operator(self, component):
         """
