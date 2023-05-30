@@ -1,13 +1,12 @@
-import math
 import numpy as np
 import pandas as pd
 
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from qutip import Qobj
+from qutip import Qobj, rand_dm
 
-from pulsee.operators import random_operator, random_density_matrix, random_observable
+from pulsee.operators import random_operator, random_observable
 
 from pulsee.many_body import ptrace_subspace
 
@@ -42,7 +41,7 @@ def test_h_quadrupole_independent_of_gamma_when_EFG_is_symmetric(gamma):
 @given(eta = st.floats(min_value=0, max_value=1))
 def test_v0_reduces_to_one_half_when_angles_are_0(eta):
     v0 = v0_EFG(eta, 0, 0, 0)
-    assert math.isclose(1/2, v0, rel_tol=1e-10)
+    assert np.isclose(1/2, v0, rel_tol=1e-10)
     
 def test_v1_reduces_to_0_when_angles_are_0():
     for sign in [-1, +1]:
@@ -53,7 +52,7 @@ def test_v1_reduces_to_0_when_angles_are_0():
 def test_v2_becomes_proportional_to_eta_when_angles_are_0(eta):
     for sign in [-2, +2]:
         v2 = v2_EFG(sign, eta, 0, 0, 0)
-        assert np.isclose(v2, eta/(2*math.sqrt(6)), rtol=1e-10)
+        assert np.isclose(v2, eta/(2*np.sqrt(6)), rtol=1e-10)
         
 @given(n = st.integers(min_value=-20, max_value=20))
 def test_periodicity_pulse_hamiltonian(n):

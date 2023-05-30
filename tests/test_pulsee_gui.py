@@ -2,7 +2,6 @@ import sys
 sys.path.insert(1, '../Code')
 
 # Generic python imports
-import math
 import numpy as np
 import pandas as pd
 from fractions import Fraction

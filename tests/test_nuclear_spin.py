@@ -1,13 +1,12 @@
-import math
 import numpy as np
 
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee.operators import random_operator, random_density_matrix, \
-                             random_observable, commutator
-
+from pulsee.operators import random_operator, random_observable
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
+
+from qutip import commutator
         
 
 def test_spin_quantum_number_initialisation_with_non_half_integer():
