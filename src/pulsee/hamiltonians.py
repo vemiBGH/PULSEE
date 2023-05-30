@@ -208,7 +208,7 @@ def pulse_time_dep_coeff(frequency, phase, pulse_time):
     -------
     Function with signature f(t: float, args: iterable) -> float
     """
-    # The scond argument 'args' is added to match qutip's documentation convention
+    # The second argument 'args' is added to match qutip's documentation convention
     def time_dependence_function(t, args):
         if t <= pulse_time:
             return np.cos(frequency * t - phase)
@@ -236,9 +236,9 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
         the magnetic wave in the LAB frame (expressed in radians);
     """
     return -2 * spin.gyro_ratio_over_2pi * B_1 \
-        * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x']
-           + np.sin(theta_1) * np.sin(phi_1) * spin.I['y']
-           + np.cos(theta_1) * spin.I['z'])
+           * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x']
+              + np.sin(theta_1) * np.sin(phi_1) * spin.I['y']
+              + np.cos(theta_1) * spin.I['z'])
 
 
 def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_time,
@@ -667,17 +667,17 @@ def h_tensor_coupling(spins, t):
     representing the Hamiltonian of this interaction. 
     """
 
-    i_1 = spins.spin[0].cartesian_operator()
-    i_2 = spins.spin[1].cartesian_operator()
+    spin_0_ops = [spins.spin[0].I[key] for key in ['x', 'y', 'z']]
+    spin_1_ops = [spins.spin[1].I[key] for key in ['x', 'y', 'z']]
 
     # Initialize empty operator of appropriate dimension as base case for
     # for loop.
     dims = spins.dims
     h = Qobj(np.zeros((spins.d, spins.d)), dims=dims)
 
-    for m in range(len(i_1)):
-        for n in range(len(i_2)):
-            h += t[m, n] * tensor(i_1[m], i_2[n])
+    for (m, op_1) in enumerate(spin_0_ops):
+        for (n, op_2) in enumerate(spin_1_ops):
+            h += t[m, n] * tensor(op_1, op_2)
 
     return h
 
