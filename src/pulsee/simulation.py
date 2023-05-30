@@ -1272,7 +1272,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
 
     result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated],
-                     progress_bar=display_progress, opts=opts)
+                     progress_bar=display_progress, options=opts)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
 
