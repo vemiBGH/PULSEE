@@ -12,3 +12,5 @@ __pycache__
 /demos/archive
 /demos/archive/.ipynb_checkpoints
 src/pulsee.egg-info/PKG-INFO
+*.code-workspace
+tests/plot_complex_density_matrix test.py

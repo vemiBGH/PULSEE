@@ -31,18 +31,10 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
     magnus
 
 
-def nuclear_system_setup(spin_par,
-                         quad_par=None,
-                         zeem_par=None,
-                         j_matrix=None,
-                         cs_param=None,
-                         D1_param=None,
-                         D2_param=None,
-                         hf_param=None,
-                         h_tensor_inter=None,
-                         j_sec_param=None,
-                         h_userDef=None,
-                         initial_state='canonical',
+def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
+                         cs_param=None, D1_param=None, D2_param=None,
+                         hf_param=None, h_tensor_inter=None, j_sec_param=None,
+                         h_userDef=None, initial_state='canonical',
                          temperature=1e-4):
     """
     Sets up the nuclear system under study, returning the objects representing
@@ -216,7 +208,7 @@ def nuclear_system_setup(spin_par,
         Specifies the state of the system at time t=0.
 
         If the keyword canonical is passed, the function will return a
-        DensityMatrix object representing the state of thermal equilibrium at the
+        Qobj representing the state of thermal equilibrium at the
         temperature specified by the same-named argument.
 
         If a square complex array is passed, the function will return a
@@ -340,9 +332,8 @@ def nuclear_system_setup(spin_par,
     if h_userDef is not None:
         h_unperturbed += (h_userDefined(h_userDef))
     if isinstance(initial_state, str) and initial_state == 'canonical':
-        dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)),
-                                              temperature)
-    else:
+        dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)), temperature)
+    else: # initial_state is a np array
         dm_initial = Qobj(initial_state)
 
     if len(spins) == 1:
@@ -372,7 +363,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
         just like in the formula above.
         Default value is True.
 
-    dm_initial : DensityMatrix or None
+    dm_initial : Qobj or None
         Density matrix of the system at time t=0, just before the
         application of the pulse.
 
@@ -524,7 +515,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           evolution_time=0, picture='IP',
+           evolution_time=0., picture='IP',
            RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
            n_points=30, order=None, opts=None, return_allstates=False,
            display_progress=True):
@@ -670,7 +661,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         mode.loc[:,'phase'] = mode.loc[:,'phase'].add(np.pi)
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
-    if pulse_time == 0 or \
+    if (pulse_time == 0.) or \
        np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
         return dm_initial
 
@@ -972,8 +963,7 @@ def complex_phase_cmap():
 
 def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, 
         phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400, 
-        save=False, name='ComplexDensityMatrix', destination='', 
-        figsize=None, labelsize=6):
+        save_to='', figsize=None, labelsize=6):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -983,7 +973,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     Parameters
     ----------
-    dm : DensityMatrix / numpy array as a square matrix
+    dm : Qobj
         Density matrix to be plotted.
 
     many_spin_indexing : None or list
@@ -992,8 +982,11 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         dimensions of the subspaces of the full Hilbert space related to the
         individual nuclei of the system. 
         The ordering of the elements of many_spin_indexing should match that of
-        the single spins' density matrices in their tensor product 
-        resulting in dm.
+        the single spins' density matrices in their tensor product resulting in dm.
+        
+        For example, a system of [spin-1/2 x spin-1 x spin-3/2] will correspond to:
+        many_spin_indexing = [2, 3, 4]
+        
         Default value is None.
 
     show : bool
@@ -1001,8 +994,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         displayed.
         Default value is True.
 
-    phase_limits : list/array with two float numbers
-        The phase-axis (colorbar) limits [min, max] (optional)
+    phase_limits : list/array of two floats
+        The phase-axis (colorbar) limits [min, max]
 
     phi_label : str
         Label for the legend for the angle of the complex number.
@@ -1014,22 +1007,11 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         Image quality of the figure when showing and saving. Useful for
         publications. Default set to very high value.
 
-    save : bool
-        When False, the plotted graph will not be saved on disk. When True,
-        it will be saved with the name passed as name and in the directory
-        passed as destination.
+    save_to : str
+        If this is not the empty string, the plotted graph will be saved to the
+        path ('directory/filename') described by this string.
 
-        Default value is False.
-
-    name : string
-        Name with which the graph will be saved.
-        Default value is 'RealPartDensityMatrix'.
-
-    destination : string
-        Path of the directory where the graph will be saved (starting
-        from the current directory). The name of the directory must
-        be terminated with a slash /.
-        Default value is the empty string (current directory).
+        Default value is the empty string.
 
     Action
     ------
@@ -1042,12 +1024,13 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
     matplotlib.axis.Axis representing the figure built up by the function.
 
     """
-    if isinstance(dm, Qobj):
-        data_array = np.array(dm)
-    else:
-        data_array = dm
+    if not isinstance(dm, Qobj):
+        raise TypeError('First argument be an instance of Qobj!')
+    
     if not many_spin_indexing:
         many_spin_indexing = dm.dims[0]
+        
+    dm = np.array(dm)
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
@@ -1057,19 +1040,19 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     # Create an X-Y mesh of the same dimension as the 2D data
     # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(np.arange(data_array.shape[1]) + 0.25,
-                                 np.arange(data_array.shape[0]) + 0.25)
+    x_data, y_data = np.meshgrid(np.arange(dm.shape[1]) + 0.25,
+                                 np.arange(dm.shape[0]) + 0.25)
 
     # Set width of the vertical bars
     dx = dy = 0.5
 
     # Flatten out the arrays so that they may be passed to "ax.bar3d".
-    # Basically, ax.bar3d expects three one-dimensional arrays: x_data, y_data, z_data. The following
-    # call boils down to picking one entry from each array and plotting a bar from (x_data[i],
-    # y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
+    # Basically, ax.bar3d expects three one-dimensional arrays: x_data, y_data, z_data.
+    # The following call boils down to picking one entry from each array and plotting a bar from 
+    # (x_data[i], y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
     x_data = x_data.flatten()
     y_data = y_data.flatten()
-    z_data = data_array.flatten()
+    z_data = dm.flatten()
 
     if phase_limits:  # check that limits is a list type
         phase_min = phase_limits[0]
@@ -1080,21 +1063,21 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     norm = clrs.Normalize(phase_min, phase_max)
     cmap = complex_phase_cmap()
-
     colors = cmap(norm(np.angle(z_data)))
 
-    ax.bar3d(x_data,
-             y_data,
-             np.zeros(len(z_data)),
-             dx, dy, np.absolute(z_data), color=colors)
+    ax.bar3d(x_data, y_data, np.zeros(len(z_data)),
+             dx, dy, np.absolute(z_data), color=colors, shade=True)
+    ax.view_init(elev=45, azim=-15) # rotating the plot so the "diagonal" direction is more clear
 
-    d = data_array.shape[0]
+    d = dm.shape[0]
     tick_label = []
 
     d_sub = many_spin_indexing
     n_sub = len(d_sub)
-    m_dict = []
+    m_dict = [] # dictionary of labels for the spin orientation "m"
 
+    # For example, for a two spin-1/2 system:
+    # m_dict = [{0: '1/2', 1:'-1/2'}, {0: '1/2', 1:'-1/2'}]
     for i in range(n_sub):
         m_dict.append({})
         for j in range(d_sub[i]):
@@ -1104,7 +1087,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         tick_label.append('>')
 
     for i in range(n_sub)[::-1]:
-        d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
+        d_downhill = int(np.prod(d_sub[i+1:]))
         d_uphill = int(np.prod(d_sub[0:i]))
 
         for j in range(d_uphill):
@@ -1112,20 +1095,18 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
                 for l in range(d_downhill):
                     comma = ', '
                     if j == n_sub - 1: comma = ''
-                    tick_label[j * d_sub[i] * d_downhill +
-                               k * d_downhill + l] = m_dict[i][k] + \
-                        comma + tick_label[j *
-                                           d_sub[i] * d_downhill + k * d_downhill + l]
+                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
+                        m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l])
 
     for i in range(d):
         tick_label[i] = '|' + tick_label[i]
 
     ax.tick_params(axis='both', which='major', labelsize=labelsize)
 
-    xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
-    yticks(np.arange(start=1., stop=data_array.shape[0] + 1.), tick_label)
+    xticks(np.arange(start=0.5, stop=dm.shape[0] + 0.5), tick_label)
+    yticks(np.arange(start=1., stop=dm.shape[0] + 1.), tick_label)
 
-    if (show_legend):
+    if show_legend:
         cax, kw = clrbar.make_axes(ax, location='right', shrink=.75, pad=.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
         cb.set_ticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
@@ -1133,8 +1114,8 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
             (r'$-\pi$', r'$-\pi/2$', r'$0$', r'$\pi/2$', r'$\pi$'))
         cb.set_label(phi_label)
 
-    if save:
-        plt.savefig(destination + name, dpi=fig_dpi)
+    if save_to != '':
+        plt.savefig(save_to, dpi=fig_dpi)
 
     if show:
         plt.show()
@@ -1201,7 +1182,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Refer to the argument 'mode' in the function evolve() for details about 
         this pulse_mode argument.
 
-    display_progress: either True or None
+    display_progress: either True or False
         True value will display a progress bar for the mesolve function.
         None will not display a progress bar.
         
@@ -1225,6 +1206,9 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         (in arbitrary units). Each signal value is a complex number, where
         the real part and the imaginary part are quadrature detections.
     """
+    if display_progress == False:
+        display_progress = None
+    
     times = np.linspace(start=0, stop=acquisition_time, num=n_points)
 
     decay_functions = []
@@ -1557,7 +1541,7 @@ def plot_fourier_transform(
     Returns
     -------
     An object of the class matplotlib.figure.Figure and an object of the class 
-    matplotlib.axis.Axis representing the figure
+    matplotlib.axis.Axis representing the figure 
     built up by the function.
     """
     fourier = np.array(fourier)

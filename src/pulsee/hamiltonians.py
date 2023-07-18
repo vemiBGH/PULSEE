@@ -191,7 +191,7 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
     return v2
 
 
-def pulse_time_dep_coeff(frequency, phase, pulse_time):
+def cosine_wrapper(frequency, phase, pulse_time):
     """
     Return the time-dependent coefficient of a pulse Hamiltonian. 
 
@@ -283,7 +283,7 @@ def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_ti
         raise ValueError(
             "The amplitude of the electromagnetic wave must be positive.")
     # Notice the following does not depend on spin
-    t_dependence = pulse_time_dep_coeff(frequency, phase, pulse_time)  # this variable is a function!
+    t_dependence = cosine_wrapper(frequency, phase, pulse_time)  # this variable is a function!
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence:
         return Qobj(h_t_independent), t_dependence
@@ -348,7 +348,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in mode.index:
-                t_dependence = pulse_time_dep_coeff(omegas[i], phases[i], pulse_times[i])
+                t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
                 h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
@@ -364,11 +364,11 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
                         else:
                             ops.append(qeye(spin.spin[m].d))
                     term_n = tensor(ops)
-
                     h_t_independent += term_n
 
                 # Append total hamiltonian for this mode to mode_hamiltonians
                 mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
+                
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
