@@ -1124,7 +1124,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                phi=0, ref_freq=0, n_points=100, pulse_mode=None,
-               display_progress=None):
+               opts=None, display_progress=None):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
@@ -1252,8 +1252,11 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     h_scaled = multiply_by_2pi(hamiltonian)
     # Measuring the expectation value of I_plus allows us to get the expectation of
     # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
+    if opts is None:
+        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+
     result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated],
-                     progress_bar=display_progress)
+                     progress_bar=display_progress, options=opts)
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
 
