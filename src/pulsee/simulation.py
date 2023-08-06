@@ -1123,7 +1123,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
     return fig, ax
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, ref_freq=0, n_points=100, pulse_mode=None,
+               phi=0, ref_freq=0, n_points=1000, pulse_mode=None,
                opts=None, display_progress=None):
     """ 
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -1171,10 +1171,8 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Default value is 0.
 
     n_points : float
-        Factor that multiplies the number of points, # points = [acquisition_time * n_points]
-        per microsecond in which the time interval [0, acquisition_time] is sampled for the
-        generation of the FID signal.
-        Default value is 100.
+        The total number of samples for the signal.
+        Default value is 1000.
 
     pulse_mode : pandas.DataFrame
         The user can decide to apply a pulse during the measurement of the FID.
@@ -1182,9 +1180,9 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Refer to the argument 'mode' in the function evolve() for details about 
         this pulse_mode argument.
 
-    display_progress: either True or False
-        True value will display a progress bar for the mesolve function.
-        None will not display a progress bar.
+    display_progress: bool
+        True will display a progress bar for the mesolve function.
+        False will not display a progress bar.
         
     Action
     ------
@@ -1203,11 +1201,10 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
     [1] : numpy.ndarray
         FID signal evaluated at the discrete times reported in the first output
-        (in arbitrary units). Each signal value is a complex number, where
-        the real part and the imaginary part are quadrature detections.
+        (in arbitrary units). This is the expectation value of the spin in the
+        direction defined by the angles (theta, phi) in the input.
     """
-    if display_progress == False:
-        display_progress = None
+
     
     times = np.linspace(start=0, stop=acquisition_time, num=n_points)
 
@@ -1231,15 +1228,10 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     # Now, multiply all the decay functions together to make it into 1D array with same length as times
     decay_t = np.prod(np.array(decay_array), axis=0)
 
-    # Computes the FID assuming that the detection coils record the time-dependence of the
-    # magnetization on the plane perpendicular to (sin(theta)cos(phi), sin(theta)sin(phi), cos(theta))
-    Iz = spin.I['z']
-    Iy = spin.I['y']
-
-    # I_plus_rotated = spin.I['+'].transform((-1j * theta * Iy).expm()) \
-    #     .transform((-1j * phi * Iz).expm())
-    rot1, rot2 = (-1j * theta * Iy), (-1j * phi * Iz)
-    I_plus_rotated = apply_exp_op(apply_exp_op(spin.I['+'], rot1), rot2)
+    # Define the direction of measurement
+    Ix, Iy, Iz = spin.I['x'], spin.I['y'], spin.I['z']
+    rot_y, rot_z = (-1j * theta * Iy), (-1j * phi * Iz)
+    Ix_rotated = apply_exp_op(apply_exp_op(Ix, rot_y), rot_z)
 
     if pulse_mode is not None:
         # copying the method from function 'evolve()' above
@@ -1250,19 +1242,22 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         hamiltonian = h_unperturbed
 
     h_scaled = multiply_by_2pi(hamiltonian)
-    # Measuring the expectation value of I_plus allows us to get the expectation of
-    # Ix and Iy, since <Ix> = Real(<I_plus>) and <Iy> = Imag(<I_plus>)
+    
+    # Measuring the expectation value of Ix rotated:
     if opts is None:
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
-
-    result = mesolve(h_scaled, dm, times, e_ops=[I_plus_rotated],
+    if not display_progress:
+        display_progress = None # qutip takes in a None instead of False for some reason (bad type check)
+        
+    result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated],
                      progress_bar=display_progress, options=opts)
+    
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
-
     if np.max(fid) < 0.09:
         import warnings
         warnings.warn('Unreliable FID: Weak signal, check simulation!', stacklevel=0)
+        
     return result.times, fid
 
 
