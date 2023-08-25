@@ -234,7 +234,7 @@ Below, the content and usage of these modules is reported briefly:
   
   Class `NuclearSpin` is characterized by a quantum number, a gyromagnetic ratio, and a set of methods that return the spherical and cartesian components of the spin vector operator.
   
-  The subclass `ManySpins` contains the `NuclearSpin` objects representing the individual spins in 😬an ensemble of nuclei, as well as a method for the calculation of the operators of the total spin.
+  The subclass `ManySpins` contains the `NuclearSpin` objects representing the individual spins in an ensemble of nuclei, as well as a method for the calculation of the operators of the total spin.
 
 
 * `hamiltonians`
