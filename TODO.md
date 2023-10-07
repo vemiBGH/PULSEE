@@ -1,3 +1,4 @@
+-[ ] Add zero-field NQR example
 Jiwoo: 
 - [x] FID parallelizable
 - [x] Time dependent Hamiltonians during FID and as ``pulses''
