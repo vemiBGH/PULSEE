@@ -99,6 +99,11 @@ class NuclearSpin:
         """
         return int(2 * self.quantum_number + 1)
 
+    def spin_J_set(self):
+        """
+        Returns the Ix, Iy, and Iz operators.
+        """
+        return self.I['x'], self.I['y'], self.I['z']
 class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins,
@@ -209,3 +214,9 @@ class ManySpins(NuclearSpin):
             many_spin_op += Qobj(term.full(), dims=self.dims)
 
         return many_spin_op
+
+    def spin_J_set(self):
+        """
+        Returns the Ix, Iy, and Iz operators.
+        """
+        return self.I['x'], self.I['y'], self.I['z']
