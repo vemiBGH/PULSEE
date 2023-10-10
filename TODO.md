@@ -1,4 +1,5 @@
 - [ ] Add zero-field NQR example
+- [ ] Fix ipyparallel for Jyputer notebook
 
 Jiwoo: 
 - [x] FID parallelizable
