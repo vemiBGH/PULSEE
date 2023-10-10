@@ -79,7 +79,7 @@ class NuclearSpin:
         # Spin operators
         self.Ix, self.Iy, self.Iz = spin_J_set(self.quantum_number)
         # Raising & lowering operators
-        self.Ip, self.Im = (self.Ix + 1j*self.Iy, self.Ix - 1j*self.Iy)
+        self.Ip, self.Im = (self.Ix + 1j * self.Iy, self.Ix - 1j * self.Iy)
         # Pack everything into a dict
         self.I = {'-': self.Im,
                   '+': self.Ip,
@@ -149,17 +149,30 @@ class ManySpins(NuclearSpin):
         # SHOULD FIX THIS
         self.gyro_ratio_over_2pi = spins[0].gyro_ratio_over_2pi
 
-    def many_spin_operator(self, component):
+    def many_spin_operator(self, component, spin_target='all'):
         """
         Returns the specified spherical or cartesian component of the spin operator of the
-        ManySpins system.
-  
+        ManySpins system. If spin_target == 'all' it applied the spin component to all the spins;
+        otherwise, only to the specified spins.
+
+        This functions outputs:
+        component[0] (x) Id ... (x) Id +
+        + Id (x) component[1] (x) Id ... (x) Id + ...
+        + Id (x) Id (x) ... (x) component[-1],
+
+        where (x) is the tensor product.
+
         Parameters
         ----------
-        component: string
+        component: string/list
             Specifies which component of the overall spin is to be computed,
             following the key-value correspondence of the attribute I of NuclearSpin.
-        
+
+        spin_target: string or int/list of ints
+            The target spin that the spin operator component is applied to
+
+            Default is 'all', apply the spin component to every spin in the ManySpins.
+
         Returns
         -------
         If (component = +, -), an Operator object representing the corresponding 
@@ -169,9 +182,26 @@ class ManySpins(NuclearSpin):
         """
 
         many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
-        
+        if isinstance(component, list):
+            assert len(component) == self.n_spins, 'If spin components are different for each spin, ' \
+                                                   'must specify the operator as a string for each spin. ' \
+                                                   'If no operator acts on spin at a position, put a placeholder ' \
+                                                   'in that position, such as None.'
+            spin_target = [i for i in range(len(component)) if component[i] in self.I]
+        else:
+            component = self.n_spins * [component]
+
         for i in range(self.n_spins):
-            term = self.spin[i].I[component]
+            # Apply the spin operator component to all the spins
+            if spin_target == 'all':
+                term = self.spin[i].I[component[i]]
+            # Only apply the spin operator component to the spin specified in spin_target
+            elif i in ([spin_target] if isinstance(spin_target, int) else spin_target):
+                term = self.spin[i].I[component[i]]
+            # Otherwise, apply nothing to the given spin
+            else:
+                term = 0*qeye(self.spin[i].d)
+
             for j in range(self.n_spins)[:i]:
                 term = tensor(qeye(self.spin[j].d), term)
             for k in range(self.n_spins)[i+1:]:
