@@ -1,3 +1,6 @@
+- [ ] Add zero-field NQR example
+- [ ] Fix ipyparallel for Jyputer notebook
+
 Jiwoo: 
 - [x] FID parallelizable
 - [x] Time dependent Hamiltonians during FID and as ``pulses''
