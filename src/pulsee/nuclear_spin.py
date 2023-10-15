@@ -93,6 +93,10 @@ class NuclearSpin:
         self.shape = self.I['-'].shape
         self.dims = self.I['-'].dims
 
+    def __repr__(self):
+        return (f'quantum_number: {self.quantum_number},'
+              f' multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
+
     def multiplicity(self):
         """
         Returns the spin states' multiplicity: 2*quantum_number+1 (cast to int).
@@ -153,6 +157,9 @@ class ManySpins(NuclearSpin):
 
         # SHOULD FIX THIS
         self.gyro_ratio_over_2pi = spins[0].gyro_ratio_over_2pi
+
+    def __repr__(self):
+        return f' shape: {self.shape}, dims: {self.dims}'
 
     def many_spin_operator(self, component, spin_target='all'):
         """

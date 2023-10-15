@@ -5,7 +5,7 @@ import sys
 from tqdm import tqdm, trange
 from scipy.fft import fft, fftfreq, fftshift
 
-from qutip import Options, mesolve, Qobj, tensor, expect, qeye
+from qutip import Options, mesolve, Qobj, tensor, expect, qeye, spin_coherent
 from qutip.parallel import parallel_map
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 
@@ -30,6 +30,7 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
     h_userDefined, multiply_by_2pi, \
     magnus
 
+from .spin_squeezing import CSS
 
 def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
                          cs_param=None, D1_param=None, D2_param=None,
@@ -204,15 +205,19 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         of the system.
         Default value is None.
 
-    initial_state : string or numpy.ndarray
+    initial_state : string or numpy.ndarray or dict
         Specifies the state of the system at time t=0.
 
         If the keyword canonical is passed, the function will return a
         Qobj representing the state of thermal equilibrium at the
         temperature specified by the same-named argument.
 
+        If a dictionary {'theta' : rad, 'phi' : rad} is passed, a spin coherent
+        state is created. Can pass a list of dictionaries for a ManySpins system
+        to create a tensor product state.
+
         If a square complex array is passed, the function will return a
-        DensityMatrix object directly initialised with it.
+        Qobj directly initialised with it.
 
         Default value is 'canonical'.
 
@@ -229,7 +234,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar
         and J-coupling terms (expressed in MHz).
 
-    [2]: DensityMatrix
+    [2]: Qobj
         The density matrix representing the state of the system at time t=0,
         initialised according to initial_state.
     """
@@ -331,10 +336,18 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
 
     if h_userDef is not None:
         h_unperturbed += (h_userDefined(h_userDef))
+
     if isinstance(initial_state, str) and initial_state == 'canonical':
         dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)), temperature)
-    else: # initial_state is a np array
-        dm_initial = Qobj(initial_state)
+
+    elif 'theta' in np.all(initial_state) and 'phi' in np.all(initial_state):
+        dm_initial = CSS(spin_system, initial_state)
+
+    else:  # initial_state is a np array
+        if isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
+            dm_initial = Qobj(initial_state)
+        else:
+            raise ValueError("Please check the type of the initial state passed.")
 
     if len(spins) == 1:
         return spins[0], h_unperturbed, dm_initial
@@ -421,7 +434,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
 
                 intensity_nu = nu * \
-                    (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
+                               (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
 
                 if not normalized:
                     p_i = dm_initial[i, i]
@@ -435,9 +448,9 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True, 
-        xlim=None, ylim=None, fig_dpi=400, save=False, 
-        name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(frequencies, intensities, show=True,
+                                   xlim=None, ylim=None, fig_dpi=400, save=False,
+                                   name='PowerAbsorptionSpectrum', destination=''):
     """
     Plots the power absorption intensities as a function of the corresponding
     frequencies.
@@ -517,8 +530,8 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
            evolution_time=0., picture='IP',
            RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
-           n_points=30, order=None, opts=None, return_allstates=False,
-           display_progress=True):
+           times=None, n_points=30, order=None, opts=None,
+           return_allstates=False, display_progress=True):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
     action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -597,6 +610,10 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         By default, all the values in this map are set to 0 (RRF equivalent
         to the LAB frame).
 
+    times : list or np.array
+        Pass in the array of times that the numerical calculation are performed for.
+        Default is None.
+
     n_points : float
         Factor that multiplies the number of points, (points = [pulse_time * n_points])
         in which the time interval [0, pulse_time] is sampled in the discrete approximation
@@ -605,7 +622,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     order : float
         The order of the simulation method to use. For `magnus` must be <= 3. 
-        Defaults to 2 for `magnus` and 12 for `mesolve` and any other solver.
+        Defaults to 1 for `magnus` and 12 for `mesolve` and any other solver.
 
     return_allstates : boolean
         Specify whether to return every calculated state or only last one.
@@ -640,7 +657,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
 
     Returns
     -------
-    The DensityMatrix object representing the state of the system (in the
+    The Qobj  representing the state of the system (in the
     Schroedinger picture) evolved through a time pulse_time under the action of
     the specified pulse.  
     """
@@ -652,27 +669,28 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if np.min(mode['pulse_time']) < 0:
         raise ValueError(
             'Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
-    
+
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
     if spin.gyro_ratio_over_2pi > 0:
-        mode = mode.copy() # in case the user wants to use same 'mode' variable for later uses.
-        mode.loc[:,'phase'] = mode.loc[:,'phase'].add(np.pi)
+        mode = mode.copy()  # in case the user wants to use same 'mode' variable for later uses.
+        mode.loc[:, 'phase'] = mode.loc[:, 'phase'].add(np.pi)
 
     pulse_time = max(np.max(mode['pulse_time']), evolution_time)
     if (pulse_time == 0.) or \
-       np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
+            np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
         return dm_initial
 
     if order is None and (solver == magnus or solver == 'magnus'):
         order = 1
 
-    # match tolerance to operators.posititivity tolerance.
+    # match tolerance to operators.positivity tolerance.
     if opts is None:
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
 
-    times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
+    if times is None:
+        times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
 
     if solver == magnus or solver == 'magnus':
         if picture == 'IP':
@@ -683,14 +701,18 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         h_total = Qobj(sum(h_unperturbed), dims=dims)
         result = magnus(h_total, Qobj(dm_initial), times,
                         order, spin, mode, o_change_of_picture)
-        dm_evolved = changed_picture(
-            result.states[-1], o_change_of_picture, pulse_time, invert=True)
-        # TODO: Problem of the conj
-        # return dm_evolved.conj()
+        if return_allstates:
+            raise NotImplementedError('Return all states not implemented with Magnus. '
+                                      'Use mesolve instead.')
+        else:
+            dm_evolved = changed_picture(
+                result.states[-1], o_change_of_picture, pulse_time, invert=True)
+            # TODO: Problem of the conj
+            # return dm_evolved.conj()
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
-    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0, 
+    h_perturbation = h_multiple_mode_pulse(spin, mode, t=0,
                                            factor_t_dependence=True)
 
     # Given that H = H0 + H1*f1(t) + H2*f1(t) + ...,
@@ -775,7 +797,7 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
 
     Parameters
     ----------
-    dm : DensityMatrix / numpy array as a square matrix
+    dm : Qobj / numpy array as a square matrix
         Density matrix to be plotted.
 
     many_spin_indexing : None or list
@@ -897,8 +919,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
                         comma = ''
                     tick_label[j * d_sub[i] * d_downhill +
                                k * d_downhill + l] = m_dict[i][k] + \
-                        comma + tick_label[j * d_sub[i] * d_downhill +
-                                           k * d_downhill + l]
+                                                     comma + tick_label[j * d_sub[i] * d_downhill +
+                                                                        k * d_downhill + l]
 
     for i in range(d):
         tick_label[i] = '|' + tick_label[i]
@@ -961,9 +983,9 @@ def complex_phase_cmap():
     return cmap
 
 
-def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True, 
-        phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400, 
-        save_to='', figsize=None, labelsize=6):
+def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
+                                phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400,
+                                save_to="", figsize=None, labelsize=6, azim=-45, elev=35):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -1013,6 +1035,20 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
         Default value is the empty string.
 
+    figsize :  (float, float)
+         Width, height in inches.
+
+         Default value is the empty string.
+
+    labelsize : int
+
+         Decault is 6
+
+    (azim, elev) : (float, float)
+         Angle of viewing for the 3D plot.
+
+         Defualt is (-45 deg, 35 deg)
+
     Action
     ------
     If show=True, draws a histogram on a 2-dimensional grid representing the
@@ -1025,11 +1061,11 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     """
     if not isinstance(dm, Qobj):
-        raise TypeError('First argument be an instance of Qobj!')
-    
+        raise TypeError('First argument must be an instance of Qobj!')
+
     if not many_spin_indexing:
         many_spin_indexing = dm.dims[0]
-        
+
     dm = np.array(dm)
 
     # Create a figure for plotting the data as a 3D histogram.
@@ -1067,14 +1103,14 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     ax.bar3d(x_data, y_data, np.zeros(len(z_data)),
              dx, dy, np.absolute(z_data), color=colors, shade=True)
-    ax.view_init(elev=45, azim=-15) # rotating the plot so the "diagonal" direction is more clear
+    ax.view_init(elev=45, azim=-15)  # rotating the plot so the "diagonal" direction is more clear
 
     d = dm.shape[0]
     tick_label = []
 
     d_sub = many_spin_indexing
     n_sub = len(d_sub)
-    m_dict = [] # dictionary of labels for the spin orientation "m"
+    m_dict = []  # dictionary of labels for the spin orientation "m"
 
     # For example, for a two spin-1/2 system:
     # m_dict = [{0: '1/2', 1:'-1/2'}, {0: '1/2', 1:'-1/2'}]
@@ -1087,7 +1123,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         tick_label.append('>')
 
     for i in range(n_sub)[::-1]:
-        d_downhill = int(np.prod(d_sub[i+1:]))
+        d_downhill = int(np.prod(d_sub[i + 1:]))
         d_uphill = int(np.prod(d_sub[0:i]))
 
         for j in range(d_uphill):
@@ -1096,7 +1132,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
                     comma = ', '
                     if j == n_sub - 1: comma = ''
                     tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
-                        m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l])
+                            m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l])
 
     for i in range(d):
         tick_label[i] = '|' + tick_label[i]
@@ -1105,7 +1141,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     xticks(np.arange(start=0.5, stop=dm.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=1., stop=dm.shape[0] + 1.), tick_label)
-
+    ax.view_init(azim=azim, elev=elev)
     if show_legend:
         cax, kw = clrbar.make_axes(ax, location='right', shrink=.75, pad=.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
@@ -1121,6 +1157,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         plt.show()
 
     return fig, ax
+
 
 def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
                phi=0, ref_freq=0, n_points=1000, pulse_mode=None,
@@ -1140,7 +1177,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         Unperturbed Hamiltonian of the system (in MHz). (Most likely an output
         of the 'nuclear_system_setup' function above)
 
-    dm : DensityMatrix
+    dm : Qobj
         Density matrix representing the state of the system at the beginning
         of the acquisition of the signal.
 
@@ -1205,7 +1242,6 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         direction defined by the angles (theta, phi) in the input.
     """
 
-    
     times = np.linspace(start=0, stop=acquisition_time, num=n_points)
 
     decay_functions = []
@@ -1242,22 +1278,22 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         hamiltonian = h_unperturbed
 
     h_scaled = multiply_by_2pi(hamiltonian)
-    
+
     # Measuring the expectation value of Ix rotated:
     if opts is None:
         opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
     if not display_progress:
-        display_progress = None # qutip takes in a None instead of False for some reason (bad type check)
-        
+        display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
+
     result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated],
                      progress_bar=display_progress, options=opts)
-    
+
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
     if np.max(fid) < 0.09:
         import warnings
         warnings.warn('Unreliable FID: Weak signal, check simulation!', stacklevel=0)
-        
+
     return result.times, fid
 
 
