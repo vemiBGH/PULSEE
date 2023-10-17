@@ -1,27 +1,36 @@
+- [ ] Add zero-field NQR example
+- [ ] Fix ipyparallel for Jyputer notebook
+
 Jiwoo: 
-- [x] FID parallelizable
-- [x] Time dependent Hamiltonians during FID and as ``pulses''
-- [ ] Arbitrary pulse shape (not just square pulse)
+- [ ] update 
+- [ ] simulate CNOT on ADP
+- [ ] Update `plot_complex_density_matrix` and `plot_real_part_density_matrix` (fix element labels & optional arguments to rotate the plot)
 - [ ] Test, QA
 
 Ilija
-- [ ] Update notebooks
-- [x] Add notebook simple 1/2 case
+- [ ] simulate CNOT on ADP
 - [ ] Check magnus higher order integral approx
 - [ ] Add notebook selective pulse
+
+Alex
+- [ ] Update demo notebooks
+- [ ] Add an option for a Gaussian shape pulse
+- [ ] Arbitrary pulse shape (not just square pulse)
 
 ### General Features
 - [ ] Gradient pulses & Arbitrary shape pulses
 - [ ] GRAPE
 - [ ] Automatically find the \pi pulse
-- [ ] Similate dissipation?
+- [ ] Simulate dissipation?
 - [ ] Noise spectroscopy  
 - [ ] Add a function that generates CNOT gate based on some interaction? (Is it possible)? Not theoretically, but using pulses...
 - [ ] Pulse diagram after pulses are sent to sim.evolve
 - [ ] Fix GUI with most recent changes
+- [ ] FID parallelizable
 
 ### Project status
-
+- [x] Time dependent Hamiltonians to simulate FID and add option to add pulses during FID acquisition
+- [x] Add notebook simple 1/2 case
 - [x] Check the demo for hyperfine (small errors) 
 - [x] Add xlim and ylim for the plot_fourier_transform function
 - [x] Add normalize for plot_fourier_transform function

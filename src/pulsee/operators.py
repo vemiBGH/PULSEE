@@ -2,6 +2,7 @@ import numpy as np
 from scipy.constants import Planck, Boltzmann
 from qutip import Qobj, rand_herm
 
+from tqdm import tqdm
 
 def exp_diagonalize(q):
     """
@@ -199,8 +200,30 @@ def canonical_density_matrix(hamiltonian, temperature):
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        print('Most likely exponent cannot be taken because the value is too large. '\
+        raise ValueError('Most likely exponent cannot be taken because the value is too large. '\
               'Either hamiltonian has a very strong interaction in MHz, or the temperature'\
               'is too low.')
-        raise ValueError
     return canonical_dm
+
+def calc_e_ops(dms, e_ops):
+    """
+    Returns the expectation value of the operators for each density matrix given.
+
+    Parameters
+    ----------
+    dms : List
+        List of Qobj of the density matrices.
+
+    e_ops : List
+        Operators
+
+    Returns
+    -------
+    List of lists. For each e_op, its expectation value in the particulat dm.
+    """
+    exp_vals = [[] for x in range(len(e_ops))]
+    for dm in tqdm(dms):
+        for i in range(len(e_ops)):
+            exp_vals[i].append((dm * e_ops[i]).tr())
+
+    return np.array(exp_vals)
