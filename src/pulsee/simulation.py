@@ -306,8 +306,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         if (D2_param['b_D'] == 0.) and (D2_param['theta'] == 0.):
             pass
         else:
-            h_d2 = h_D2(spin_system, D2_param['b_D'],
-                        D2_param['theta'])
+            h_d2 = h_D2(spin_system, D2_param['b_D'], D2_param['theta'])
             h_unperturbed = h_unperturbed + [Qobj(h_d2)]
 
     if hf_param is not None:
@@ -327,12 +326,10 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
 
     if h_tensor_inter is not None:
         if type(h_tensor_inter) != list:
-            h_unperturbed += [Qobj(h_tensor_coupling(spin_system,
-                                                     h_tensor_inter))]
+            h_unperturbed += [Qobj(h_tensor_coupling(spin_system, h_tensor_inter))]
         else:
             for hyp_ten in h_tensor_inter:
-                h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten)
-                                       )]
+                h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten))]
 
     if h_userDef is not None:
         h_unperturbed += (h_userDefined(h_userDef))
@@ -636,7 +633,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     Action
     ------
     If
-    - evolution_time is equal to 0, or
+    - evolution_time=0 AND mode=None, or
     - dm_initial is very close to the identity 
       (with an error margin of 1e-10 for each element)
 
@@ -985,7 +982,7 @@ def complex_phase_cmap():
 
 def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
                                 phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400,
-                                save_to="", figsize=None, labelsize=6, azim=-45, elev=35):
+                                save_to="", figsize=None, labelsize=6, elev=45, azim=-15):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -1037,17 +1034,14 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     figsize :  (float, float)
          Width, height in inches.
-
          Default value is the empty string.
 
     labelsize : int
-
-         Decault is 6
+         Default is 6
 
     (azim, elev) : (float, float)
          Angle of viewing for the 3D plot.
-
-         Defualt is (-45 deg, 35 deg)
+         Default is (45 deg, -15 deg)
 
     Action
     ------
@@ -1103,7 +1097,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     ax.bar3d(x_data, y_data, np.zeros(len(z_data)),
              dx, dy, np.absolute(z_data), color=colors, shade=True)
-    ax.view_init(elev=45, azim=-15)  # rotating the plot so the "diagonal" direction is more clear
+    ax.view_init(elev=elev, azim=azim)  # rotating the plot so the "diagonal" direction is more clear
 
     d = dm.shape[0]
     tick_label = []
@@ -1141,7 +1135,6 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     xticks(np.arange(start=0.5, stop=dm.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=1., stop=dm.shape[0] + 1.), tick_label)
-    ax.view_init(azim=azim, elev=elev)
     if show_legend:
         cax, kw = clrbar.make_axes(ax, location='right', shrink=.75, pad=.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
