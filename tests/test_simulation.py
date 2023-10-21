@@ -214,19 +214,19 @@ def test_j_coupling_refocusing_sequence():
                               columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p'])
         
     dm_1 = evolve(spins, h_unperturbed, initial_dm, mesolve,
-                  None, pulse_time=1, \
+                  None, evolution_time=1, \
                   picture='IP')
         
     dm_2 = evolve(spins, h_unperturbed, dm_1, mesolve,
-                  pulse_mode, pulse_time=0.1, \
+                  pulse_mode, evolution_time=0.1, \
                   picture='IP')
         
     dm_3 = evolve(spins, h_unperturbed, dm_2, mesolve,
-                  None, pulse_time=1, \
+                  None, evolution_time=1, \
                   picture='IP')
         
     final_dm = evolve(spins, h_unperturbed, dm_3, mesolve,
-                      pulse_mode, pulse_time=0.1, \
+                      pulse_mode, evolution_time=0.1, \
                       picture='IP')
         
     j_evolved_dm = changed_picture(final_dm, Qobj(np.array(h_zeeman[0])), 2.2)

@@ -15,14 +15,14 @@ from matplotlib import colorbar as clrbar
 from matplotlib.pyplot import xticks, yticks
 from matplotlib.patches import Patch
 
-from .operators import canonical_density_matrix, \
+from pulsee.operators import canonical_density_matrix, \
     evolve_by_hamiltonian, \
     changed_picture, exp_diagonalize, \
     apply_exp_op, apply_op
 
-from .nuclear_spin import NuclearSpin, ManySpins
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
 
-from .hamiltonians import h_zeeman, h_quadrupole, \
+from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
     h_multiple_mode_pulse, \
     h_j_coupling, \
     h_CS_isotropic, h_D1, h_D2, \
@@ -30,7 +30,7 @@ from .hamiltonians import h_zeeman, h_quadrupole, \
     h_userDefined, multiply_by_2pi, \
     magnus
 
-from .spin_squeezing import CSS
+from pulsee.spin_squeezing import CSS
 
 def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
                          cs_param=None, D1_param=None, D2_param=None,
@@ -268,18 +268,15 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
 
         if zeem_par is not None:
             h_z.append(h_zeeman(spins[i], zeem_par['theta_z'],
-                                zeem_par['phi_z'],
-                                zeem_par['field magnitude']))
+                                zeem_par['phi_z'], zeem_par['field magnitude']))
         else:
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
 
-        if cs_param is not None:
-            if cs_param != 0.0:
-                h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'],
-                                          zeem_par['field magnitude']))
+        if (cs_param is not None) and (cs_param != 0.0):
+            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], 
+                                      zeem_par['field magnitude']))
 
     spin_system = ManySpins(spins)
-
     h_unperturbed = []
 
     for i in range(spin_system.n_spins):
@@ -403,14 +400,12 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     h_unperturbed = Qobj(sum(h_unperturbed), dims=dims)
     energies, o_change_of_basis = h_unperturbed.eigenstates()
     transition_frequency = []
-
     transition_intensity = []
 
     # assume that this Hamiltonian is a rank-1 tensor
     d = sum(h_unperturbed.dims[0])
     # Operator of the magnetic moment of the spin system
     if isinstance(spin, ManySpins):
-
         magnetic_moment = Qobj(np.zeros(shape), dims=dims)
         for i in range(spin.n_spins):
             mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I['x']
@@ -429,19 +424,14 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
             if i < j:
                 nu = np.absolute(energies[j] - energies[i])
                 transition_frequency.append(nu)
-
-                intensity_nu = nu * \
-                               (np.absolute(mm_in_basis_of_eigenstates[j, i])) ** 2
-
+                intensity_nu = nu * np.absolute(mm_in_basis_of_eigenstates[j, i]) ** 2
                 if not normalized:
                     p_i = dm_initial[i, i]
                     p_j = dm_initial[j, j]
                     intensity_nu = np.absolute(p_i - p_j) * intensity_nu
-
                 transition_intensity.append(intensity_nu)
             else:
                 pass
-
     return transition_frequency, transition_intensity
 
 
@@ -923,12 +913,10 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
         tick_label[i] = '|' + tick_label[i]
 
     ax.tick_params(axis='both', which='major', labelsize=6)
-
     xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
 
     ax.set_zlabel("Re(\N{GREEK SMALL LETTER RHO})")
-
     legend_elements = [Patch(facecolor='tab:blue', label='<m|\N{GREEK SMALL LETTER RHO}|m> > 0'),
                        Patch(facecolor='tab:red', label='<m|\N{GREEK SMALL LETTER RHO}|m> < 0')]
     if (show_legend):
@@ -974,9 +962,8 @@ def complex_phase_cmap():
                      (0.50, 0.0, 0.0),
                      (0.75, 0.0, 0.0),
                      (1.00, 1.0, 1.0))}
-
+    
     cmap = clrs.LinearSegmentedColormap('phase_colormap', cdict, 256)
-
     return cmap
 
 
