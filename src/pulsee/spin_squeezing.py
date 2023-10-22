@@ -3,8 +3,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from qutip import tensor, spin_coherent
 
-from .nuclear_spin import NuclearSpin, ManySpins
-from .operators import calc_e_ops
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
+from pulsee.operators import calc_e_ops
 
 
 class useful_sqz_ops:
