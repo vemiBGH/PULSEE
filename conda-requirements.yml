@@ -1,0 +1,17 @@
+name: pulsee_env
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - pandas
+  - tqdm
+  - qutip
+  - matplotlib
+  - ipykernel
+  - cython=0.29
+  - python=3.11
+  - kivy
+  - scipy
+  - numpy
+  - kivy-garden
+prefix: C:\ProgramData\Anaconda3\envs\pulsee_env
