@@ -1,4 +1,7 @@
 '''
+%%%%%%
+THIS IS COPY & PASTED FROM THE KIVY SOURCE CODE 
+%%%%%%
 Backend KivyAgg
 =====
 
@@ -93,7 +96,7 @@ from kivy.properties import ObjectProperty
 from kivy.base import EventLoop
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.image import Image
-from backend_kivy import FigureCanvasKivy,\
+from pulsee.backend_kivy import FigureCanvasKivy,\
                             FigureManagerKivy, show, new_figure_manager,\
                             NavigationToolbar2Kivy
 

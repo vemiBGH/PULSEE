@@ -1045,7 +1045,7 @@ class GraphicsContextKivy(GraphicsContextBase, object):
             if self.get_joinstyle() != 'round':
                 attrib['line-linejoin'] = self.get_joinstyle()
             if self.get_capstyle() != 'butt':
-                attrib['line-linecap'] = _capd[self.get_capstyle()]
+                attrib['line-linecap'] = self._capd[self.get_capstyle()]
         return attrib
 
 
