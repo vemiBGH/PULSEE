@@ -3,8 +3,8 @@ from tqdm import trange
 from qutip import Qobj, tensor, qeye, commutator
 from qutip.solver import Result
 
-from .nuclear_spin import NuclearSpin, ManySpins
-from .operators import changed_picture, apply_exp_op
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
+from pulsee.operators import changed_picture, apply_exp_op
 
 
 def h_zeeman(spin, theta_z, phi_z, B_0):

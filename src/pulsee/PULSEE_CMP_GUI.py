@@ -2,6 +2,7 @@
 import pandas as pd
 from fractions import Fraction
 from functools import partial
+import os
 
 # Write to file import
 import json
@@ -38,7 +39,7 @@ try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
 except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
-    from backend_kivyagg import FigureCanvasKivyAgg
+    from pulsee.backend_kivyagg import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
 from pulsee.operators import *
@@ -47,7 +48,7 @@ from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.simulation import nuclear_system_setup, \
                        evolve, plot_real_part_density_matrix, \
-                       FID_signal, legacy_fourier_transform_signal, \
+                       FID_signal, fourier_transform_signal, \
                        plot_fourier_transform, fourier_phase_shift
 
 # This class defines the object responsible of the management of the inputs and outputs of the
@@ -149,6 +150,9 @@ class System_Parameters(FloatLayout):
     nu_q_label = Label()
     
     dm_initial_figure = matplotlib.figure.Figure()
+    
+    ns_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nuclear_species.txt")
+
     
     # Specifies the action of the checkbox 'Canonical', i.e. to toggle the TextInput widgets associated
     # with the temperature and the density matrix to be inserted manually
@@ -306,7 +310,7 @@ class System_Parameters(FloatLayout):
         self.nucleus_dd.bind(on_select=lambda instance, x: setattr(self.nuclear_species, 'text', x))
         
         # Reads the properties of various nuclear species from a JSON file
-        with open("nuclear_species.txt") as ns_file:
+        with open(self.ns_file_path) as ns_file:
              ns_data = json.load(ns_file)
         
         ns_names = ns_data.keys()
@@ -1070,14 +1074,14 @@ class NMR_Spectrum(FloatLayout):
             
             if self.input_opposite_frequency == False:
                 sim_man.spectrum_frequencies, \
-                sim_man.spectrum_fourier = legacy_fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier = fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID,\
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound)
             else:
                 sim_man.spectrum_frequencies, \
                 sim_man.spectrum_fourier, \
-                sim_man.spectrum_fourier_neg = legacy_fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier_neg = fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID, \
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound, \

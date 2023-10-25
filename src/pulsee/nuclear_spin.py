@@ -180,10 +180,10 @@ class ManySpins(NuclearSpin):
             Specifies which component of the overall spin is to be computed,
             following the key-value correspondence of the attribute I of NuclearSpin.
 
-        spin_target: string or int/list of ints
-            The target spin that the spin operator component is applied to
+        spin_target: string or int or list of ints
+            The target spin(s) that the spin operator component is applied to
 
-            Default is 'all', apply the spin component to every spin in the ManySpins.
+            Default is 'all': apply the spin component to every spin in the ManySpins.
 
         Returns
         -------
@@ -203,15 +203,18 @@ class ManySpins(NuclearSpin):
         else:
             component = self.n_spins * [component]
 
+        if isinstance(spin_target, int):
+            spin_target = [spin_target]
+
         for i in range(self.n_spins):
-            # Apply the spin operator component to all the spins
             if spin_target == 'all':
+                # Apply the spin operator component to all the spins
                 term = self.spin[i].I[component[i]]
-            # Only apply the spin operator component to the spin specified in spin_target
-            elif i in ([spin_target] if isinstance(spin_target, int) else spin_target):
+            elif i in spin_target:
+                # Only apply the spin operator component to the spin specified in spin_target
                 term = self.spin[i].I[component[i]]
-            # Otherwise, apply nothing to the given spin
             else:
+                # Apply nothing to the given spin
                 term = 0*qeye(self.spin[i].d)
 
             for j in range(self.n_spins)[:i]:

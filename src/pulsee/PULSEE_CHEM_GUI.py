@@ -3,11 +3,13 @@ import numpy as np
 import pandas as pd
 from fractions import Fraction
 from functools import partial
+import os
 
 # Write to file import
 import json
 
 # Generic graphics imports
+import matplotlib.figure
 import matplotlib.pylab as plt
 
 # Kivy imports
@@ -38,7 +40,7 @@ try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
 except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
-    from backend_kivyagg import FigureCanvasKivyAgg
+    from pulsee.backend_kivyagg import FigureCanvasKivyAgg
 
     #catch an ImportError that happens due to some versions of kivy.
     #This shouldn't be a problem in future updates of matplotlib and kivy.
@@ -53,7 +55,7 @@ from pulsee.simulation import nuclear_system_setup, \
                        evolve, RRF_operator, \
                        plot_real_part_density_matrix, \
                        FID_signal, plot_real_part_FID_signal, \
-                       legacy_fourier_transform_signal, \
+                       fourier_transform_signal, \
                        plot_fourier_transform, \
                        fourier_phase_shift
 
@@ -180,10 +182,11 @@ class System_Parameters(FloatLayout):
     
     dm_initial_figure = matplotlib.figure.Figure()
     
+    ns_file_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nuclear_species.txt")
+    
     # Specifies the action of the checkbox 'Canonical', i.e. to toggle the TextInput widgets associated
     # with the temperature and the density matrix to be inserted manually
     def on_canonical_active(self, *args):
-                    
         self.temperature.disabled = not self.temperature.disabled
         
         if self.spin_qn.text != '':
@@ -386,7 +389,7 @@ class System_Parameters(FloatLayout):
         self.nucleus_dd.bind(on_select=lambda instance, x: setattr(self.nuclear_species, 'text', x))
         
         # Reads the properties of various nuclear species from a JSON file
-        with open("nuclear_species.txt") as ns_file:
+        with open(self.ns_file_path) as ns_file:
              ns_data = json.load(ns_file)
         
         ns_names = ns_data.keys()
@@ -443,7 +446,7 @@ class System_Parameters(FloatLayout):
         self.nucleus_dd2.bind(on_select=lambda instance, x: setattr(self.nuclear_species2, 'text', x))
 
         # Reads the properties of various nuclear species from a JSON file
-        with open("nuclear_species.txt") as ns_file:
+        with open(self.ns_file_path) as ns_file:
              ns_data2 = json.load(ns_file)
 
         ns_names2 = ns_data2.keys()
@@ -1420,14 +1423,14 @@ class NMR_Spectrum(FloatLayout):
             
             if self.input_opposite_frequency == False:
                 sim_man.spectrum_frequencies, \
-                sim_man.spectrum_fourier = legacy_fourier_transform_signal(sim_man.FID_times, \
-                                                     sim_man.FID,\
+                sim_man.spectrum_fourier = fourier_transform_signal(sim_man.FID_times, \
+                                                     sim_man.FID, \
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound)
             else:
                 sim_man.spectrum_frequencies, \
                 sim_man.spectrum_fourier, \
-                sim_man.spectrum_fourier_neg = legacy_fourier_transform_signal(sim_man.FID_times, \
+                sim_man.spectrum_fourier_neg = fourier_transform_signal(sim_man.FID_times, \
                                                      sim_man.FID, \
                                                      frequency_start=self.input_frequency_left_bound, \
                                                      frequency_stop=self.input_frequency_right_bound, \
