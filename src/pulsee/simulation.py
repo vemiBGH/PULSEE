@@ -1491,11 +1491,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 def plot_fourier_transform(
         frequencies, fourier, fourier_neg=None, square_modulus=False,
         xlim=None, ylim=None, scaling_factor=None, norm=True, fig_dpi=400,
-<<<<<<< HEAD
-        show=True, save=False, name='FTSignal', destination=''):
-=======
         show=True, save=False, name='FTSignal', destination='', figure = None, my_label = ""):
->>>>>>> c5d4592... Quadrupolar Demo Updates
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
@@ -1593,18 +1589,11 @@ def plot_fourier_transform(
     if scaling_factor is not None:
         for i in range(n_plots):
             fourier_data[i] = scaling_factor * fourier_data[i]
-<<<<<<< HEAD
-
-    fig, ax = plt.subplots(n_plots, 1, sharey=True,
-                           gridspec_kw={'hspace': 0.5})
-=======
     if figure is None:
         fig , ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace': 0.5})
     else:
         fig = figure[0]
         ax = figure[1]
->>>>>>> c5d4592... Quadrupolar Demo Updates
-
     if fourier_neg is None:
         ax = [ax]
 
