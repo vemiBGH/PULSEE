@@ -1279,7 +1279,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
 
 def plot_real_part_FID_signal(
         times, FID, show=True, fig_dpi=400, save=False,
-        name='FIDSignal', destination='', xlim=None, ylim=None):
+        name='FIDSignal', destination='', xlim=None, ylim=None, figure = None):
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -1322,6 +1322,10 @@ def plot_real_part_FID_signal(
     ylim: tuple
         y limits of plot
         
+    fig: plt.figure
+        figure to plot FID signal on
+        
+        
     Action
     ------ 
     If show=True, generates a plot of the FID signal as a function of time.
@@ -1331,22 +1335,27 @@ def plot_real_part_FID_signal(
     An object of the class matplotlib.figure.Figure representing the figure
     built up by the function.
     """
-    fig = plt.figure()
-    plt.plot(times, np.real(FID), label='Real part')
-    plt.title('FID signal')
-    plt.xlabel("time (\N{GREEK SMALL LETTER MU}s)")
-    plt.ylabel("Real(FID) (a.u.)")
+    if figure is None:
+        fig, ax = plt.subplots()
+    else: 
+        fig, ax = figure
+    
+    ax.plot(times, np.real(FID), label='Real part')
+    ax.set_title('FID signal')
+    ax.set_xlabel("time (\N{GREEK SMALL LETTER MU}s)")
+    ax.set_ylabel("Real(FID) (a.u.)")
 
+    
     if xlim is not None:
-        plt.xlim(xlim)
+        ax.set_xlim(xlim)
     if ylim is not None:
-        plt.ylim(ylim)
+        ax.set_ylim(ylim)
     if save:
         plt.savefig(destination + name, dpi=fig_dpi)
     if show:
         plt.show()
 
-    return fig
+    return fig, ax
 
 
 def fourier_transform_signal(signal, times, abs=False, padding=None):
@@ -1482,7 +1491,11 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 def plot_fourier_transform(
         frequencies, fourier, fourier_neg=None, square_modulus=False,
         xlim=None, ylim=None, scaling_factor=None, norm=True, fig_dpi=400,
+<<<<<<< HEAD
         show=True, save=False, name='FTSignal', destination=''):
+=======
+        show=True, save=False, name='FTSignal', destination='', figure = None, my_label = ""):
+>>>>>>> c5d4592... Quadrupolar Demo Updates
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
@@ -1542,6 +1555,9 @@ def plot_fourier_transform(
         the current directory). The name of the directory must be terminated 
         with a slash /.
         Default value is the empty string (current directory).
+        
+    figure : plt.subplot
+        Plot to plot on the fourier transformed frequency
 
     Action
     ------
@@ -1577,20 +1593,28 @@ def plot_fourier_transform(
     if scaling_factor is not None:
         for i in range(n_plots):
             fourier_data[i] = scaling_factor * fourier_data[i]
+<<<<<<< HEAD
 
     fig, ax = plt.subplots(n_plots, 1, sharey=True,
                            gridspec_kw={'hspace': 0.5})
+=======
+    if figure is None:
+        fig , ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace': 0.5})
+    else:
+        fig = figure[0]
+        ax = figure[1]
+>>>>>>> c5d4592... Quadrupolar Demo Updates
 
     if fourier_neg is None:
         ax = [ax]
 
     for i in range(n_plots):
         if not square_modulus:
-            ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part')
-            ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part')
+            ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part ' + my_label)
+            ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part ' + my_label)
         else:
             ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2,
-                       label='Square modulus')
+                       label='Square modulus ' + my_label)
 
         if n_plots > 1:
             ax[i].title.set_text(plot_title[i])
