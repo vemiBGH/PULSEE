@@ -515,8 +515,7 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
 
 def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           evolution_time=0., picture='IP',
-           RRF_par={'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0},
+           evolution_time=0., picture='IP', RRF_par=None,
            times=None, n_points=30, order=None, opts=None,
            return_allstates=False, display_progress=True):
     """
@@ -683,8 +682,13 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         if picture == 'IP':
             o_change_of_picture = Qobj(
                 sum(h_unperturbed), dims=dims)
-        else:
+        elif picture == 'RRF':
+            if RRF_par is None:
+                RRF_par = {'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0}
             o_change_of_picture = RRF_operator(spin, RRF_par)
+        else:
+            raise ValueError("This value of argument 'picture' is not supported."
+                             "Must be either 'IF' or 'RRF'.")
         h_total = Qobj(sum(h_unperturbed), dims=dims)
         result = magnus(h_total, Qobj(dm_initial), times,
                         order, spin, mode, o_change_of_picture)

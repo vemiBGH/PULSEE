@@ -1,17 +1,19 @@
 name: pulsee_env
 channels:
-  - defaults
   - conda-forge
 dependencies:
-  - pandas
-  - tqdm
-  - qutip
   - matplotlib
-  - ipykernel
-  - cython=0.29
-  - python=3.11
-  - kivy
-  - scipy
   - numpy
+  - pandas
+  - scipy
+  - tqdm
+  - ipykernel
   - kivy-garden
-prefix: C:\ProgramData\Anaconda3\envs\pulsee_env
+  - cython=0.29
+  - qutip
+  - kivy
+  - ipyparallel
+  - jupyter_client[version='<8']
+  - notebook
+  - pyzmq[version='<25']
+prefix: C:\Users\lemon\anaconda3\envs\pulsee_env

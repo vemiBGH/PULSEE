@@ -1977,11 +1977,10 @@ class Panels(TabbedPanel):
 
 # Class of the application and main class of the program
 class PULSEE_CHEM(App):
-    
     sim_man = Simulation_Manager()
     
     def build(self):
-                
         return Panels(size=(500, 500), do_default_tab=False, tab_pos='top_mid', sim_man=self.sim_man)
-    
-PULSEE_CHEM().run()
+
+if __name__ == '__main__':
+    PULSEE_CHEM().run()
