@@ -227,3 +227,29 @@ def calc_e_ops(dms, e_ops):
             exp_vals[i].append((dm * e_ops[i]).tr())
 
     return np.array(exp_vals)
+
+
+def apply_rot_pulse(rho, duration, rot_axis):
+    """
+    Apply a "pulse" to the given state by rotating the given state by  
+    the given duration. i.e., transforms the density matrix by 
+    `U = exp(- i * duration * rot_axis)`:
+        `U * rho * U.dag()`
+
+    Parameters:
+    -----------
+    rho : Qobj
+        The density matrix of the state to apply the pulse to.
+    duration : float
+        The duration of the applied pulse as an angle in radians.
+    rot_axis : Qobj
+        Angular momentum operator for the corresponding axis of rotation. 
+
+    Returns:
+    --------
+    The transformed density matrix as a Qobj. 
+    """
+
+    rot_op = (-1j * duration * rot_axis).expm()
+    return apply_op(rho, rot_op)
+    # return rho.transform((-1j * duration * rot_axis).expm())

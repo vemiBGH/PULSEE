@@ -94,8 +94,8 @@ class NuclearSpin:
         self.dims = self.I['-'].dims
 
     def __repr__(self):
-        return (f'quantum_number: {self.quantum_number},'
-              f' multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
+        return (f'quantum_number: {self.quantum_number}, '
+                f'multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
 
     def multiplicity(self):
         """
@@ -108,6 +108,8 @@ class NuclearSpin:
         Returns the Ix, Iy, and Iz operators.
         """
         return self.I['x'], self.I['y'], self.I['z']
+    
+    
 class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins,
