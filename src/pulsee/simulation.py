@@ -1,37 +1,37 @@
-# "Main" file of the PULSEE package.
+''' "Main" file of the PULSEE package. '''
+
+# Standard library imports
+import sys
 
 # Third party imports
 import numpy as np
 import pandas as pd
-import sys
 from tqdm import tqdm, trange
 from scipy.fft import fft, fftfreq, fftshift
-
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye, spin_coherent
 from qutip.parallel import parallel_map
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 
-# Local file imports
+# Local imports
 from pulsee.operators import canonical_density_matrix, \
-                             evolve_by_hamiltonian, \
-                             changed_picture, exp_diagonalize, \
-                             apply_exp_op
+    evolve_by_hamiltonian, \
+    changed_picture, exp_diagonalize, \
+    apply_exp_op
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
-                                h_multiple_mode_pulse, \
-                                h_j_coupling, \
-                                h_CS_isotropic, h_D1, h_D2, \
-                                h_HF_secular, h_j_secular, h_tensor_coupling, \
-                                h_userDefined, multiply_by_2pi, \
-                                magnus
+    h_multiple_mode_pulse, \
+    h_j_coupling, \
+    h_CS_isotropic, h_D1, h_D2, \
+    h_HF_secular, h_j_secular, h_tensor_coupling, \
+    h_userDefined, multiply_by_2pi, \
+    magnus
 from pulsee.spin_squeezing import CSS
 from pulsee.plot import plot_power_absorption_spectrum, \
-                        plot_real_part_density_matrix, \
-                        plot_complex_density_matrix, \
-                        plot_real_part_FID_signal, \
-                        plot_fourier_transform
-                        
-                        
+    plot_real_part_density_matrix, \
+    plot_complex_density_matrix, \
+    plot_real_part_FID_signal, \
+    plot_fourier_transform
+
 
 def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
                          cs_param=None, D1_param=None, D2_param=None,
@@ -274,7 +274,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
             h_z.append(h_zeeman(spins[i], 0., 0., 0.))
 
         if (cs_param is not None) and (cs_param != 0.0):
-            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], 
+            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'],
                                       zeem_par['field magnitude']))
 
     spin_system = ManySpins(spins)
@@ -637,7 +637,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         h_scaled = multiply_by_2pi(h_unscaled)
         result = mesolve(h_scaled, Qobj(dm_initial), times,
                          options=opts, progress_bar=display_progress)
-        
+
         if return_allstates:
             return result.states
         # return last time step of density matrix evolution.
@@ -663,7 +663,7 @@ def RRF_operator(spin, RRF_par):
     ----------
     spin : NuclearSpin
         Spin under study.
-            
+
     RRF_par : dict
         Specifies the properties of the rotating reference frame. The
         keys and values required to this argument are shown in the table
@@ -674,7 +674,7 @@ def RRF_operator(spin, RRF_par):
         |    'nu_RRF'   |  float  |
         |  'theta_RRF'  |  float  |
         |   'phi_RRF'   |  float  |
-        
+
         where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
         'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
         to the plane of rotation in the LAB frame (in radians).
@@ -756,7 +756,7 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     display_progress: bool
         True will display a progress bar for the mesolve function.
         False will not display a progress bar.
-        
+
     Action
     ------
     Samples the time interval [0, acquisition_time] with n_points points per
