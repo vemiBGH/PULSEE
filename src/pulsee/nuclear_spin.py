@@ -141,13 +141,18 @@ class ManySpins(NuclearSpin):
         """        
         self.n_spins = len(spins)
 
-        self.spin, self.d, self.dims = [spins[0]], spins[0].d, spins[0].dims
-        for x in spins[1:]:
-            self.spin.append(x)
-            self.d = self.d*x.d
-            self.dims = np.concatenate([self.dims, x.dims], axis=1)
-
-        if type(self.dims) != list:
+        self.spin = spins
+        self.d = np.prod([spin.d for spin in spins]) # multiply all the d's together
+        
+        self.dims = spins[0].dims
+        
+        for s in spins[1:]:
+            self.dims = np.concatenate([self.dims, s.dims], axis=1)
+            # Careful of qutip's convention for `dims`. For example,
+            # A tensor product of a 2x2 matrix (dims = [[2],[2]]) with a 3x3 matrix (dims = [[3],[3]])
+            # will result in a dims = [[2,3], [2,3]]. 
+            
+        if not isinstance(self.dims, list):
             self.dims = self.dims.tolist()
 
         self.shape = (self.d, self.d)
@@ -163,7 +168,7 @@ class ManySpins(NuclearSpin):
     def __repr__(self):
         return f' shape: {self.shape}, dims: {self.dims}'
 
-    def many_spin_operator(self, component, spin_target='all'):
+    def many_spin_operator(self, component, spin_target: str | int | list[int] ='all'):
         """
         Returns the specified spherical or cartesian component of the spin operator of the
         ManySpins system. If spin_target == 'all' it applied the spin component to all the spins;
@@ -212,12 +217,12 @@ class ManySpins(NuclearSpin):
             if spin_target == 'all':
                 # Apply the spin operator component to all the spins
                 term = self.spin[i].I[component[i]]
-            elif i in spin_target:
+            elif isinstance(spin_target, list) and i in spin_target:
                 # Only apply the spin operator component to the spin specified in spin_target
                 term = self.spin[i].I[component[i]]
             else:
                 # Apply nothing to the given spin
-                term = 0*qeye(self.spin[i].d)
+                term = Qobj(0 * qeye(self.spin[i].d))
 
             for j in range(self.n_spins)[:i]:
                 term = tensor(qeye(self.spin[j].d), term)

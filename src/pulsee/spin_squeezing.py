@@ -1,7 +1,7 @@
 import numpy as np
 
 import matplotlib.pyplot as plt
-from qutip import tensor, spin_coherent
+from qutip import Qobj, tensor, spin_coherent
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 from pulsee.operators import calc_e_ops
@@ -44,7 +44,7 @@ class useful_sqz_ops:
                'and their average values, av[op].'
 
 
-def CSS(spin_system, initial_state):
+def CSS(spin_system, initial_state: list[dict]) -> Qobj:
     """
     If a dictionary {'theta' : rad, 'phi' : rad} is passed, a spin coherent
     state is created. Can pass a list of dictionaries for a ManySpins system
@@ -55,7 +55,9 @@ def CSS(spin_system, initial_state):
     Parameters
     ----------
     spin_system : NuclearSpin
-    initial_state : Qobj
+    
+    initial_state : list of dictionaries. Each dictionary must have keys
+    'theta' and 'phi'.
 
     Returns
     -------
@@ -63,25 +65,23 @@ def CSS(spin_system, initial_state):
         The density matrix representing the state of the system at time t=0,
         initialised according to initial_state.
     """
-    if 'theta' in np.all(initial_state) and 'phi' in np.all(initial_state):
-        if isinstance(spin_system, ManySpins):
-            assert isinstance(initial_state, list), 'The initial_state for CSS for ManySpins must be specified ' \
-                                                    'as a list with theta and phi specified for each spin.'
-            dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'],
-                               type='dm')
-
-            for i in range(1, spin_system.n_spins):
-                dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
-                                              initial_state[i]['phi'], type='dm'))
-        else:
-            assert isinstance(spin_system, NuclearSpin), 'Must give a NuclearSpin type.'
-            assert isinstance(initial_state, dict), 'The initial_state for CSS must be given as a dictionary, ' \
-                                                    'with theta and phi specified'
-
-            dm = spin_coherent(spin_system.I['I'], initial_state['theta'], initial_state['phi'], type='dm')
-    else:
-        raise ValueError("CSS: Please check that both angles, theta and phi, are given for all the ManySpins.")
-
+    for d in initial_state:
+        if 'theta' not in d.keys() or 'phi' not in d.keys():
+            raise ValueError("CSS: Please check that both angles, theta and phi, are given for all the ManySpins.")
+    
+    # Pretty sure our `spin_system` is ALWAYS a `ManySpins` object, even if it's 1 spin.
+    # `nuclear_system_setup` always returns a ManySpins object.
+    if len(initial_state) == 1: 
+        dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+        return dm
+    
+    assert isinstance(spin_system, ManySpins)
+    assert len(initial_state) == spin_system.n_spins
+    
+    dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+    for i in range(1, spin_system.n_spins):
+        dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
+                                        initial_state[i]['phi'], type='dm'))
     return dm
 
 
@@ -226,6 +226,7 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
     if (isinstance(num_plots, int)):
         fig, axs = plt.subplots(num_plots)
 
+        # axis is a list here! Maybe meant axs[i] ? 
         for i in range(len(vals)):
             if put_brackets:
                 axs.plot(times, vals[i], colors[i], label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]))

@@ -1,8 +1,8 @@
 import numpy as np
 from scipy.constants import Planck, Boltzmann
 from qutip import Qobj, rand_herm
-
 from tqdm import tqdm
+
 
 def exp_diagonalize(q):
     """
@@ -98,6 +98,7 @@ def positivity(q):
     eigenvalues = q.eigenenergies()
     return np.all(np.real(eigenvalues) >= -1e-10)
 
+
 def apply_op(q, U):
     """
     Applies the operator U onto the density matrix q
@@ -112,6 +113,7 @@ def apply_op(q, U):
     """
     return U * q * U.dag()
 
+
 def apply_exp_op(q, U):
     """
     Applies the operator U.expm() onto the density matrix q
@@ -125,6 +127,7 @@ def apply_exp_op(q, U):
     apply_op(U) = U.expm() * dm * U.expm()_dagger
     """
     return U.expm() * q * (U.expm()).dag()
+
 
 def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
@@ -194,16 +197,17 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 
+    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6
                   / temperature)
     numerator = exponent.expm()
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        raise ValueError('Most likely exponent cannot be taken because the value is too large. '\
-              'Either hamiltonian has a very strong interaction in MHz, or the temperature'\
-              'is too low.')
+        raise ValueError('Most likely exponent cannot be taken because the value is too large. '
+                         'Either hamiltonian has a very strong interaction in MHz, or the temperature'
+                         'is too low.')
     return canonical_dm
+
 
 def calc_e_ops(dms, e_ops):
     """
