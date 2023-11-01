@@ -11,6 +11,7 @@ src/pulsee/hamiltonians.py
 src/pulsee/many_body.py
 src/pulsee/nuclear_spin.py
 src/pulsee/operators.py
+src/pulsee/plot.py
 src/pulsee/quantum_computing.py
 src/pulsee/simulation.py
 src/pulsee/spin_squeezing.py

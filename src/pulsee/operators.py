@@ -197,8 +197,7 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6
-                  / temperature)
+    exponent = - (Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 / temperature
     numerator = exponent.expm()
     try:
         canonical_dm = numerator.unit()

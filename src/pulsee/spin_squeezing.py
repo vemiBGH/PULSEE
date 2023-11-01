@@ -55,7 +55,7 @@ def CSS(spin_system, initial_state: list[dict]) -> Qobj:
     Parameters
     ----------
     spin_system : NuclearSpin
-    
+
     initial_state : list of dictionaries. Each dictionary must have keys
     'theta' and 'phi'.
 
@@ -68,20 +68,19 @@ def CSS(spin_system, initial_state: list[dict]) -> Qobj:
     for d in initial_state:
         if 'theta' not in d.keys() or 'phi' not in d.keys():
             raise ValueError("CSS: Please check that both angles, theta and phi, are given for all the ManySpins.")
-    
-    # Pretty sure our `spin_system` is ALWAYS a `ManySpins` object, even if it's 1 spin.
-    # `nuclear_system_setup` always returns a ManySpins object.
-    if len(initial_state) == 1: 
+
+    if isinstance(spin_system, NuclearSpin):
+        assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
         dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
         return dm
-    
-    assert isinstance(spin_system, ManySpins)
-    assert len(initial_state) == spin_system.n_spins
-    
+
+    assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
+    assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
+
     dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
     for i in range(1, spin_system.n_spins):
         dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
-                                        initial_state[i]['phi'], type='dm'))
+                                      initial_state[i]['phi'], type='dm'))
     return dm
 
 
@@ -164,13 +163,13 @@ def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_spher=False):
     Jn_3 = Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
 
     A = (1 / 2) * (np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2) - (1 + np.cos(th) ** 2) * (
-            Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) + \
-                   np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
+        Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) +
+        np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
 
     C = I * (I + 1) - Jz2 - Jp2.imag * np.sin(2 * phi) - Jp2.real * np.cos(2 * phi) - A
 
     B = np.cos(th) * (Jp2.real * np.sin(2 * phi) - Jp2.imag * np.cos(2 * phi)) + np.sin(th) * (
-            -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
+        -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
 
     if xi_sq:
         xi = (C - np.sqrt(A ** 2 + B ** 2)) / I
@@ -226,7 +225,7 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
     if (isinstance(num_plots, int)):
         fig, axs = plt.subplots(num_plots)
 
-        # axis is a list here! Maybe meant axs[i] ? 
+        # axis is a list here! Maybe meant axs[i] ?
         for i in range(len(vals)):
             if put_brackets:
                 axs.plot(times, vals[i], colors[i], label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]))
