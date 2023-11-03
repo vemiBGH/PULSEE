@@ -1,5 +1,5 @@
-from qutip import Qobj
 import numpy as np
+from qutip import Qobj
 
 
 def partial_trace(operator, subspaces_dimensions, index_positions):
@@ -56,9 +56,9 @@ def ptrace_subspace(operator, subspaces_dimensions, index_position):
     n = len(d)
     i = index_position
 
-    d_downhill = int(np.prod(d[i+1:n]))
+    d_downhill = int(np.prod(d[i + 1:n]))
 
-    d_block = d[i]*d_downhill
+    d_block = d[i] * d_downhill
 
     d_uphill = int(np.prod(d[0:i]))
 
@@ -68,11 +68,11 @@ def ptrace_subspace(operator, subspaces_dimensions, index_position):
         p_t_row = np.empty((d_downhill, d_downhill), dtype=np.ndarray)
         for k in range(d_uphill):
             block = m[j * d_block:(j + 1) * d_block, k *
-                      d_block: (k + 1) * d_block]
+                                                     d_block: (k + 1) * d_block]
             p_t_block = np.zeros((d_downhill, d_downhill))
             for l in range(d[i]):
-                p_t_block = p_t_block + block[l*d_downhill:(l + 1) * d_downhill,
-                                              l*d_downhill:(l + 1) * d_downhill]
+                p_t_block = p_t_block + block[l * d_downhill:(l + 1) * d_downhill,
+                                              l * d_downhill:(l + 1) * d_downhill]
             p_t_row = np.concatenate((p_t_row, p_t_block), axis=1)
         ptrace_subspace = np.concatenate((ptrace_subspace, p_t_row), axis=0)
 

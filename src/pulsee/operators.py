@@ -1,6 +1,6 @@
 import numpy as np
+from qutip import Qobj
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm
 from tqdm import tqdm
 
 
@@ -169,8 +169,8 @@ def random_operator(d):
     with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
-    real_part = round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
-    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
+    real_part = round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
+    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
     random_array = real_part + imaginary_part
     return Qobj(random_array)
 

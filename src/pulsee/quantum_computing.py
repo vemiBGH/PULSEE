@@ -1,5 +1,6 @@
-import numpy as np
 from typing import Iterable
+
+import numpy as np
 from qutip import Qobj
 
 
@@ -348,7 +349,7 @@ class QubitSpace(CompositeQubitSpace):
         """
         if azimuthal is not None and polar is not None:
             matrix = np.cos(polar / 2) * self._base_zero + np.sin(polar / 2) \
-                * np.exp(1j * azimuthal) * self._base_one
+                     * np.exp(1j * azimuthal) * self._base_one
             return QubitState(self, matrix)
 
         elif coeffs is not None:

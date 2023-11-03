@@ -1,12 +1,13 @@
-import numpy as np
-from qutip import Qobj
-import matplotlib.pylab as plt
-from matplotlib.pyplot import xticks, yticks
-from matplotlib.patches import Patch
-from matplotlib import colors as clrs
-from matplotlib import colorbar as clrbar
-
 from fractions import Fraction
+
+import matplotlib.pylab as plt
+import numpy as np
+from matplotlib import colorbar as clrbar
+from matplotlib import colors as clrs
+from matplotlib.patches import Patch
+from matplotlib.pyplot import xticks, yticks
+from qutip import Qobj
+
 
 def plot_power_absorption_spectrum(frequencies, intensities, show=True,
                                    xlim=None, ylim=None, fig_dpi=400, save=False,
@@ -276,7 +277,7 @@ def complex_phase_cmap():
                      (0.50, 0.0, 0.0),
                      (0.75, 0.0, 0.0),
                      (1.00, 1.0, 1.0))}
-    
+
     cmap = clrs.LinearSegmentedColormap('phase_colormap', cdict, 256)
     return cmap
 
@@ -455,7 +456,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
 def plot_real_part_FID_signal(
         times, FID, show=True, fig_dpi=400, save=False,
-        name='FIDSignal', destination='', xlim=None, ylim=None, figure = None):
+        name='FIDSignal', destination='', xlim=None, ylim=None, figure=None):
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -513,15 +514,14 @@ def plot_real_part_FID_signal(
     """
     if figure is None:
         fig, ax = plt.subplots()
-    else: 
+    else:
         fig, ax = figure
-    
+
     ax.plot(times, np.real(FID), label='Real part')
     ax.set_title('FID signal')
     ax.set_xlabel("time (\N{GREEK SMALL LETTER MU}s)")
     ax.set_ylabel("Real(FID) (a.u.)")
 
-    
     if xlim is not None:
         ax.set_xlim(xlim)
     if ylim is not None:
@@ -540,7 +540,7 @@ def plot_real_part_FID_signal(
 def plot_fourier_transform(
         frequencies, fourier, fourier_neg=None, square_modulus=False,
         xlim=None, ylim=None, scaling_factor=None, norm=True, fig_dpi=400,
-        show=True, save=False, name='FTSignal', destination='', figure = None, my_label = ""):
+        show=True, save=False, name='FTSignal', destination='', figure=None, my_label=""):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
@@ -639,7 +639,7 @@ def plot_fourier_transform(
         for i in range(n_plots):
             fourier_data[i] = scaling_factor * fourier_data[i]
     if figure is None:
-        fig , ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace': 0.5})
+        fig, ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace': 0.5})
     else:
         fig = figure[0]
         ax = figure[1]

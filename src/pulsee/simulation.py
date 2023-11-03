@@ -1,54 +1,45 @@
 """ "Main" file of the PULSEE package. """
 
 # Standard library imports
-from multiprocessing import Value
 import sys
 from typing import Callable
-from numpy.typing import NDArray
 
 # Third party imports
 import numpy as np
 import pandas as pd
-from tqdm import tqdm, trange
-from scipy.fft import fft, fftfreq, fftshift
-from qutip import Options, mesolve, Qobj, tensor, expect, qeye, spin_coherent
-from qutip.parallel import parallel_map
+from numpy.typing import NDArray
+from qutip import Options, mesolve, Qobj, tensor, expect, qeye
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
+from qutip.parallel import parallel_map
+from scipy.fft import fft, fftfreq, fftshift
+from tqdm import tqdm, trange
 
+from pulsee.hamiltonians import make_h_unperturbed, h_multiple_mode_pulse, multiply_by_2pi, magnus
+from pulsee.nuclear_spin import NuclearSpin, ManySpins
 # Local imports
 from pulsee.operators import (
-    evolve_by_hamiltonian,
     changed_picture,
     exp_diagonalize,
     apply_exp_op,
     canonical_density_matrix,
 )
-from pulsee.nuclear_spin import NuclearSpin, ManySpins
-from pulsee.hamiltonians import make_h_unperturbed, h_multiple_mode_pulse, multiply_by_2pi, magnus
-from pulsee.plot import (
-    plot_power_absorption_spectrum,
-    plot_real_part_density_matrix,
-    plot_complex_density_matrix,
-    plot_real_part_FID_signal,
-    plot_fourier_transform,
-)
 from pulsee.spin_squeezing import CSS
 
 
 def nuclear_system_setup(
-    spin_par,
-    quad_par=None,
-    zeem_par=None,
-    j_matrix=None,
-    cs_param=None,
-    D1_param=None,
-    D2_param=None,
-    hf_param=None,
-    h_tensor_inter=None,
-    j_sec_param=None,
-    h_userDef=None,
-    initial_state="canonical",
-    temperature=1e-4,
+        spin_par,
+        quad_par=None,
+        zeem_par=None,
+        j_matrix=None,
+        cs_param=None,
+        D1_param=None,
+        D2_param=None,
+        hf_param=None,
+        h_tensor_inter=None,
+        j_sec_param=None,
+        h_userDef=None,
+        initial_state="canonical",
+        temperature=1e-4,
 ):
     """
     Sets up the nuclear system under study, returning the objects representing
@@ -349,7 +340,7 @@ def power_absorption_spectrum(spin, h_unperturbed: list[Qobj], normalized=True, 
     or not taking into account the states' populations, according to the value
     of normalized).
 
-    Returns:
+    Returns
     -------
     [0]: The list of the frequencies of transition between the eigenstates of
          h_unperturbed (in MHz);
@@ -376,7 +367,7 @@ def power_absorption_spectrum(spin, h_unperturbed: list[Qobj], normalized=True, 
             mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I["x"]
             for j in range(i):
                 mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
-            for k in range(spin.n_spins)[i + 1 :]:
+            for k in range(spin.n_spins)[i + 1:]:
                 mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
             magnetic_moment += mm_i
     else:
@@ -402,20 +393,20 @@ def power_absorption_spectrum(spin, h_unperturbed: list[Qobj], normalized=True, 
 
 
 def evolve(
-    spin,
-    h_unperturbed,
-    dm_initial,
-    solver=mesolve,
-    mode=None,
-    evolution_time=0.0,
-    picture="IP",
-    RRF_par=None,
-    times=None,
-    n_points=30,
-    order=None,
-    opts=None,
-    return_allstates=False,
-    display_progress=True,
+        spin,
+        h_unperturbed,
+        dm_initial,
+        solver=mesolve,
+        mode=None,
+        evolution_time=0.0,
+        picture="IP",
+        RRF_par=None,
+        times=None,
+        n_points=30,
+        order=None,
+        opts=None,
+        return_allstates=False,
+        display_progress=True,
 ):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -662,26 +653,26 @@ def RRF_operator(spin, RRF_par):
     # The minus sign is to take care of the `Interaction picture' problem when rotating
     # the system
     RRF_o = -nu * (
-        spin.I["z"] * np.cos(theta)
-        + spin.I["x"] * np.sin(theta) * np.cos(phi)
-        + spin.I["y"] * np.sin(theta) * np.sin(phi)
+            spin.I["z"] * np.cos(theta)
+            + spin.I["x"] * np.sin(theta) * np.cos(phi)
+            + spin.I["y"] * np.sin(theta) * np.sin(phi)
     )
     return Qobj(RRF_o)
 
 
 def FID_signal(
-    spin,
-    h_unperturbed,
-    dm,
-    acquisition_time,
-    T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
-    theta=0,
-    phi=0,
-    ref_freq=0,
-    n_points=1000,
-    pulse_mode=None,
-    opts=None,
-    display_progress=None,
+        spin,
+        h_unperturbed,
+        dm,
+        acquisition_time,
+        T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+        theta=0,
+        phi=0,
+        ref_freq=0,
+        n_points=1000,
+        pulse_mode=None,
+        opts=None,
+        display_progress=None,
 ):
     """
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -845,12 +836,12 @@ def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False,
 
         # zero pad the ends to "interpolate" in frequency domain
         zn = padding  # power of zeros
-        N_z = 2 * (2**zn) + nt  # number of elements in padded array
+        N_z = 2 * (2 ** zn) + nt  # number of elements in padded array
         zero_pad = np.zeros(N_z, dtype=complex)
 
         M0_trunc_z = zero_pad
-        num = 2**zn
-        M0_trunc_z[num : (num + nt)] = signal
+        num = 2 ** zn
+        M0_trunc_z[num: (num + nt)] = signal
 
         # figure out the "frequency axis" after the FFT
         dt = (times[-1] - times[0]) / (len(times) - 1)
@@ -981,16 +972,16 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
 
 def ed_evolve(
-    h,
-    rho0,
-    spin,
-    tlist,
-    e_ops=[],
-    state=True,
-    fid=False,
-    parallel=False,
-    all_t=False,
-    T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+        h,
+        rho0,
+        spin,
+        tlist,
+        e_ops=[],
+        state=True,
+        fid=False,
+        parallel=False,
+        all_t=False,
+        T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
 ):
     """
     Evolve the given density matrix with the interactions given by the provided

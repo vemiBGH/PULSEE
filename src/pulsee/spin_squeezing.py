@@ -1,6 +1,5 @@
-import numpy as np
-
 import matplotlib.pyplot as plt
+import numpy as np
 from qutip import Qobj, tensor, spin_coherent
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
@@ -163,13 +162,13 @@ def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_spher=False):
     Jn_3 = Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
 
     A = (1 / 2) * (np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2) - (1 + np.cos(th) ** 2) * (
-        Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) +
-        np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
+            Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) +
+                   np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
 
     C = I * (I + 1) - Jz2 - Jp2.imag * np.sin(2 * phi) - Jp2.real * np.cos(2 * phi) - A
 
     B = np.cos(th) * (Jp2.real * np.sin(2 * phi) - Jp2.imag * np.cos(2 * phi)) + np.sin(th) * (
-        -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
+            -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
 
     if xi_sq:
         xi = (C - np.sqrt(A ** 2 + B ** 2)) / I
