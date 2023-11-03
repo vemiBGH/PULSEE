@@ -1,43 +1,55 @@
-# "Main" file of the PULSEE package.
+""" "Main" file of the PULSEE package. """
+
+# Standard library imports
+from multiprocessing import Value
+import sys
+from typing import Callable
+from numpy.typing import NDArray
 
 # Third party imports
 import numpy as np
 import pandas as pd
-import sys
 from tqdm import tqdm, trange
 from scipy.fft import fft, fftfreq, fftshift
-
 from qutip import Options, mesolve, Qobj, tensor, expect, qeye, spin_coherent
 from qutip.parallel import parallel_map
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 
-# Local file imports
-from pulsee.operators import canonical_density_matrix, \
-                             evolve_by_hamiltonian, \
-                             changed_picture, exp_diagonalize, \
-                             apply_exp_op
+# Local imports
+from pulsee.operators import (
+    evolve_by_hamiltonian,
+    changed_picture,
+    exp_diagonalize,
+    apply_exp_op,
+    canonical_density_matrix,
+)
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
-from pulsee.hamiltonians import h_zeeman, h_quadrupole, \
-                                h_multiple_mode_pulse, \
-                                h_j_coupling, \
-                                h_CS_isotropic, h_D1, h_D2, \
-                                h_HF_secular, h_j_secular, h_tensor_coupling, \
-                                h_userDefined, multiply_by_2pi, \
-                                magnus
+from pulsee.hamiltonians import make_h_unperturbed, h_multiple_mode_pulse, multiply_by_2pi, magnus
+from pulsee.plot import (
+    plot_power_absorption_spectrum,
+    plot_real_part_density_matrix,
+    plot_complex_density_matrix,
+    plot_real_part_FID_signal,
+    plot_fourier_transform,
+)
 from pulsee.spin_squeezing import CSS
-from pulsee.plot import plot_power_absorption_spectrum, \
-                        plot_real_part_density_matrix, \
-                        plot_complex_density_matrix, \
-                        plot_real_part_FID_signal, \
-                        plot_fourier_transform
-                        
-                        
 
-def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
-                         cs_param=None, D1_param=None, D2_param=None,
-                         hf_param=None, h_tensor_inter=None, j_sec_param=None,
-                         h_userDef=None, initial_state='canonical',
-                         temperature=1e-4):
+
+def nuclear_system_setup(
+    spin_par,
+    quad_par=None,
+    zeem_par=None,
+    j_matrix=None,
+    cs_param=None,
+    D1_param=None,
+    D2_param=None,
+    hf_param=None,
+    h_tensor_inter=None,
+    j_sec_param=None,
+    h_userDef=None,
+    initial_state="canonical",
+    temperature=1e-4,
+):
     """
     Sets up the nuclear system under study, returning the objects representing
     the spin (either a single one or a multiple spins' system), the unperturbed
@@ -110,7 +122,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         in the docstrings of the function h_j_coupling in the module
         Hamiltonians.py.
 
-        When it is None, the J-coupling effects are not taken into account.      
+        When it is None, the J-coupling effects are not taken into account.
         Default value is None.
 
     cs_param : dict
@@ -123,7 +135,7 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
 
         where delta_iso is the magnitude of the chemical shift in Hz.
 
-        When it is None, the chemical shift is not taken into account.      
+        When it is None, the chemical shift is not taken into account.
         Default value is None.
 
     D1_param : dict
@@ -136,12 +148,12 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         |        'b_d'        |       float      |
         |       'theta'       |       float      |
 
-        where b_d is the magnitude of dipolar constant,  b_D\equiv
-        \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle
-        between the two spins (expressed in radians).
+        where b_d is the magnitude of dipolar constant,
+        `b_D\\equiv \\frac{\\mu_0\\gamma_1\\gamma_2}{4\\pi r^3_{21}}`, and 
+        theta is the polar angle between the two spins (expressed in radians).
 
         When it is None, the dipolar interaction in the secular approximation
-        for homonuclear & heteronuclear spins is not taken into account. 
+        for homonuclear & heteronuclear spins is not taken into account.
         Default value is None.
 
     D2_param : dict
@@ -154,12 +166,12 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         |        'b_d'        |       float      |
         |       'theta'       |       float      |
 
-        where b_d is the magnitude of dipolar constant,  b_D\equiv
-        \frac{\mu_0\gamma_1\gamma_2}{4\pi r^3_{21}}, and theta is the polar angle
-        between the two spins (expressed in radians).
+        where b_d is the magnitude of dipolar constant,
+        `b_D\\equiv \\rac{\\mu_0\\gamma_1\\gamma_2}{4\\pi r^3_{21}}`, and
+        theta is the polar angle between the two spins (expressed in radians).
 
         When it is None, the dipolar interaction in the secular approximation
-        for heteronuclear spins is not taken into account. 
+        for heteronuclear spins is not taken into account.
         Default value is None.
 
     hf_param : dict
@@ -173,17 +185,16 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         |         'B'         |       float      |
 
         where A, B are constant of the hyperfine interaction inthe secular
-        approximation, see paper. 
+        approximation, see paper.
 
         When it is None, the hyperfine interaction in the secular approximation
         between two spins is not taken into account.      Default value is None.
 
     h_tensor_inter : numpy.ndarray  or a list of numpy.ndarrays
-        Rank-2 tensor describing a two-spin interaction of the form 
-        $\mathbf{I}_1 J \mathbf{I}_2$ where $J$ is the tensor and $\mathbf{I}_i$
-        are vector spin operators.
+        Rank-2 tensor describing a two-spin interaction of the form
+        $I_1 J I_2$ where $J$ is the tensor and $I_i$ are vector spin operators.
 
-        When it is None, the interaction is not taken into account. 
+        When it is None, the interaction is not taken into account.
         Default value is None.
 
     j_sec_param : dict
@@ -241,108 +252,37 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
     """
 
     if not isinstance(spin_par, list):
+        assert isinstance(spin_par, dict), ""
         spin_par = [spin_par]
-    if quad_par is not None and not isinstance(quad_par, list):
+    if (quad_par is not None) and (not isinstance(quad_par, list)):
         quad_par = [quad_par]
-
-    if quad_par is not None and len(spin_par) != len(quad_par):
-        raise IndexError("The number of passed sets of spin parameters must be" +
-                         " equal to the number of the quadrupolar ones.")
+    if (quad_par is not None) and (len(spin_par) != len(quad_par)):
+        raise IndexError(
+            "The number of passed sets of spin parameters must be" + " equal to the number of the quadrupolar ones."
+        )
 
     spins = []
-    h_q = []
-    h_z = []
-
     for i in range(len(spin_par)):
-        spins.append(NuclearSpin(spin_par[i]['quantum number'],
-                                 spin_par[i]['gamma/2pi']))
-
-        if quad_par is not None:
-            h_q.append(h_quadrupole(spins[i], quad_par[i]['coupling constant'],
-                                    quad_par[i]['asymmetry parameter'],
-                                    quad_par[i]['alpha_q'],
-                                    quad_par[i]['beta_q'],
-                                    quad_par[i]['gamma_q'],
-                                    quad_par[i]['order']))
-        else:
-            h_q.append(h_quadrupole(spins[i], 0., 0., 0., 0., 0.))
-
-        if zeem_par is not None:
-            h_z.append(h_zeeman(spins[i], zeem_par['theta_z'],
-                                zeem_par['phi_z'], zeem_par['field magnitude']))
-        else:
-            h_z.append(h_zeeman(spins[i], 0., 0., 0.))
-
-        if (cs_param is not None) and (cs_param != 0.0):
-            h_z.append(h_CS_isotropic(spins[i], cs_param['delta_iso'], 
-                                      zeem_par['field magnitude']))
-
+        spins.append(NuclearSpin(spin_par[i]["quantum number"], spin_par[i]["gamma/2pi"]))
     spin_system = ManySpins(spins)
-    h_unperturbed = []
 
-    for i in range(spin_system.n_spins):
-        h_i = h_q[i] + h_z[i]
-        for j in range(i):
-            h_i = tensor(qeye(spin_system.spin[j].d), h_i)
-        for k in range(spin_system.n_spins)[i + 1:]:
-            h_i = tensor(h_i, qeye(spin_system.spin[k].d))
-        h_unperturbed = h_unperturbed + [Qobj(h_i)]
+    # Very ugly to have this many arguments, so might make a "InitialParams" class
+    h_unperturbed = make_h_unperturbed(
+        spin_system,
+        spin_par,
+        quad_par,
+        zeem_par,
+        cs_param,
+        j_matrix,
+        D1_param,
+        D2_param,
+        hf_param,
+        h_tensor_inter,
+        j_sec_param,
+        h_userDef,
+    )
 
-    if j_matrix is not None:
-        h_j = h_j_coupling(spin_system, j_matrix)
-        h_unperturbed = h_unperturbed + [Qobj(h_j)]
-
-    if D1_param is not None:
-        if (D1_param['b_D'] == 0.) and (D1_param['theta'] == 0.):
-            pass
-        else:
-            h_d1 = h_D1(spin_system, D1_param['b_D'],
-                        D1_param['theta'])
-            h_unperturbed = h_unperturbed + [Qobj(h_d1)]
-
-    if D2_param is not None:
-        if (D2_param['b_D'] == 0.) and (D2_param['theta'] == 0.):
-            pass
-        else:
-            h_d2 = h_D2(spin_system, D2_param['b_D'], D2_param['theta'])
-            h_unperturbed = h_unperturbed + [Qobj(h_d2)]
-
-    if hf_param is not None:
-        if (hf_param['A'] == 0.) and (hf_param['B'] == 0.):
-            pass
-        else:
-            h_hf = h_HF_secular(spin_system, hf_param['A'],
-                                hf_param['B'])
-            h_unperturbed = h_unperturbed + [Qobj(h_hf)]
-
-    if j_sec_param is not None:
-        if j_sec_param['J'] == 0.0:
-            pass
-        else:
-            h_j = h_j_secular(spin_system, j_sec_param['J'])
-            h_unperturbed = h_unperturbed + [Qobj(h_j)]
-
-    if h_tensor_inter is not None:
-        if type(h_tensor_inter) != list:
-            h_unperturbed += [Qobj(h_tensor_coupling(spin_system, h_tensor_inter))]
-        else:
-            for hyp_ten in h_tensor_inter:
-                h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten))]
-
-    if h_userDef is not None:
-        h_unperturbed += (h_userDefined(h_userDef))
-
-    if isinstance(initial_state, str) and initial_state == 'canonical':
-        dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)), temperature)
-
-    elif 'theta' in np.all(initial_state) and 'phi' in np.all(initial_state):
-        dm_initial = CSS(spin_system, initial_state)
-
-    else:  # initial_state is a np array
-        if isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
-            dm_initial = Qobj(initial_state)
-        else:
-            raise ValueError("Please check the type of the initial state passed.")
+    dm_initial = make_dm_initial(initial_state, spin_system, h_unperturbed, temperature)
 
     if len(spins) == 1:
         return spins[0], h_unperturbed, dm_initial
@@ -350,7 +290,28 @@ def nuclear_system_setup(spin_par, quad_par=None, zeem_par=None, j_matrix=None,
         return spin_system, h_unperturbed, dm_initial
 
 
-def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=None):
+def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Qobj:
+    """
+    Helper for 'nuclear_system_setup' in simulation.py
+    """
+    if isinstance(initial_state, str) and initial_state == "canonical":
+        dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)), temperature)
+
+    elif isinstance(initial_state, dict):
+        dm_initial = CSS(spin_system, [initial_state])
+
+    elif isinstance(initial_state, list) and isinstance(initial_state[0], dict):
+        dm_initial = CSS(spin_system, initial_state)
+
+    elif isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
+        dm_initial = Qobj(initial_state)
+    else:
+        raise ValueError("Please check the type of the initial state passed.")
+
+    return dm_initial
+
+
+def power_absorption_spectrum(spin, h_unperturbed: list[Qobj], normalized=True, dm_initial=None):
     """
     Computes the spectrum of power absorption of the system due to x-polarized
     monochromatic pulses.
@@ -364,10 +325,10 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
         Unperturbed Hamiltonian of the system (in MHz).
 
     normalized : bool
-        Specifies whether the difference between the states' populations are 
-        to be taken into account in the calculation of the line intensities. 
-        When normalized=True, they are not, when normalized=False, 
-        the intensities are weighted by the differences p(b)-p(a) 
+        Specifies whether the difference between the states' populations are
+        to be taken into account in the calculation of the line intensities.
+        When normalized=True, they are not, when normalized=False,
+        the intensities are weighted by the differences p(b)-p(a)
         just like in the formula above.
         Default value is True.
 
@@ -395,28 +356,31 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
 
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
+    if not normalized and dm_initial is None:
+        raise ValueError("argument `dm_initial` cannot be None if `normalized` is set to True!")
     # dims = [s.d for s in spin.spin]
     dims = h_unperturbed[0].dims
     shape = h_unperturbed[0].shape
-    h_unperturbed = Qobj(sum(h_unperturbed), dims=dims)
-    energies, o_change_of_basis = h_unperturbed.eigenstates()
+    h_unperturbed_sum = Qobj(sum(h_unperturbed), dims=dims)
+    energies, o_change_of_basis = h_unperturbed_sum.eigenstates()
     transition_frequency = []
     transition_intensity = []
 
     # assume that this Hamiltonian is a rank-1 tensor
-    d = sum(h_unperturbed.dims[0])
+    d = sum(h_unperturbed_sum.dims[0])
+    print(f"PRINTING OUT DIMS[0]: {h_unperturbed_sum.dims[0]}")
     # Operator of the magnetic moment of the spin system
     if isinstance(spin, ManySpins):
         magnetic_moment = Qobj(np.zeros(shape), dims=dims)
         for i in range(spin.n_spins):
-            mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I['x']
+            mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I["x"]
             for j in range(i):
                 mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
-            for k in range(spin.n_spins)[i + 1:]:
+            for k in range(spin.n_spins)[i + 1 :]:
                 mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
             magnetic_moment += mm_i
     else:
-        magnetic_moment = spin.gyro_ratio_over_2pi * spin.I['x']
+        magnetic_moment = spin.gyro_ratio_over_2pi * spin.I["x"]
 
     mm_in_basis_of_eigenstates = magnetic_moment.transform(o_change_of_basis)
 
@@ -427,6 +391,7 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
                 transition_frequency.append(nu)
                 intensity_nu = nu * np.absolute(mm_in_basis_of_eigenstates[j, i]) ** 2
                 if not normalized:
+                    assert isinstance(dm_initial, Qobj), "`dm_initial` must have type Qobj!"
                     p_i = dm_initial[i, i]
                     p_j = dm_initial[j, j]
                     intensity_nu = np.absolute(p_i - p_j) * intensity_nu
@@ -436,10 +401,22 @@ def power_absorption_spectrum(spin, h_unperturbed, normalized=True, dm_initial=N
     return transition_frequency, transition_intensity
 
 
-def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
-           evolution_time=0., picture='IP', RRF_par=None,
-           times=None, n_points=30, order=None, opts=None,
-           return_allstates=False, display_progress=True):
+def evolve(
+    spin,
+    h_unperturbed,
+    dm_initial,
+    solver=mesolve,
+    mode=None,
+    evolution_time=0.0,
+    picture="IP",
+    RRF_par=None,
+    times=None,
+    n_points=30,
+    order=None,
+    opts=None,
+    return_allstates=False,
+    display_progress=True,
+):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
     action of an electromagnetic pulse in a NMR/NQR experiment.
@@ -453,11 +430,11 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         Hamiltonian of the nucleus at equilibrium (in MHz).
 
     dm_initial : Qobj
-        Density matrix of the system at time t=0, just before the application 
+        Density matrix of the system at time t=0, just before the application
         of the pulse.
 
     solver : function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
-             OR 
+             OR
              string
         Solution method to be used when calculating time evolution of
         state. If string, must be either `mesolve` or `magnus.`
@@ -529,7 +506,7 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
         Default value is 10.
 
     order : float
-        The order of the simulation method to use. For `magnus` must be <= 3. 
+        The order of the simulation method to use. For `magnus` must be <= 3.
         Defaults to 1 for `magnus` and 12 for `mesolve` and any other solver.
 
     return_allstates : boolean
@@ -545,12 +522,12 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     ------
     If
     - evolution_time=0 AND mode=None, or
-    - dm_initial is very close to the identity 
+    - dm_initial is very close to the identity
       (with an error margin of 1e-10 for each element)
 
         the function returns dm_initial without performing any evolution.
 
-    Otherwise, 
+    Otherwise,
     evolution is carried out in the picture determined by the
     same-named parameter. The evolution operator is built up appealing to the
     Magnus expansion of the full Hamiltonian of the system (truncated to the
@@ -567,30 +544,30 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     -------
     The Qobj  representing the state of the system (in the
     Schroedinger picture) evolved through a time pulse_time under the action of
-    the specified pulse.  
+    the specified pulse.
     """
     dims = spin.dims
 
     if mode is None:
-        mode = pd.DataFrame([(0., 0., 0., 0., 0., 0.)],
-                            columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p', 'pulse_time'])
-    if np.min(mode['pulse_time']) < 0:
-        raise ValueError(
-            'Pulse duration must be a non-negative number. Given:' + str(np.min(mode['pulse_time'])))
+        mode = pd.DataFrame(
+            [(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)],
+            columns=["frequency", "amplitude", "phase", "theta_p", "phi_p", "pulse_time"],
+        )
+    if np.min(mode["pulse_time"]) < 0:
+        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode["pulse_time"])))
 
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
     if spin.gyro_ratio_over_2pi > 0:
         mode = mode.copy()  # in case the user wants to use same 'mode' variable for later uses.
-        mode.loc[:, 'phase'] = mode.loc[:, 'phase'].add(np.pi)
+        mode.loc[:, "phase"] = mode.loc[:, "phase"].add(np.pi)
 
-    pulse_time = max(np.max(mode['pulse_time']), evolution_time)
-    if (pulse_time == 0.) or \
-            np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
+    pulse_time = max(np.max(mode["pulse_time"]), evolution_time)
+    if (pulse_time == 0.0) or np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
         return dm_initial
 
-    if order is None and (solver == magnus or solver == 'magnus'):
+    if order is None and (solver == magnus or solver == "magnus"):
         order = 1
 
     # match tolerance to operators.positivity tolerance.
@@ -600,25 +577,21 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     if times is None:
         times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
 
-    if solver == magnus or solver == 'magnus':
-        if picture == 'IP':
+    if solver == magnus or solver == "magnus":
+        if picture == "IP":
             o_change_of_picture = Qobj(sum(h_unperturbed), dims=dims)
-        elif picture == 'RRF':
+        elif picture == "RRF":
             if RRF_par is None:
-                RRF_par = {'nu_RRF': 0, 'theta_RRF': 0, 'phi_RRF': 0}
+                RRF_par = {"nu_RRF": 0, "theta_RRF": 0, "phi_RRF": 0}
             o_change_of_picture = RRF_operator(spin, RRF_par)
         else:
-            raise ValueError("This value of argument 'picture' is not supported."
-                             "Must be either 'IF' or 'RRF'.")
+            raise ValueError("This value of argument 'picture' is not supported." "Must be either 'IF' or 'RRF'.")
         h_total = Qobj(sum(h_unperturbed), dims=dims)
-        result = magnus(h_total, Qobj(dm_initial), times,
-                        order, spin, mode, o_change_of_picture)
+        result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         if return_allstates:
-            raise NotImplementedError('Return all states not implemented with Magnus. '
-                                      'Use mesolve instead.')
+            raise NotImplementedError("Return all states not implemented with Magnus. " "Use mesolve instead.")
         else:
-            dm_evolved = changed_picture(
-                result.states[-1], o_change_of_picture, pulse_time, invert=True)
+            dm_evolved = changed_picture(result.states[-1], o_change_of_picture, pulse_time, invert=True)
             # TODO: Problem of the conj
             # return dm_evolved.conj()
         return dm_evolved
@@ -631,20 +604,19 @@ def evolve(spin, h_unperturbed, dm_initial, solver=mesolve, mode=None,
     # (refer to QuTiP's mesolve documentation for further detail)
     h_unscaled = h_unperturbed + h_perturbation
 
-    if solver == mesolve or solver == 'mesolve':
+    if solver == mesolve or solver == "mesolve":
         # Magnus expansion solver includes 2 pi factor in exponentiations;
         # scale Hamiltonians by this factor for `mesolve` for consistency.
         h_scaled = multiply_by_2pi(h_unscaled)
-        result = mesolve(h_scaled, Qobj(dm_initial), times,
-                         options=opts, progress_bar=display_progress)
-        
+        result = mesolve(h_scaled, Qobj(dm_initial), times, options=opts, progress_bar=display_progress)
+
         if return_allstates:
             return result.states
         # return last time step of density matrix evolution.
         return result.states[-1]
 
     elif isinstance(solver, str):
-        raise ValueError(f'Invalid solver: {solver}')
+        raise ValueError(f"Invalid solver: {solver}")
 
     else:
         result = solver(h_unscaled, Qobj(dm_initial), times, options=opts)
@@ -663,7 +635,7 @@ def RRF_operator(spin, RRF_par):
     ----------
     spin : NuclearSpin
         Spin under study.
-            
+
     RRF_par : dict
         Specifies the properties of the rotating reference frame. The
         keys and values required to this argument are shown in the table
@@ -674,31 +646,44 @@ def RRF_operator(spin, RRF_par):
         |    'nu_RRF'   |  float  |
         |  'theta_RRF'  |  float  |
         |   'phi_RRF'   |  float  |
-        
+
         where 'nu_RRF' is the frequency of rotation of the RRF (in MHz), while
         'theta_RRF' and 'phi_RRF' are the polar and azimuthal angles of the normal
         to the plane of rotation in the LAB frame (in radians).
 
     Returns
     -------
-    An Observable object representing the operator which generates the change 
+    An Observable object representing the operator which generates the change
     to the RRF picture.
     """
-    nu = RRF_par['nu_RRF']
-    theta = RRF_par['theta_RRF']
-    phi = RRF_par['phi_RRF']
+    nu = RRF_par["nu_RRF"]
+    theta = RRF_par["theta_RRF"]
+    phi = RRF_par["phi_RRF"]
     # The minus sign is to take care of the `Interaction picture' problem when rotating
     # the system
-    RRF_o = -nu * (spin.I['z'] * np.cos(theta) +
-                   spin.I['x'] * np.sin(theta) * np.cos(phi) +
-                   spin.I['y'] * np.sin(theta) * np.sin(phi))
+    RRF_o = -nu * (
+        spin.I["z"] * np.cos(theta)
+        + spin.I["x"] * np.sin(theta) * np.cos(phi)
+        + spin.I["y"] * np.sin(theta) * np.sin(phi)
+    )
     return Qobj(RRF_o)
 
 
-def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
-               phi=0, ref_freq=0, n_points=1000, pulse_mode=None,
-               opts=None, display_progress=None):
-    """ 
+def FID_signal(
+    spin,
+    h_unperturbed,
+    dm,
+    acquisition_time,
+    T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+    theta=0,
+    phi=0,
+    ref_freq=0,
+    n_points=1000,
+    pulse_mode=None,
+    opts=None,
+    display_progress=None,
+):
+    """
     Simulates the free induction decay signal (FID) measured after the shut-off
     of the electromagnetic pulse, once the evolved density matrix of the system,
     the time interval of acquisition, the relaxation time T2 and the direction
@@ -722,13 +707,13 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         microseconds.
 
     T2 : float, or
-         iterable[float], or 
+         iterable[float], or
          function with signature (float) -> float, or
          iterable[function with signature (float) -> float]
 
         If float, characteristic time of relaxation of the component of the
         magnetization on the plane of detection vanishing, i.e., T2.
-        If function, the decay envelope. 
+        If function, the decay envelope.
         If iterable, total decay envelope will be product of decays in list.
 
         In units of microseconds. Default value is 100 (microseconds).
@@ -750,13 +735,13 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     pulse_mode : pandas.DataFrame
         The user can decide to apply a pulse during the measurement of the FID.
         Although unusual, this is necessary for axion simulations.
-        Refer to the argument 'mode' in the function evolve() for details about 
+        Refer to the argument 'mode' in the function evolve() for details about
         this pulse_mode argument.
 
     display_progress: bool
         True will display a progress bar for the mesolve function.
         False will not display a progress bar.
-        
+
     Action
     ------
     Samples the time interval [0, acquisition_time] with n_points points per
@@ -777,21 +762,23 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
         (in arbitrary units). This is the expectation value of the spin in the
         direction defined by the angles (theta, phi) in the input.
     """
-
     times = np.linspace(start=0, stop=acquisition_time, num=n_points)
+    decay_functions: list[Callable] = []
 
-    decay_functions = []
-    try:
+    if isinstance(T2, (float, int)):
+        decay_functions.append(lambda t: np.exp(-t / T2))
+    elif callable(T2):
+        decay_functions.append(T2)
+    elif isinstance(T2, list):
         for d in T2:
-            if not callable(d):  # T2 is a list of floats
+            if isinstance(d, (float, int)):
                 decay_functions.append(lambda t: np.exp(-t / d))
-            else:  # T2 is a list of functions given by the user
+            elif callable(d):
                 decay_functions.append(d)
-    except TypeError:
-        if not callable(T2):  # T2 is a float
-            decay_functions.append(lambda t: np.exp(-t / T2))
-        else:  # T2 is a function given by user
-            decay_functions.append(T2)
+            else:
+                raise ValueError("T2 is a list of an incorrect type!")
+    else:
+        raise ValueError("T2 doesn't have the correct type!")
 
     decay_array = []
     for decay_fun in decay_functions:
@@ -801,14 +788,13 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     decay_t = np.prod(np.array(decay_array), axis=0)
 
     # Define the direction of measurement
-    Ix, Iy, Iz = spin.I['x'], spin.I['y'], spin.I['z']
+    Ix, Iy, Iz = spin.I["x"], spin.I["y"], spin.I["z"]
     rot_y, rot_z = (-1j * theta * Iy), (-1j * phi * Iz)
     Ix_rotated = apply_exp_op(apply_exp_op(Ix, rot_y), rot_z)
 
     if pulse_mode is not None:
         # copying the method from function 'evolve()' above
-        h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0,
-                                               factor_t_dependence=True)
+        h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0, factor_t_dependence=True)
         hamiltonian = h_unperturbed + h_perturbation
     else:
         hamiltonian = h_unperturbed
@@ -821,19 +807,19 @@ def FID_signal(spin, h_unperturbed, dm, acquisition_time, T2=100, theta=0,
     if not display_progress:
         display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
 
-    result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated],
-                     progress_bar=display_progress, options=opts)
+    result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated], progress_bar=display_progress, options=opts)
 
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
     if np.max(fid) < 0.09:
         import warnings
-        warnings.warn('Unreliable FID: Weak signal, check simulation!', stacklevel=0)
+
+        warnings.warn("Unreliable FID: Weak signal, check simulation!", stacklevel=0)
 
     return result.times, fid
 
 
-def fourier_transform_signal(signal, times, abs=False, padding=None):
+def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False, padding: int | None = None):
     """
     Computes the Fourier transform of the passed time-dependent signal using
     the scipy library.
@@ -844,8 +830,8 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
         Sampled signal to be transformed in the frequency domain (in a.u.).
     times : array-like
         Sampled time domain (in microseconds).
-    abs : Boolean 
-        Whether to return the absolute value of the computer Fourier transform. 
+    abs : Boolean
+        Whether to return the absolute value of the computer Fourier transform.
     padding : Integer
         Amount of zero-padding to add to signal in the power of zeroes.
 
@@ -859,15 +845,15 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
 
         # zero pad the ends to "interpolate" in frequency domain
         zn = padding  # power of zeros
-        N_z = 2 * (2 ** zn) + nt  # number of elements in padded array
+        N_z = 2 * (2**zn) + nt  # number of elements in padded array
         zero_pad = np.zeros(N_z, dtype=complex)
 
         M0_trunc_z = zero_pad
-        num = 2 ** zn
-        M0_trunc_z[num:(num + nt)] = signal
+        num = 2**zn
+        M0_trunc_z[num : (num + nt)] = signal
 
         # figure out the "frequency axis" after the FFT
-        dt = times[2] - times[1]
+        dt = (times[-1] - times[0]) / (len(times) - 1)
         Fs = 1.0 / dt  # max frequency sampling
 
         # axis goes from - Fs / 2 to Fs / 2, with N_z steps
@@ -887,7 +873,7 @@ def fourier_transform_signal(signal, times, abs=False, padding=None):
 
 # Finds out the phase responsible for the displacement of the real and imaginary parts of the Fourier
 # spectrum of the FID with respect to the ideal absorptive/dispersive lorentzian shapes
-def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=.5):
+def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=0.5):
     """
     Computes the phase factor which must multiply the Fourier spectrum
     (`fourier`) in order to have the real and imaginary part of the adjusted
@@ -897,16 +883,16 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
     Parameters
     ----------
     frequencies : array-like
-        Sampled values of frequency (in MHz). 
+        Sampled values of frequency (in MHz).
 
     fourier : array-like
         Values of the Fourier transform of the signal (in a.u.) sampled
         at the frequencies passed as the first argument.
 
     fourier_neg : array-like
-        Values of the Fourier transform of the signal (in a.u.) sampled at 
-        the opposite of the frequencies passed as the first argument. 
-        When fourier_neg is passed, it is possible to specify a peak_frequency 
+        Values of the Fourier transform of the signal (in a.u.) sampled at
+        the opposite of the frequencies passed as the first argument.
+        When fourier_neg is passed, it is possible to specify a peak_frequency
         located in the range frequencies changed by sign.
         Default value is None.
 
@@ -915,12 +901,12 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         Default value is 0.
 
     int_domain_width : float
-        Width of the domain (centered at peak_frequency) where the 
+        Width of the domain (centered at peak_frequency) where the
         real and imaginary parts of the Fourier spectrum will be integrated.
         Default value is .5.
 
     Action
-    ------  
+    ------
     The function integrates both the real and the imaginary parts of the
     spectrum over an interval of frequencies centered at peak_frequency whose
     width is given by int_domain_width. Then, it computes the phase shift.
@@ -934,8 +920,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         fourier = np.concatenate((fourier, fourier_neg))
         frequencies = np.concatenate((frequencies, -frequencies))
 
-    integration_domain = np.nonzero(np.isclose(
-        frequencies, peak_frequency, atol=int_domain_width / 2))[0]
+    integration_domain = np.nonzero(np.isclose(frequencies, peak_frequency, atol=int_domain_width / 2))[0]
 
     int_real_fourier = 0
     int_imag_fourier = 0
@@ -950,7 +935,7 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
         else:
             return np.pi
 
-    atan = np.arctan(- int_imag_fourier / int_real_fourier)
+    atan = np.arctan(-int_imag_fourier / int_real_fourier)
 
     if int_real_fourier > 0:
         phase = atan + np.pi / 2
@@ -962,8 +947,8 @@ def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0
 
 def _ed_evolve_solve_t(t, h, rho0, e_ops):
     """
-    Helper function for `ed_evolve`; uses exact diagonalization to evolve 
-    the given initial state rho0 by a time `t`. 
+    Helper function for `ed_evolve`; uses exact diagonalization to evolve
+    the given initial state rho0 by a time `t`.
 
     Params
     ------
@@ -972,15 +957,15 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     h : Qobj or List[Qobj]:
         The Hamiltonian describing the system in MHz.
     rho0 : Qobj
-        The initial state of the system as a density matrix. 
+        The initial state of the system as a density matrix.
     e_ops : List[Qobj]:
-        List of operators for which to return the expectation values. 
+        List of operators for which to return the expectation values.
 
     Returns
     ------
     The evolved density matrix at the time specified by `t,' and the expectation
     values of each operartor in `e_ops` at `t`. The latter is in the format
-    [e_op1[t], e_op2[t], ..., e_opn[t]]. 
+    [e_op1[t], e_op2[t], ..., e_opn[t]].
     """
     u1, d1, d1exp = exp_diagonalize(1j * 2 * np.pi * h * t)
     u2, d2, d2exp = exp_diagonalize(-1j * 2 * np.pi * h * t)
@@ -995,10 +980,20 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     return rho_t, exp
 
 
-def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=False,
-              all_t=False, T2=100):
+def ed_evolve(
+    h,
+    rho0,
+    spin,
+    tlist,
+    e_ops=[],
+    state=True,
+    fid=False,
+    parallel=False,
+    all_t=False,
+    T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+):
     """
-    Evolve the given density matrix with the interactions given by the provided 
+    Evolve the given density matrix with the interactions given by the provided
     Hamiltonian using exact diagonalization.
 
     ipyparallel must be present for Jupyter notebooks.
@@ -1008,27 +1003,27 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     h : Qobj or List[Qobj]:
         The Hamiltonian describing the system in MHz.
     rho0 : Qobj
-        The initial state of the system as a density matrix. 
+        The initial state of the system as a density matrix.
     spin : NuclearSpin
-        The NuclearSpin object representing the system under study. 
+        The NuclearSpin object representing the system under study.
     tlist : List[float]
-        List of times at which the system will be evolved. 
+        List of times at which the system will be evolved.
     e_ops : List[Qobj]:
-        List of operators for which to return the expectation values. 
-    state : Boolean 
+        List of operators for which to return the expectation values.
+    state : Boolean
         Whether to return the density matrix at all. Default `True`.
     fid : Boolean
-        Whether to return the free induction decay (FID) signal as 
-        an expectation value. If True, appends FID signal to the end of 
-        the `e_ops` expectation value list. 
+        Whether to return the free induction decay (FID) signal as
+        an expectation value. If True, appends FID signal to the end of
+        the `e_ops` expectation value list.
     par : Boolean
-        Whether to use QuTiP's parallel computing implementation `parallel_map` 
+        Whether to use QuTiP's parallel computing implementation `parallel_map`
         to evolve the system.
-    all_t : Boolean 
+    all_t : Boolean
         Whether to return the density matrix and for all times in the
         evolution (as opposed to the last state)
-    T2 : iterable[float or function with signature (float) -> float] or 
-         float or 
+    T2 : iterable[float or function with signature (float) -> float] or
+         float or
          function with signature (float) -> float
 
         If float, characteristic time of relaxation of the component of the
@@ -1036,7 +1031,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
         measured in
         microseconds.
 
-        If function, the decay envelope. 
+        If function, the decay envelope.
 
         If iterable, total decay envelope will be product of decays in list.
 
@@ -1045,33 +1040,38 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     Returns
     ------
     [0]: The density matrix at time `tlist[-1]` OR the evolved density matrix
-        at times specified by `tlist`. 
+        at times specified by `tlist`.
 
     [1]: the expectation values of each operator in `e_ops` at the times in
-        `tlist`. The latter is in the format `[[e_op1[t1], e_op1[t2], ...] , 
-        [e_op2[t1], e_op2[t2]], ..., [e_opn[t1], e_opn[t2], ...]]`. 
+        `tlist`. The latter is in the format `[[e_op1[t1], e_op1[t2], ...] ,
+        [e_op2[t1], e_op2[t2]], ..., [e_opn[t1], e_opn[t2], ...]]`.
 
-    OR 
+    OR
 
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
     if type(h) is not Qobj and type(h) is list:
         h = Qobj(sum(h), dims=h[0].dims)
     if fid:
-        e_ops.append(Qobj(np.array(spin.I['+']), dims=h.dims))
+        e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
 
-    decay_envelopes = []
-    try:
+    decay_functions: list[Callable] = []
+
+    if isinstance(T2, (float, int)):
+        decay_functions.append(lambda t: np.exp(-t / T2))
+        print(f"T2 IS A INT/FLOAT")
+    elif callable(T2):
+        decay_functions.append(T2)
+    elif isinstance(T2, list):
         for d in T2:
-            if not callable(d):  # T2 is a list of floats
-                decay_envelopes.append(lambda t: np.exp(-t / d))
-            else:  # T2 is a list of functions
-                decay_envelopes.append(d)
-    except TypeError:
-        if not callable(T2):  # T2 is a float
-            decay_envelopes.append(lambda t: np.exp(-t / T2))
-        else:  # T2 is a function given by user
-            decay_envelopes.append(T2)
+            if isinstance(d, (float, int)):
+                decay_functions.append(lambda t: np.exp(-t / d))
+            elif callable(d):
+                decay_functions.append(d)
+            else:
+                raise ValueError("T2 is a list of an incorrect type!")
+    else:
+        raise ValueError("T2 doesn't have the correct type!")
 
     rho_t = []
     e_ops_t = []
@@ -1079,18 +1079,17 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
     if parallel:
         # Check if Jupyter notebook to use QuTiP's Jupyter-optimized parallelization
         # Better method than calling 'get_ipython()' since this requires calling un un-imported function
-        if 'ipykernel' in sys.modules:
+        if "ipykernel" in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t,
-                                         tlist, (h, rho0, e_ops), progress_bar=True)
+                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
             except OSError:
-                raise OSError('Make sure to have a running cluster. ' +
-                              'Try opening a new cmd and running ipcluster start.')
+                raise OSError(
+                    "Make sure to have a running cluster. " + "Try opening a new cmd and running ipcluster start."
+                )
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist,
-                               (h, rho0, e_ops), progress_bar=True)
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
 
         for r, e in res:
             rho_t.append(r)
@@ -1116,7 +1115,7 @@ def ed_evolve(h, rho0, spin, tlist, e_ops=[], state=True, fid=False, parallel=Fa
         for i in trange(len(fids)):
             # Obtain total decay envelope at that time.
             envelope = 1
-            for decay in decay_envelopes:
+            for decay in decay_functions:
                 # Different name to avoid bizarre variable scope bug
                 envelope *= decay(tlist[i])
                 # (can't have same name as iteration var in line 1117.)

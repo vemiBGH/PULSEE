@@ -99,8 +99,7 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q, component_order=0):
         return Qobj(spin.d) * 0
     I = spin.quantum_number
     h_q = (e2qQ / (I * (2 * I - 1))) * \
-          ((1 / 2) * (3 * (spin.I['z'] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q,
-                                                                                    gamma_q))
+          ((1 / 2) * (3 * (spin.I['z'] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q))
     if component_order > 0:
         h_q += (e2qQ / (I * (2 * I - 1))) * ((np.sqrt(6) / 4) *
                                              ((spin.I['z'] * spin.I['+'] + spin.I['+'] * spin.I['z']) *
@@ -108,10 +107,8 @@ def h_quadrupole(spin, e2qQ, eta, alpha_q, beta_q, gamma_q, component_order=0):
                                               (spin.I['z'] * spin.I['-'] + spin.I['-'] * spin.I['z']) *
                                               v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)))
     if component_order > 1:
-        h_q += (e2qQ / (I * (2 * I - 1))) * ((spin.I['+'] ** 2) *
-                                             v2_EFG(-2, eta, alpha_q, beta_q, gamma_q) +
-                                             (spin.I['-'] ** 2) *
-                                             v2_EFG(2, eta, alpha_q, beta_q, gamma_q))
+        h_q += (e2qQ / (I * (2 * I - 1))) * ((spin.I['+'] ** 2) * v2_EFG(-2, eta, alpha_q, beta_q, gamma_q) +
+                                             (spin.I['-'] ** 2) * v2_EFG(2, eta, alpha_q, beta_q, gamma_q))
     return Qobj(h_q)
 
 
@@ -670,15 +667,13 @@ def h_tensor_coupling(spins, t):
     spin_0_ops = [spins.spin[0].I[key] for key in ['x', 'y', 'z']]
     spin_1_ops = [spins.spin[1].I[key] for key in ['x', 'y', 'z']]
 
-    # Initialize empty operator of appropriate dimension as base case for
-    # for loop.
-    dims = spins.dims
-    h = Qobj(np.zeros((spins.d, spins.d)), dims=dims)
+    # Initialize empty operator of appropriate dimension as base case for the for loop.
+    h = Qobj(np.zeros((spins.d, spins.d)), dims=spins.dims)
 
     for (m, op_1) in enumerate(spin_0_ops):
         for (n, op_2) in enumerate(spin_1_ops):
             h += t[m, n] * tensor(op_1, op_2)
-
+    print(f"THIS IS THE J COUPLING TERM: {h}")
     return h
 
 
@@ -825,3 +820,90 @@ def multiply_by_2pi(h_unscaled):
         else:  # of the form: H0
             h_scaled.append(2 * np.pi * h)   
     return h_scaled 
+
+
+def make_h_unperturbed(spin_system, spin_par, quad_par, zeem_par, cs_param,
+                       j_matrix, D1_param, D2_param, hf_param,
+                       h_tensor_inter, j_sec_param, h_userDef) -> list[Qobj]:
+    '''
+    Helper for 'nuclear_system_setup' in simulation.py
+    '''
+    h_unperturbed = []
+    h_quad = []
+    h_zeem = []
+    spins = spin_system.spin
+    for i in range(len(spin_par)):
+        if quad_par is not None:
+            h_quad.append(h_quadrupole(spins[i], quad_par[i]['coupling constant'],
+                                       quad_par[i]['asymmetry parameter'],
+                                       quad_par[i]['alpha_q'],
+                                       quad_par[i]['beta_q'],
+                                       quad_par[i]['gamma_q'],
+                                       quad_par[i]['order']))
+        else:
+            h_quad.append(h_quadrupole(spins[i], 0., 0., 0., 0., 0.))
+
+        if zeem_par is not None:
+            h_zeem.append(h_zeeman(spins[i], zeem_par['theta_z'],
+                                 zeem_par['phi_z'], zeem_par['field magnitude']))
+        else:
+            h_zeem.append(h_zeeman(spins[i], 0., 0., 0.))
+
+        if (cs_param is not None) and (cs_param != 0.0):
+            h_zeem.append(h_CS_isotropic(spins[i], cs_param['delta_iso'],
+                                         zeem_par['field magnitude']))
+
+    
+    for i in range(spin_system.n_spins):
+        h_i = h_quad[i] + h_zeem[i]
+        for j in range(i):
+            h_i = tensor(qeye(spin_system.spin[j].d), h_i)
+        for k in range(spin_system.n_spins)[i + 1:]:
+            h_i = tensor(h_i, qeye(spin_system.spin[k].d))
+        h_unperturbed = h_unperturbed + [Qobj(h_i)]
+
+    if j_matrix is not None:
+        h_j = h_j_coupling(spin_system, j_matrix)
+        h_unperturbed = h_unperturbed + [Qobj(h_j)]
+
+    if D1_param is not None:
+        if (D1_param['b_D'] == 0.) and (D1_param['theta'] == 0.):
+            pass
+        else:
+            h_d1 = h_D1(spin_system, D1_param['b_D'],
+                        D1_param['theta'])
+            h_unperturbed = h_unperturbed + [Qobj(h_d1)]
+
+    if D2_param is not None:
+        if (D2_param['b_D'] == 0.) and (D2_param['theta'] == 0.):
+            pass
+        else:
+            h_d2 = h_D2(spin_system, D2_param['b_D'], D2_param['theta'])
+            h_unperturbed = h_unperturbed + [Qobj(h_d2)]
+
+    if hf_param is not None:
+        if (hf_param['A'] == 0.) and (hf_param['B'] == 0.):
+            pass
+        else:
+            h_hf = h_HF_secular(spin_system, hf_param['A'],
+                                hf_param['B'])
+            h_unperturbed = h_unperturbed + [Qobj(h_hf)]
+
+    if j_sec_param is not None:
+        if j_sec_param['J'] == 0.0:
+            pass
+        else:
+            h_j = h_j_secular(spin_system, j_sec_param['J'])
+            h_unperturbed = h_unperturbed + [Qobj(h_j)]
+
+    if h_tensor_inter is not None:
+        if type(h_tensor_inter) != list:
+            h_unperturbed += [Qobj(h_tensor_coupling(spin_system, h_tensor_inter))]
+        else:
+            for hyp_ten in h_tensor_inter:
+                h_unperturbed += [Qobj(h_tensor_coupling(spin_system, hyp_ten))]
+
+    if h_userDef is not None:
+        h_unperturbed += (h_userDefined(h_userDef))
+
+    return h_unperturbed
