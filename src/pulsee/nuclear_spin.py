@@ -2,6 +2,7 @@ import numpy as np
 
 from qutip import Qobj, tensor, spin_J_set, qeye
 
+
 class NuclearSpin:
     """
     An instance of the following class is to be thought as an all-round representation of the
@@ -31,6 +32,7 @@ class NuclearSpin:
 
     shape
     """
+
     def __init__(self, s=1, gamma_over_2pi=1):
         """
         Constructs an instance of NuclearSpin.
@@ -71,7 +73,7 @@ class NuclearSpin:
         tolerance of 10^(-10)).
         """
         s = float(s)
-        if not np.isclose(int(2*s), 2*s, rtol=1e-10):
+        if not np.isclose(int(2 * s), 2 * s, rtol=1e-10):
             raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
@@ -108,14 +110,15 @@ class NuclearSpin:
         Returns the Ix, Iy, and Iz operators.
         """
         return self.I['x'], self.I['y'], self.I['z']
-    
-    
+
+
 class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins,
     and its attributes include the individual NuclearSpin objects,
     the dimensions of the full Hilbert space and the components of the overall spin operator.
     """
+
     def __init__(self, spins):
         """
         Constructs an instance of ManySpins.
@@ -138,20 +141,20 @@ class ManySpins(NuclearSpin):
         Returns
         -------
         The initialised ManySpins object.
-        """        
+        """
         self.n_spins = len(spins)
 
         self.spin = spins
-        self.d = np.prod([spin.d for spin in spins]) # multiply all the d's together
-        
+        self.d = np.prod([spin.d for spin in spins])  # multiply all the d's together
+
         self.dims = spins[0].dims
-        
+
         for s in spins[1:]:
             self.dims = np.concatenate([self.dims, s.dims], axis=1)
             # Careful of qutip's convention for `dims`. For example,
             # A tensor product of a 2x2 matrix (dims = [[2],[2]]) with a 3x3 matrix (dims = [[3],[3]])
             # will result in a dims = [[2,3], [2,3]]. 
-            
+
         if not isinstance(self.dims, list):
             self.dims = self.dims.tolist()
 
@@ -168,7 +171,7 @@ class ManySpins(NuclearSpin):
     def __repr__(self):
         return f' shape: {self.shape}, dims: {self.dims}'
 
-    def many_spin_operator(self, component, spin_target: str | int | list[int] ='all'):
+    def many_spin_operator(self, component, spin_target: str | int | list[int] = 'all'):
         """
         Returns the specified spherical or cartesian component of the spin operator of the
         ManySpins system. If spin_target == 'all' it applied the spin component to all the spins;
@@ -226,7 +229,7 @@ class ManySpins(NuclearSpin):
 
             for j in range(self.n_spins)[:i]:
                 term = tensor(qeye(self.spin[j].d), term)
-            for k in range(self.n_spins)[i+1:]:
+            for k in range(self.n_spins)[i + 1:]:
                 term = tensor(term, qeye(self.spin[k].d))
             many_spin_op += Qobj(term.full(), dims=self.dims)
 

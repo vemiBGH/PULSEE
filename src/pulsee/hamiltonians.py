@@ -1,7 +1,7 @@
 import numpy as np
-from tqdm import trange
 from qutip import Qobj, tensor, qeye, commutator
 from qutip.solver import Result
+from tqdm import trange
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 from pulsee.operators import changed_picture, apply_exp_op
@@ -180,11 +180,11 @@ def v2_EFG(sign, eta, alpha_q, beta_q, gamma_q):
         raise ValueError(
             "The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
-    v2 = 1/2 * (np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q) +
-                (eta / np.sqrt(6)) * np.exp(sign * 2j * alpha_q) *
-                (np.exp(2j * gamma_q) * (1 + sign * np.cos(beta_q))**2 / 4 *
-                 np.exp(-2j * gamma_q) * (1 - sign * np.cos(beta_q))**2 / 4))
-    
+    v2 = 1 / 2 * (np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q) +
+                  (eta / np.sqrt(6)) * np.exp(sign * 2j * alpha_q) *
+                  (np.exp(2j * gamma_q) * (1 + sign * np.cos(beta_q)) ** 2 / 4 *
+                   np.exp(-2j * gamma_q) * (1 - sign * np.cos(beta_q)) ** 2 / 4))
+
     return v2
 
 
@@ -205,6 +205,7 @@ def cosine_wrapper(frequency, phase, pulse_time):
     -------
     Function with signature f(t: float, args: iterable) -> float
     """
+
     # The second argument 'args' is added to match qutip's documentation convention
     def time_dependence_function(t, args):
         if t <= pulse_time:
@@ -233,9 +234,9 @@ def pulse_t_independent_op(spin, B_1, theta_1, phi_1):
         the magnetic wave in the LAB frame (expressed in radians);
     """
     return -2 * spin.gyro_ratio_over_2pi * B_1 \
-           * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x']
-              + np.sin(theta_1) * np.sin(phi_1) * spin.I['y']
-              + np.cos(theta_1) * spin.I['z'])
+        * (np.sin(theta_1) * np.cos(phi_1) * spin.I['x']
+           + np.sin(theta_1) * np.sin(phi_1) * spin.I['y']
+           + np.cos(theta_1) * spin.I['z'])
 
 
 def h_single_mode_pulse(spin, frequency, B_1, phase, theta_1, phi_1, t, pulse_time,
@@ -365,7 +366,7 @@ def h_multiple_mode_pulse(spin, mode, t, factor_t_dependence=False):
 
                 # Append total hamiltonian for this mode to mode_hamiltonians
                 mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
-                
+
         elif isinstance(spin, NuclearSpin):
             for i in mode.index:
                 # Ix term
@@ -705,7 +706,7 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
 
     Parameters
     ----------
-    h_total : np.ndarray of Observable
+    h_total : Qobj
         Time-independent Hamiltonian (expressed in MHz). Technically, an array 
         of Observable objects which correspond to the Hamiltonian evaluated at 
         successive instants of time. The start and end points of the array are 
@@ -787,9 +788,9 @@ def magnus(h_total, rho0, tlist, order, spin, mode, o_change_of_picture):
                         factor *= 2
 
                     integral += (factor *
-                                (commutator(h[t], commutator(h[t2], h[t3])) +
-                                 commutator(h[t3], commutator(h[t2], h[t]))) *
-                                ((2 * np.pi * time_step) ** 3) * (-1j / 6))
+                                 (commutator(h[t], commutator(h[t2], h[t3])) +
+                                  commutator(h[t3], commutator(h[t2], h[t]))) *
+                                 ((2 * np.pi * time_step) ** 3) * (-1j / 6))
 
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
     # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()
@@ -818,8 +819,8 @@ def multiply_by_2pi(h_unscaled):
         if isinstance(h, list) or isinstance(h, tuple):  # of the form: (Hm, fm(t))
             h_scaled.append([h[0] * 2 * np.pi, h[1]])
         else:  # of the form: H0
-            h_scaled.append(2 * np.pi * h)   
-    return h_scaled 
+            h_scaled.append(2 * np.pi * h)
+    return h_scaled
 
 
 def make_h_unperturbed(spin_system, spin_par, quad_par, zeem_par, cs_param,
@@ -845,7 +846,7 @@ def make_h_unperturbed(spin_system, spin_par, quad_par, zeem_par, cs_param,
 
         if zeem_par is not None:
             h_zeem.append(h_zeeman(spins[i], zeem_par['theta_z'],
-                                 zeem_par['phi_z'], zeem_par['field magnitude']))
+                                   zeem_par['phi_z'], zeem_par['field magnitude']))
         else:
             h_zeem.append(h_zeeman(spins[i], 0., 0., 0.))
 
@@ -853,7 +854,6 @@ def make_h_unperturbed(spin_system, spin_par, quad_par, zeem_par, cs_param,
             h_zeem.append(h_CS_isotropic(spins[i], cs_param['delta_iso'],
                                          zeem_par['field magnitude']))
 
-    
     for i in range(spin_system.n_spins):
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
