@@ -555,7 +555,7 @@ def evolve(
         mode.loc[:, "phase"] = mode.loc[:, "phase"].add(np.pi)
 
     pulse_time = max(np.max(mode["pulse_time"]), evolution_time)
-    if (pulse_time == 0.0) or np.all(np.absolute((dm_initial.full() - np.eye(spin.d))) < 1e-10):
+    if (pulse_time == 0.0) or np.isclose(dm_initial, np.identity(spin.d)):
         return dm_initial
 
     if order is None and (solver == magnus or solver == "magnus"):
@@ -719,7 +719,7 @@ def FID_signal(
         with respect to the LAB system. (in MHz)
         Default value is 0.
 
-    n_points : float
+    n_points : int
         The total number of samples for the signal.
         Default value is 1000.
 
@@ -945,11 +945,11 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
     ------
     t : float
         The time up to which to evolve.
-    h : Qobj or List[Qobj]:
+    h : Qobj or List[Qobj]
         The Hamiltonian describing the system in MHz.
     rho0 : Qobj
         The initial state of the system as a density matrix.
-    e_ops : List[Qobj]:
+    e_ops : List[Qobj]
         List of operators for which to return the expectation values.
 
     Returns
@@ -963,7 +963,7 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
     rho_t = u1 * d1exp * u1.inv() * rho0 * u2 * d2exp * u2.inv()
 
-    if e_ops == None:
+    if e_ops is None:
         return rho_t
 
     exp = np.transpose([[expect(op, rho_t) for op in e_ops]])
@@ -976,7 +976,7 @@ def ed_evolve(
         rho0,
         spin,
         tlist,
-        e_ops=[],
+        e_ops=None,
         state=True,
         fid=False,
         parallel=False,
@@ -1045,6 +1045,8 @@ def ed_evolve(
         h = Qobj(sum(h), dims=h[0].dims)
     if fid:
         e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
+    if e_ops is None:
+        e_ops = []
 
     decay_functions: list[Callable] = []
 

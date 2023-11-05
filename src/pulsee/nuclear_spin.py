@@ -125,8 +125,8 @@ class ManySpins(NuclearSpin):
   
         Parameters
         ----------
-        spins : list
-            List of the NuclearSpin objects which represent the spins in the system.
+        spins : list[NuclearSpin]
+            A list of the NuclearSpin objects which represent the spins in the system.
         
         Action
         ------
