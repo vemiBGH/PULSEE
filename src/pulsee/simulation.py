@@ -37,7 +37,7 @@ def nuclear_system_setup(
         hf_param=None,
         h_tensor_inter=None,
         j_sec_param=None,
-        h_userDef=None,
+        h_user=None,
         initial_state="canonical",
         temperature=1e-4,
 ):
@@ -202,7 +202,7 @@ def nuclear_system_setup(
         When it is None, the J-couping in the secular approximation is not taken
         into account. Default value is None.
 
-    h_userDef : numpy.ndarray
+    h_user : numpy.ndarray
         Square matrix array which will give the hamiltonian of the system, adding to
         previous terms (if any). When passing, must ensure compability with the rest
         of the system.
@@ -270,7 +270,7 @@ def nuclear_system_setup(
         hf_param,
         h_tensor_inter,
         j_sec_param,
-        h_userDef,
+        h_user,
     )
 
     dm_initial = make_dm_initial(initial_state, spin_system, h_unperturbed, temperature)
@@ -500,6 +500,10 @@ def evolve(
         The order of the simulation method to use. For `magnus` must be <= 3.
         Defaults to 1 for `magnus` and 12 for `mesolve` and any other solver.
 
+    opts : Options
+        qutip's Options class (qutip.solver.Options) that will be passed as a parameter
+        in qutip's mesolve function.
+
     return_allstates : boolean
         Specify whether to return every calculated state or only last one.
         Default False --> returns only last state.
@@ -555,7 +559,7 @@ def evolve(
         mode.loc[:, "phase"] = mode.loc[:, "phase"].add(np.pi)
 
     pulse_time = max(np.max(mode["pulse_time"]), evolution_time)
-    if (pulse_time == 0.0) or np.isclose(dm_initial, np.identity(spin.d)):
+    if (pulse_time == 0.0) or np.allclose(dm_initial, np.identity(spin.d)):
         return dm_initial
 
     if order is None and (solver == magnus or solver == "magnus"):

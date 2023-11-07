@@ -7,7 +7,6 @@ notes/
 .pytest_cache/
 tests/.hypothesis/
 tests/__pycache__
-src/pulsee/__pycache__/ 
 .DS_Store
 __pycache__
 /demos/archive
@@ -17,3 +16,4 @@ src/pulsee.egg-info/PKG-INFO
 tests/plot_complex_density_matrix test.py
 src/pulsee.egg-info/SOURCES.txt
 src/pulsee.egg-info/PKG-INFO
+src/pulsee/__pycache__/
