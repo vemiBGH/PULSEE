@@ -8,21 +8,16 @@ from typing import Callable
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from qutip import Options, mesolve, Qobj, tensor, expect, qeye
+from qutip import Options, Qobj, expect, mesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 from qutip.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
-from pulsee.hamiltonians import make_h_unperturbed, h_multiple_mode_pulse, multiply_by_2pi, magnus
-from pulsee.nuclear_spin import NuclearSpin, ManySpins
+from pulsee.hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
+from pulsee.nuclear_spin import ManySpins, NuclearSpin
 # Local imports
-from pulsee.operators import (
-    changed_picture,
-    exp_diagonalize,
-    apply_exp_op,
-    canonical_density_matrix,
-)
+from pulsee.operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
 from pulsee.spin_squeezing import coherent_spin_state
 
 
@@ -669,7 +664,7 @@ def FID_signal(
         h_unperturbed,
         dm,
         acquisition_time,
-        T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
         theta=0,
         phi=0,
         ref_freq=0,
@@ -758,26 +753,9 @@ def FID_signal(
         direction defined by the angles (theta, phi) in the input.
     """
     times = np.linspace(start=0, stop=acquisition_time, num=n_points)
-    decay_functions: list[Callable] = []
 
-    if isinstance(T2, (float, int)):
-        decay_functions.append(lambda t: np.exp(-t / T2))
-    elif callable(T2):
-        decay_functions.append(T2)
-    elif isinstance(T2, list):
-        for d in T2:
-            if isinstance(d, (float, int)):
-                decay_functions.append(lambda t: np.exp(-t / d))
-            elif callable(d):
-                decay_functions.append(d)
-            else:
-                raise ValueError("T2 is a list of an incorrect type!")
-    else:
-        raise ValueError("T2 doesn't have the correct type!")
-
-    decay_array = []
-    for decay_fun in decay_functions:
-        decay_array.append(decay_fun(times))
+    decay_functions = make_decay_functions(T2)
+    decay_array = [decay_fun(times) for decay_fun in decay_functions]
     # decay_array is now a 2D array with shape (len(decay_functions), len(times))
     # Now, multiply all the decay functions together to make it into 1D array with same length as times
     decay_t = np.prod(np.array(decay_array), axis=0)
@@ -812,6 +790,36 @@ def FID_signal(
         warnings.warn("Unreliable FID: Weak signal, check simulation!", stacklevel=0)
 
     return result.times, fid
+
+
+def make_decay_functions(t2: float | Callable | list[float] | list[Callable]) -> list[Callable]:
+    """
+    Helper function to make a decay function out of the user's T2 input
+    Parameters
+    ----------
+    t2: The 'T2' value provided by the user. Can be types:
+        - float, or
+        - iterable[float], or
+        - function with signature (float) -> float, or
+        - iterable[function with signature (float) -> float]
+
+    Returns
+    -------
+    decay_functions, of type: list[functions]
+
+    """
+    if isinstance(t2, (float, int)):
+        decay_functions = [lambda t: np.exp(-t / t2)]
+    elif callable(t2):
+        decay_functions = [t2]
+    elif isinstance(t2, list) and isinstance(t2[0], (float, int)):
+        decay_functions = [lambda t: np.exp(-t / d) for d in t2]
+    elif isinstance(t2, list) and callable(t2[0]):
+        decay_functions = [fun for fun in t2]
+    else:
+        raise TypeError("T2 doesn't have the correct type!")
+
+    return decay_functions
 
 
 def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False, padding: int | None = None):
@@ -985,7 +993,7 @@ def ed_evolve(
         fid=False,
         parallel=False,
         all_t=False,
-        T2: int | float | Callable | list[int] | list[float] | list[Callable] = 100,
+        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
 ):
     """
     Evolve the given density matrix with the interactions given by the provided
@@ -1005,21 +1013,22 @@ def ed_evolve(
         List of times at which the system will be evolved.
     e_ops : List[Qobj]:
         List of operators for which to return the expectation values.
-    state : Boolean
+    state : Bool
         Whether to return the density matrix at all. Default `True`.
-    fid : Boolean
+    fid : Bool
         Whether to return the free induction decay (FID) signal as
         an expectation value. If True, appends FID signal to the end of
         the `e_ops` expectation value list.
-    par : Boolean
+    par : Bool
         Whether to use QuTiP's parallel computing implementation `parallel_map`
         to evolve the system.
-    all_t : Boolean
+    all_t : Bool
         Whether to return the density matrix and for all times in the
         evolution (as opposed to the last state)
-    T2 : iterable[float or function with signature (float) -> float] or
-         float or
-         function with signature (float) -> float
+    T2 : float, or
+         iterable[float], or
+         function with signature (float) -> float, or
+         iterable[function with signature (float) -> float]
 
         If float, characteristic time of relaxation of the component of the
         magnetization on the plane of detection vanishing, i.e., T2. It is
@@ -1045,30 +1054,14 @@ def ed_evolve(
 
     The expectation values of each operator in `e_ops` at the times in `tlist`.
     """
-    if type(h) is not Qobj and type(h) is list:
+    if not isinstance(h, Qobj) and isinstance(h, list):
         h = Qobj(sum(h), dims=h[0].dims)
-    if fid:
-        e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
     if e_ops is None:
         e_ops = []
+    if fid:
+        e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
 
-    decay_functions: list[Callable] = []
-
-    if isinstance(T2, (float, int)):
-        decay_functions.append(lambda t: np.exp(-t / T2))
-        print(f"T2 IS A INT/FLOAT")
-    elif callable(T2):
-        decay_functions.append(T2)
-    elif isinstance(T2, list):
-        for d in T2:
-            if isinstance(d, (float, int)):
-                decay_functions.append(lambda t: np.exp(-t / d))
-            elif callable(d):
-                decay_functions.append(d)
-            else:
-                raise ValueError("T2 is a list of an incorrect type!")
-    else:
-        raise ValueError("T2 doesn't have the correct type!")
+    decay_functions = make_decay_functions(T2)
 
     rho_t = []
     e_ops_t = []
