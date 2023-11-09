@@ -23,7 +23,7 @@ from pulsee.operators import (
     apply_exp_op,
     canonical_density_matrix,
 )
-from pulsee.spin_squeezing import CSS
+from pulsee.spin_squeezing import coherent_spin_state
 
 
 def nuclear_system_setup(
@@ -289,10 +289,10 @@ def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Q
         dm_initial = canonical_density_matrix(Qobj(sum(h_unperturbed)), temperature)
 
     elif isinstance(initial_state, dict):
-        dm_initial = CSS(spin_system, [initial_state])
+        dm_initial = coherent_spin_state(spin_system, [initial_state])
 
     elif isinstance(initial_state, list) and isinstance(initial_state[0], dict):
-        dm_initial = CSS(spin_system, initial_state)
+        dm_initial = coherent_spin_state(spin_system, initial_state)
 
     elif isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
         dm_initial = Qobj(initial_state)

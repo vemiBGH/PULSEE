@@ -2,8 +2,7 @@ from fractions import Fraction
 
 import matplotlib.pylab as plt
 import numpy as np
-from matplotlib import colorbar as clrbar
-from matplotlib import colors as clrs
+from matplotlib import colorbar as clrbar, colors as clrs
 from matplotlib.patches import Patch
 from matplotlib.pyplot import xticks, yticks
 from qutip import Qobj
@@ -62,8 +61,8 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
 
     Action
     ------
-    If show=True, generates a graph with the frequencies of transition on the x
-    axis and the corresponding intensities on the y axis.
+    If show=True, generates a graph with the frequencies of transition on the
+    x-axis and the corresponding intensities on the y-axis.
 
     Returns
     -------
@@ -219,10 +218,8 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
                     comma = ', '
                     if j == n_sub - 1:
                         comma = ''
-                    tick_label[j * d_sub[i] * d_downhill +
-                               k * d_downhill + l] = m_dict[i][k] + \
-                                                     comma + tick_label[j * d_sub[i] * d_downhill +
-                                                                        k * d_downhill + l]
+                    tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = \
+                        m_dict[i][k] + comma + tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l]
 
     for i in range(d):
         tick_label[i] = '|' + tick_label[i]
@@ -234,7 +231,7 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
     ax.set_zlabel("Re(\N{GREEK SMALL LETTER RHO})")
     legend_elements = [Patch(facecolor='tab:blue', label='<m|\N{GREEK SMALL LETTER RHO}|m> > 0'),
                        Patch(facecolor='tab:red', label='<m|\N{GREEK SMALL LETTER RHO}|m> < 0')]
-    if (show_legend):
+    if show_legend:
         ax.legend(handles=legend_elements, loc='upper left')
 
     if (xmin is not None) and (xmax is not None):
@@ -366,7 +363,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
-    if (figsize):
+    if figsize:
         fig = plt.figure(figsize=figsize)
     ax = fig.add_subplot(111, projection='3d')
 
@@ -426,9 +423,10 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
             for k in range(d_sub[i]):
                 for l in range(d_downhill):
                     comma = ', '
-                    if j == n_sub - 1: comma = ''
-                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
-                            m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l])
+                    if j == n_sub - 1:
+                        comma = ''
+                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = \
+                        m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
 
     for i in range(d):
         tick_label[i] = '|' + tick_label[i]
@@ -462,7 +460,7 @@ def plot_real_part_FID_signal(
 
     Parameters
     ----------
-    time : array-like
+    times : array-like
         Sampled instants of time (in microseconds).
 
     FID : array-like
@@ -499,7 +497,7 @@ def plot_real_part_FID_signal(
     ylim: tuple
         y limits of plot
         
-    fig: plt.figure
+    figure: plt.figure
         figure to plot FID signal on
         
         
