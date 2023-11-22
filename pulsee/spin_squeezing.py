@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from qutip import Qobj, spin_coherent, tensor
 
-from pulsee.nuclear_spin import ManySpins, NuclearSpin
-from pulsee.operators import calc_e_ops
+from .nuclear_spin import ManySpins, NuclearSpin
+from .operators import calc_e_ops
 
 
 class UsefulSqzOps:

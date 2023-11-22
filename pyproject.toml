@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "pulsee"
+version = "0.1.2"
+description = ""
+authors = ["Alan Bidart <alanbidart@gmail.com>", "Jiwoo Seo <lemon6927@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = ">=3.10,<3.13"
+pandas = "2.1.1"
+matplotlib = {extras = ["kivy"], version = "3.8.0"}
+kivy-garden = "^0.1.5"
+kivy = {extras = ["sdl2"], version = "2.2.1"}
+scipy = "1.11.3"
+qutip = "4.7.3"
+tqdm = "4.66.1"
+ipython = "8.16.1"
+cython = "3.0.3"
+
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.4.3"
+black = "^23.11.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
