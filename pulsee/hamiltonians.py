@@ -7,8 +7,8 @@ from qutip import Qobj, commutator, qeye, tensor
 from qutip.solver import Result
 from tqdm import trange
 
-from pulsee.nuclear_spin import ManySpins, NuclearSpin
-from pulsee.operators import apply_exp_op, changed_picture
+from .nuclear_spin import ManySpins, NuclearSpin
+from .operators import apply_exp_op, changed_picture
 
 
 def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qobj:
