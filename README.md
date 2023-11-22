@@ -163,7 +163,8 @@ conveniently.
 For most users (using Windows or Mac), we recommend using the popular Anaconda distribution which the developers have mainly used and are most familiar with.
 If you are not familiar with Anaconda, there are many resources online and you can start [here](https://docs.anaconda.com/free/anaconda/):
 
-For users using Linux, more experienced with package management, or prefer to not use Anaconda, they can skip to the 'Installation of PULSEE' section.
+For users using Linux, more experienced with package management, or prefer not to use Anaconda,
+they can skip to the ['Editable Installation of PULSEE'](#editable-installation-of-pulsee) section.
 
 ### Creating a Conda Environment with Required Packages
 

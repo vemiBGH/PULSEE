@@ -1,6 +1,7 @@
 name: pulsee_env
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - cython=0.29
   - ipykernel
@@ -15,4 +16,4 @@ dependencies:
   - qutip
   - scipy
   - tqdm
-prefix: C:\Users\lemon\anaconda3\envs\pulsee_env
+prefix: C:\Users\username\anaconda3\envs\pulsee_env

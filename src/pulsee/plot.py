@@ -8,9 +8,17 @@ from matplotlib.pyplot import xticks, yticks
 from qutip import Qobj
 
 
-def plot_power_absorption_spectrum(frequencies, intensities, show=True,
-                                   xlim=None, ylim=None, fig_dpi=400, save=False,
-                                   name='PowerAbsorptionSpectrum', destination=''):
+def plot_power_absorption_spectrum(
+        frequencies,
+        intensities,
+        show=True,
+        xlim=None,
+        ylim=None,
+        fig_dpi=400,
+        save=False,
+        name="PowerAbsorptionSpectrum",
+        destination="",
+):
     """
     Plots the power absorption intensities as a function of the corresponding
     frequencies.
@@ -67,13 +75,13 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
     Returns
     -------
     An object of the class matplotlib.figure.Figure representing the figure
-    built up by the function.  
+    built up by the function.
     """
     fig = plt.figure()
 
-    plt.vlines(frequencies, 0, intensities, colors='b')
+    plt.vlines(frequencies, 0, intensities, colors="b")
     plt.xlabel("\N{GREEK SMALL LETTER NU} (MHz)")
-    plt.ylabel("Power absorption (a. u.)")
+    plt.ylabel("Power absorption (a.u.)")
 
     if xlim is not None:
         plt.xlim(left=xlim[0], right=xlim[1])
@@ -87,11 +95,20 @@ def plot_power_absorption_spectrum(frequencies, intensities, show=True,
     return fig
 
 
-def plot_real_part_density_matrix(dm, many_spin_indexing=None,
-                                  show=True, fig_dpi=400,
-                                  save=False, xmin=None, xmax=None,
-                                  ymin=None, ymax=None, show_legend=True,
-                                  name='RealPartDensityMatrix', destination=''):
+def plot_real_part_density_matrix(
+        dm,
+        many_spin_indexing=None,
+        show=True,
+        fig_dpi=400,
+        save=False,
+        xmin=None,
+        xmax=None,
+        ymin=None,
+        ymax=None,
+        show_legend=True,
+        name="RealPartDensityMatrix",
+        destination="",
+):
     """
     Generates a 3D histogram displaying the real part of the elements of the
     passed density matrix.
@@ -102,12 +119,12 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
         Density matrix to be plotted.
 
     many_spin_indexing : None or list
-        If not None, the density matrix dm is interpreted as the state of 
-        a many spins' system, and this parameter provides the list of the 
+        If not None, the density matrix dm is interpreted as the state of
+        a many spins' system, and this parameter provides the list of the
         dimensions of the subspaces of the full Hilbert space related to the
-        individual nuclei of the system. 
+        individual nuclei of the system.
         The ordering of the elements of many_spin_indexing should match that of
-        the single spins' density matrices in their tensor product 
+        the single spins' density matrices in their tensor product
         resulting in dm. Default value is None.
 
     show : bool
@@ -159,12 +176,11 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
 
     # Create an X-Y mesh of the same dimension as the 2D data
     # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(np.arange(data_array.shape[1]) + 0.25,
-                                 np.arange(data_array.shape[0]) + 0.25)
+    x_data, y_data = np.meshgrid(np.arange(data_array.shape[1]) + 0.25, np.arange(data_array.shape[0]) + 0.25)
 
     # Set width of the vertical bars
     dx = dy = 0.5
@@ -181,14 +197,11 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
 
     for i in range(len(z_data)):
         if z_data[i] < -1e-10:
-            bar_color[i] = 'tab:red'
+            bar_color[i] = "tab:red"
         else:
-            bar_color[i] = 'tab:blue'
+            bar_color[i] = "tab:blue"
 
-    ax.bar3d(x_data,
-             y_data,
-             np.zeros(len(z_data)),
-             dx, dy, np.absolute(z_data), color=bar_color)
+    ax.bar3d(x_data, y_data, np.zeros(len(z_data)), dx, dy, np.absolute(z_data), color=bar_color)
 
     d = data_array.shape[0]
     tick_label = []
@@ -206,33 +219,36 @@ def plot_real_part_density_matrix(dm, many_spin_indexing=None,
             m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
 
     for i in range(d):
-        tick_label.append('>')
+        tick_label.append(">")
 
     for i in range(n_sub)[::-1]:
-        d_downhill = int(np.prod(d_sub[i + 1:n_sub]))
+        d_downhill = int(np.prod(d_sub[i + 1: n_sub]))
         d_uphill = int(np.prod(d_sub[0:i]))
 
         for j in range(d_uphill):
             for k in range(d_sub[i]):
                 for l in range(d_downhill):
-                    comma = ', '
+                    comma = ", "
                     if j == n_sub - 1:
-                        comma = ''
-                    tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = \
-                        m_dict[i][k] + comma + tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l]
+                        comma = ""
+                    tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = (
+                            m_dict[i][k] + comma + tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l]
+                    )
 
     for i in range(d):
-        tick_label[i] = '|' + tick_label[i]
+        tick_label[i] = "|" + tick_label[i]
 
-    ax.tick_params(axis='both', which='major', labelsize=6)
+    ax.tick_params(axis="both", which="major", labelsize=6)
     xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
     yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
 
     ax.set_zlabel("Re(\N{GREEK SMALL LETTER RHO})")
-    legend_elements = [Patch(facecolor='tab:blue', label='<m|\N{GREEK SMALL LETTER RHO}|m> > 0'),
-                       Patch(facecolor='tab:red', label='<m|\N{GREEK SMALL LETTER RHO}|m> < 0')]
+    legend_elements = [
+        Patch(facecolor="tab:blue", label="<m|\N{GREEK SMALL LETTER RHO}|m> > 0"),
+        Patch(facecolor="tab:red", label="<m|\N{GREEK SMALL LETTER RHO}|m> < 0"),
+    ]
     if show_legend:
-        ax.legend(handles=legend_elements, loc='upper left')
+        ax.legend(handles=legend_elements, loc="upper left")
 
     if (xmin is not None) and (xmax is not None):
         plt.xlim(xmin, xmax)
@@ -259,29 +275,30 @@ def complex_phase_cmap():
     -------
     cmap : A matplotlib linear segmented colormap.
     """
-    cdict = {'blue': ((0.00, 0.0, 0.0),
-                      (0.25, 0.0, 0.0),
-                      (0.50, 1.0, 1.0),
-                      (0.75, 1.0, 1.0),
-                      (1.00, 0.0, 0.0)),
-             'green': ((0.00, 0.0, 0.0),
-                       (0.25, 1.0, 1.0),
-                       (0.50, 0.0, 0.0),
-                       (0.75, 1.0, 1.0),
-                       (1.00, 0.0, 0.0)),
-             'red': ((0.00, 1.0, 1.0),
-                     (0.25, 0.5, 0.5),
-                     (0.50, 0.0, 0.0),
-                     (0.75, 0.0, 0.0),
-                     (1.00, 1.0, 1.0))}
+    cdict = {
+        "blue": ((0.00, 0.0, 0.0), (0.25, 0.0, 0.0), (0.50, 1.0, 1.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+        "green": ((0.00, 0.0, 0.0), (0.25, 1.0, 1.0), (0.50, 0.0, 0.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+        "red": ((0.00, 1.0, 1.0), (0.25, 0.5, 0.5), (0.50, 0.0, 0.0), (0.75, 0.0, 0.0), (1.00, 1.0, 1.0)),
+    }
 
-    cmap = clrs.LinearSegmentedColormap('phase_colormap', cdict, 256)
+    cmap = clrs.LinearSegmentedColormap("phase_colormap", cdict, 256)
     return cmap
 
 
-def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
-                                phase_limits=None, phi_label=r'$\phi$', show_legend=True, fig_dpi=400,
-                                save_to="", figsize=None, labelsize=6, elev=45, azim=-15):
+def plot_complex_density_matrix(
+        dm,
+        many_spin_indexing=None,
+        show=True,
+        phase_limits=None,
+        phi_label=r"$\phi$",
+        show_legend=True,
+        fig_dpi=400,
+        save_to="",
+        figsize=None,
+        labelsize=6,
+        elev=45,
+        azim=-15,
+):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -295,16 +312,16 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         Density matrix to be plotted.
 
     many_spin_indexing : None or list
-        If not None, the density matrix dm is interpreted as the state of 
-        a many spins' system, and this parameter provides the list of the 
+        If not None, the density matrix dm is interpreted as the state of
+        a many spins' system, and this parameter provides the list of the
         dimensions of the subspaces of the full Hilbert space related to the
-        individual nuclei of the system. 
+        individual nuclei of the system.
         The ordering of the elements of many_spin_indexing should match that of
         the single spins' density matrices in their tensor product resulting in dm.
-        
+
         For example, a system of [spin-1/2 x spin-1 x spin-3/2] will correspond to:
         many_spin_indexing = [2, 3, 4]
-        
+
         Default value is None.
 
     show : bool
@@ -349,12 +366,12 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
     Returns
     -------
-    An object of the class matplotlib.figure.Figure and an object of the class 
+    An object of the class matplotlib.figure.Figure and an object of the class
     matplotlib.axis.Axis representing the figure built up by the function.
 
     """
     if not isinstance(dm, Qobj):
-        raise TypeError('First argument must be an instance of Qobj!')
+        raise TypeError("First argument must be an instance of Qobj!")
 
     if not many_spin_indexing:
         many_spin_indexing = dm.dims[0]
@@ -365,19 +382,18 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
     fig = plt.figure()
     if figsize:
         fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111, projection='3d')
+    ax = fig.add_subplot(111, projection="3d")
 
     # Create an X-Y mesh of the same dimension as the 2D data
     # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(np.arange(dm.shape[1]) + 0.25,
-                                 np.arange(dm.shape[0]) + 0.25)
+    x_data, y_data = np.meshgrid(np.arange(dm.shape[1]) + 0.25, np.arange(dm.shape[0]) + 0.25)
 
     # Set width of the vertical bars
     dx = dy = 0.5
 
     # Flatten out the arrays so that they may be passed to "ax.bar3d".
     # Basically, ax.bar3d expects three one-dimensional arrays: x_data, y_data, z_data.
-    # The following call boils down to picking one entry from each array and plotting a bar from 
+    # The following call boils down to picking one entry from each array and plotting a bar from
     # (x_data[i], y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
     x_data = x_data.flatten()
     y_data = y_data.flatten()
@@ -394,8 +410,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
     cmap = complex_phase_cmap()
     colors = cmap(norm(np.angle(z_data)))
 
-    ax.bar3d(x_data, y_data, np.zeros(len(z_data)),
-             dx, dy, np.absolute(z_data), color=colors, shade=True)
+    ax.bar3d(x_data, y_data, np.zeros(len(z_data)), dx, dy, np.absolute(z_data), color=colors, shade=True)
     ax.view_init(elev=elev, azim=azim)  # rotating the plot so the "diagonal" direction is more clear
 
     d = dm.shape[0]
@@ -413,7 +428,7 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
             m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
 
     for i in range(d):
-        tick_label.append('>')
+        tick_label.append(">")
 
     for i in range(n_sub)[::-1]:
         d_downhill = int(np.prod(d_sub[i + 1:]))
@@ -422,28 +437,28 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
         for j in range(d_uphill):
             for k in range(d_sub[i]):
                 for l in range(d_downhill):
-                    comma = ', '
+                    comma = ", "
                     if j == n_sub - 1:
-                        comma = ''
-                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = \
-                        m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
+                        comma = ""
+                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
+                            m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
+                    )
 
     for i in range(d):
-        tick_label[i] = '|' + tick_label[i]
+        tick_label[i] = "|" + tick_label[i]
 
-    ax.tick_params(axis='both', which='major', labelsize=labelsize)
+    ax.tick_params(axis="both", which="major", labelsize=labelsize)
 
     xticks(np.arange(start=0.5, stop=dm.shape[0] + 0.5), tick_label)
-    yticks(np.arange(start=1., stop=dm.shape[0] + 1.), tick_label)
+    yticks(np.arange(start=1.0, stop=dm.shape[0] + 1.0), tick_label)
     if show_legend:
-        cax, kw = clrbar.make_axes(ax, location='right', shrink=.75, pad=.06)
+        cax, kw = clrbar.make_axes(ax, location="right", shrink=0.75, pad=0.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
         cb.set_ticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
-        cb.set_ticklabels(
-            (r'$-\pi$', r'$-\pi/2$', r'$0$', r'$\pi/2$', r'$\pi$'))
+        cb.set_ticklabels((r"$-\pi$", r"$-\pi/2$", r"$0$", r"$\pi/2$", r"$\pi$"))
         cb.set_label(phi_label)
 
-    if save_to != '':
+    if save_to != "":
         plt.savefig(save_to, dpi=fig_dpi)
 
     if show:
@@ -453,8 +468,17 @@ def plot_complex_density_matrix(dm, many_spin_indexing=None, show=True,
 
 
 def plot_real_part_FID_signal(
-        times, FID, show=True, fig_dpi=400, save=False,
-        name='FIDSignal', destination='', xlim=None, ylim=None, figure=None):
+        times,
+        FID,
+        show=True,
+        fig_dpi=400,
+        save=False,
+        name="FIDSignal",
+        destination="",
+        xlim=None,
+        ylim=None,
+        figure=None
+):
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -496,13 +520,13 @@ def plot_real_part_FID_signal(
 
     ylim: tuple
         y limits of plot
-        
+
     figure: plt.figure
         figure to plot FID signal on
-        
-        
+
+
     Action
-    ------ 
+    ------
     If show=True, generates a plot of the FID signal as a function of time.
 
     Returns
@@ -515,8 +539,8 @@ def plot_real_part_FID_signal(
     else:
         fig, ax = figure
 
-    ax.plot(times, np.real(FID), label='Real part')
-    ax.set_title('FID signal')
+    ax.plot(times, np.real(FID), label="Real part")
+    ax.set_title("FID signal")
     ax.set_xlabel("time (\N{GREEK SMALL LETTER MU}s)")
     ax.set_ylabel("Real(FID) (a.u.)")
 
@@ -536,9 +560,22 @@ def plot_real_part_FID_signal(
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(
-        frequencies, fourier, fourier_neg=None, square_modulus=False,
-        xlim=None, ylim=None, scaling_factor=None, norm=True, fig_dpi=400,
-        show=True, save=False, name='FTSignal', destination='', figure=None, my_label=""):
+        frequencies,
+        fourier,
+        fourier_neg=None,
+        square_modulus=False,
+        xlim=None,
+        ylim=None,
+        scaling_factor=None,
+        norm=True,
+        fig_dpi=400,
+        show=True,
+        save=False,
+        name="FTSignal",
+        destination="",
+        figure=None,
+        my_label="",
+):
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
@@ -567,10 +604,10 @@ def plot_fourier_transform(
 
     scaling_factor : float
         When it is not None, it specifies the scaling factor which
-        multiplies the data to be plotted. 
+        multiplies the data to be plotted.
         It applies simultaneously to all the plots in the resulting figure.
 
-    norm : Boolean 
+    norm : Boolean
         Whether to normalize the fourier transform; i.e.,
         scale it such that its maximum value is 1.
 
@@ -594,11 +631,11 @@ def plot_fourier_transform(
         Default value is `'FTSignal'`.
 
     destination : string
-        Path of the directory where the graph will be saved (starting from 
-        the current directory). The name of the directory must be terminated 
+        Path of the directory where the graph will be saved (starting from
+        the current directory). The name of the directory must be terminated
         with a slash /.
         Default value is the empty string (current directory).
-        
+
     figure : plt.subplot
         Plot to plot on the fourier transformed frequency
 
@@ -609,12 +646,12 @@ def plot_fourier_transform(
     represent respectively the Fourier spectra for counter-clockwise and
     clockwise rotation frequencies.
 
-    If show=True, the figure is printed on screen.  
+    If show=True, the figure is printed on screen.
 
     Returns
     -------
-    An object of the class matplotlib.figure.Figure and an object of the class 
-    matplotlib.axis.Axis representing the figure 
+    An object of the class matplotlib.figure.Figure and an object of the class
+    matplotlib.axis.Axis representing the figure
     built up by the function.
     """
     fourier = np.array(fourier)
@@ -630,14 +667,13 @@ def plot_fourier_transform(
 
     if norm:
         for i in range(n_plots):
-            fourier_data[i] = (fourier_data[i] /
-                               np.amax(np.abs(fourier_data[i])))
+            fourier_data[i] = fourier_data[i] / np.amax(np.abs(fourier_data[i]))
 
     if scaling_factor is not None:
         for i in range(n_plots):
             fourier_data[i] = scaling_factor * fourier_data[i]
     if figure is None:
-        fig, ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={'hspace': 0.5})
+        fig, ax = plt.subplots(n_plots, 1, sharey=True, gridspec_kw={"hspace": 0.5})
     else:
         fig = figure[0]
         ax = figure[1]
@@ -646,20 +682,19 @@ def plot_fourier_transform(
 
     for i in range(n_plots):
         if not square_modulus:
-            ax[i].plot(frequencies, np.real(fourier_data[i]), label='Real part ' + my_label)
-            ax[i].plot(frequencies, np.imag(fourier_data[i]), label='Imaginary part ' + my_label)
+            ax[i].plot(frequencies, np.real(fourier_data[i]), label="Real part " + my_label)
+            ax[i].plot(frequencies, np.imag(fourier_data[i]), label="Imaginary part " + my_label)
         else:
-            ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2,
-                       label='Square modulus ' + my_label)
+            ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2, label="Square modulus " + my_label)
 
         if n_plots > 1:
             ax[i].title.set_text(plot_title[i])
         else:
-            ax[i].set_title('Frequency Spectrum')
+            ax[i].set_title("Frequency Spectrum")
 
-        ax[i].legend(loc='upper left')
+        ax[i].legend(loc="upper left")
         ax[i].set_xlabel("Frequency (MHz)")
-        ax[i].set_ylabel("FT signal (a. u.)")
+        ax[i].set_ylabel("FT signal (a.u.)")
 
         if xlim is not None:
             ax[i].set_xlim(*xlim)
