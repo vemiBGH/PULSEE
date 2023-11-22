@@ -14,12 +14,12 @@ from qutip.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
-from pulsee.hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
-from pulsee.nuclear_spin import ManySpins, NuclearSpin
 
+from .hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
+from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
-from pulsee.operators import apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize
-from pulsee.spin_squeezing import coherent_spin_state
+from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
+from .spin_squeezing import coherent_spin_state
 
 
 def nuclear_system_setup(
