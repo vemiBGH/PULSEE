@@ -2,6 +2,7 @@ import numpy as np
 
 from qutip import Qobj, tensor, spin_J_set, qeye
 
+
 class NuclearSpin:
     """
     An instance of the following class is to be thought as an all-round representation of the
@@ -31,6 +32,7 @@ class NuclearSpin:
 
     shape
     """
+
     def __init__(self, s=1, gamma_over_2pi=1):
         """
         Constructs an instance of NuclearSpin.
@@ -71,7 +73,7 @@ class NuclearSpin:
         tolerance of 10^(-10)).
         """
         s = float(s)
-        if not np.isclose(int(2*s), 2*s, rtol=1e-10):
+        if not np.isclose(int(2 * s), 2 * s, rtol=1e-10):
             raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
@@ -94,8 +96,8 @@ class NuclearSpin:
         self.dims = self.I['-'].dims
 
     def __repr__(self):
-        return (f'quantum_number: {self.quantum_number},'
-              f' multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
+        return (f'quantum_number: {self.quantum_number}, '
+                f'multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
 
     def multiplicity(self):
         """
@@ -108,20 +110,23 @@ class NuclearSpin:
         Returns the Ix, Iy, and Iz operators.
         """
         return self.I['x'], self.I['y'], self.I['z']
+
+
 class ManySpins(NuclearSpin):
     """
     An instance of this class represents a system made up of many nuclear spins,
     and its attributes include the individual NuclearSpin objects,
     the dimensions of the full Hilbert space and the components of the overall spin operator.
     """
+
     def __init__(self, spins):
         """
         Constructs an instance of ManySpins.
   
         Parameters
         ----------
-        spins : list
-            List of the NuclearSpin objects which represent the spins in the system.
+        spins : list[NuclearSpin]
+            A list of the NuclearSpin objects which represent the spins in the system.
         
         Action
         ------
@@ -136,16 +141,21 @@ class ManySpins(NuclearSpin):
         Returns
         -------
         The initialised ManySpins object.
-        """        
+        """
         self.n_spins = len(spins)
 
-        self.spin, self.d, self.dims = [spins[0]], spins[0].d, spins[0].dims
-        for x in spins[1:]:
-            self.spin.append(x)
-            self.d = self.d*x.d
-            self.dims = np.concatenate([self.dims, x.dims], axis=1)
+        self.spin = spins
+        self.d = np.prod([spin.d for spin in spins])  # multiply all the d's together
 
-        if type(self.dims) != list:
+        self.dims = spins[0].dims
+
+        for s in spins[1:]:
+            self.dims = np.concatenate([self.dims, s.dims], axis=1)
+            # Careful of qutip's convention for `dims`. For example,
+            # A tensor product of a 2x2 matrix (dims = [[2],[2]]) with a 3x3 matrix (dims = [[3],[3]])
+            # will result in a dims = [[2,3], [2,3]]. 
+
+        if not isinstance(self.dims, list):
             self.dims = self.dims.tolist()
 
         self.shape = (self.d, self.d)
@@ -161,7 +171,7 @@ class ManySpins(NuclearSpin):
     def __repr__(self):
         return f' shape: {self.shape}, dims: {self.dims}'
 
-    def many_spin_operator(self, component, spin_target='all'):
+    def many_spin_operator(self, component, spin_target: str | int | list[int] = 'all'):
         """
         Returns the specified spherical or cartesian component of the spin operator of the
         ManySpins system. If spin_target == 'all' it applied the spin component to all the spins;
@@ -180,10 +190,10 @@ class ManySpins(NuclearSpin):
             Specifies which component of the overall spin is to be computed,
             following the key-value correspondence of the attribute I of NuclearSpin.
 
-        spin_target: string or int/list of ints
-            The target spin that the spin operator component is applied to
+        spin_target: string or int or list of ints
+            The target spin(s) that the spin operator component is applied to
 
-            Default is 'all', apply the spin component to every spin in the ManySpins.
+            Default is 'all': apply the spin component to every spin in the ManySpins.
 
         Returns
         -------
@@ -203,20 +213,23 @@ class ManySpins(NuclearSpin):
         else:
             component = self.n_spins * [component]
 
+        if isinstance(spin_target, int):
+            spin_target = [spin_target]
+
         for i in range(self.n_spins):
-            # Apply the spin operator component to all the spins
             if spin_target == 'all':
+                # Apply the spin operator component to all the spins
                 term = self.spin[i].I[component[i]]
-            # Only apply the spin operator component to the spin specified in spin_target
-            elif i in ([spin_target] if isinstance(spin_target, int) else spin_target):
+            elif isinstance(spin_target, list) and i in spin_target:
+                # Only apply the spin operator component to the spin specified in spin_target
                 term = self.spin[i].I[component[i]]
-            # Otherwise, apply nothing to the given spin
             else:
-                term = 0*qeye(self.spin[i].d)
+                # Apply nothing to the given spin
+                term = Qobj(0 * qeye(self.spin[i].d))
 
             for j in range(self.n_spins)[:i]:
                 term = tensor(qeye(self.spin[j].d), term)
-            for k in range(self.n_spins)[i+1:]:
+            for k in range(self.n_spins)[i + 1:]:
                 term = tensor(term, qeye(self.spin[k].d))
             many_spin_op += Qobj(term.full(), dims=self.dims)
 

@@ -1,24 +1,28 @@
-# PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)
+# PULSEE (**P**rogram for the Sim**ul**ation of Nuclear **S**pin **E**nsemble **E**volution)
 
-## Developers: Ilija N., Jiwoo S., Lucas B., Stephen C. (Brown University), Davide Candoli (Università di Bologna)
+Developers: Jiwoo S., Ilija N., Lucas B., Stephen C., Alex A. (Brown University), Davide Candoli (Università di Bologna)
 
 PULSEE is an open-source software for the simulation of typical nuclear quadrupole/magnetic resonance experiments on a solid-state sample, describing the dynamics of nuclear spins in condensed matter under the effect of external magnetic fields and reproducing the traditional results observed in laboratory.
 
-- [PULSEE (Program for the simULation of nuclear Spin Ensemble Evolution)](#pulsee-program-for-the-simulation-of-nuclear-spin-ensemble-evolution)
-  - [Example](#example)
-  - [Physics background](#physics-background)
-    - [Unit standard of the software](#unit-standard-of-the-software)
-  - [Software](#software)
-    - [Prerequisites](#prerequisites)
-    - [Installation](#installation)
-    - [Modules of the software](#modules-of-the-software)
-    - [Further examples](#further-examples)
-      - [Pure Zeeman experiment](#pure-zeeman-experiment)
-      - [Perturbed Zeeman experiment](#perturbed-zeeman-experiment)
-      - [Pure NQR experiment](#pure-nqr-experiment)
-  - [Acknowledgements](#acknowledgements)
+<!-- TOC -->
+* [PULSEE (**P**rogram for the Sim**ul**ation of Nuclear **S**pin **E**nsemble **E**volution)](#pulsee-program-for-the-simulation-of-nuclear-spin-ensemble-evolution)
+  * [Physics Background](#physics-background)
+  * [Example](#example)
+    * [Unit standard of the software](#unit-standard-of-the-software)
+  * [Installation](#installation)
+    * [Creating a Conda Environment with Required Packages](#creating-a-conda-environment-with-required-packages)
+    * [Editable Installation of PULSEE](#editable-installation-of-pulsee)
+    * [Notes About Requirements](#notes-about-requirements)
+  * [Software](#software)
+    * [Modules of the software](#modules-of-the-software)
+    * [Further examples](#further-examples)
+      * [Pure Zeeman experiment](#pure-zeeman-experiment)
+      * [Perturbed Zeeman experiment](#perturbed-zeeman-experiment)
+      * [Pure NQR experiment](#pure-nqr-experiment)
+  * [Acknowledgements](#acknowledgements)
+<!-- TOC -->
 
-## Physics background
+## Physics Background
 
 Each atomic nucleus in a single crystal is endowed with an intrinsic angular momentum, named spin, and a corresponding intrinsic magnetic moment. The interaction between this magnetic moment and any applied magnetic field provides a means for the manipulation of nuclear spins and the study of nuclear interactions in a material.
 
@@ -32,7 +36,7 @@ In nuclear quadrupole resonance (NQR), the degeneracy of spin states is broken b
 
 In general, experimental systems are characterized by an intermediate configuration where both a magnetic field and an EFG are present. The corresponding interactions must be taken into account simultaneously in order to determine the energy spectrum.
 
-After the application of a given pulse sequence, the system's magnetization typically developes a non-zero component along the direction of the coil employed for the generation of the pulse. This component changes with time in a manner dependent on the energy spectrum of the nuclei, eventually relaxing to zero due to the unavoidable dephasing of different spins. This relaxation is denoted by time T<sub>2</sub> (*coherence time*).
+After the application of a given pulse sequence, the system's magnetization typically develops a non-zero component along the direction of the coil employed for the generation of the pulse. This component changes with time in a manner dependent on the energy spectrum of the nuclei, eventually relaxing to zero due to the unavoidable dephasing of different spins. This relaxation is denoted by time T<sub>2</sub> (*coherence time*).
 
 The time dependence of the magnetization is measured through the acquisition of the current it induces in the coil. After performing the Fourier analysis of this signal, one can extract information about the system, according to the position of the peaks of the spectrum, their shape, and their sign.
 
@@ -45,7 +49,7 @@ from pulsee import simulation as sim
 
 Define the system parameters as given by the function `nuclear_system_setup`'s
 documentation. For example, to include a Zeeman interaction and a quadrupolar
-interaction on a $s = 5/2$ system with $\gamma/ 2\pi = 1$, 
+interaction on an $s = 5/2$ system with $\gamma/ 2\pi = 1$, 
 ```
 spin_par = {'quantum number' : 5/2,
             'gamma/2pi' : 1.}
@@ -84,7 +88,7 @@ mode = pd.DataFrame([(10., 1., 0., np.pi/2, 0, 2 * np.pi)],
                     columns=['frequency', 'amplitude', 'phase', 'theta_p', 'phi_p', 'pulse_time'])
 ```
 
-Finally we can evolve this state with 
+Finally, we can evolve this state with 
 ```
 from qutip import mesolve
 
@@ -141,28 +145,93 @@ In order to save processing power and lighten calculations, a suitable choice of
 The standard units employed in the software are listed below.
 
 | physical quantity  | unit  |
-| ------------------ | ----- |
+|--------------------|-------|
 | gyromagnetic ratio | MHz/T |
-|   magnetic field   |   T   |
-|  energy/frequency  |  MHz  |
-|    temperature     |   K   |
-|        time        |   us  |
+| magnetic field     | T     |
+| energy/frequency   | MHz   |
+| temperature        | K     |
+| time               | us    |
 
 Angles do not have a standard unit: they are measured in radians when they are passed directly to the software's functions, while they are measured in degrees when they are inserted in the GUI.
 
-## Software
+## Installation
 
-### Prerequisites
+In the current development phase, we recommend git cloning the repository into your local machine and following the 
+later instructions of installing the local project in "editable" mode, so that any changes are reflected immediately &
+conveniently.
 
-PULSEE has been written in Python 3.7.
+For most users (using Windows or Mac), we recommend using the popular Anaconda distribution which the developers have mainly used and are most familiar with.
+If you are not familiar with Anaconda, there are many resources online and you can start [here](https://docs.anaconda.com/free/anaconda/):
+
+For users using Linux, more experienced with package management, or prefer not to use Anaconda,
+they can skip to the ['Editable Installation of PULSEE'](#editable-installation-of-pulsee) section.
+
+### Creating a Conda Environment with Required Packages
+
+We assume the user has successfully installed Anaconda and have a cloned PULSEE repository in their local machine.
+This section is mainly written in language of Windows, but Mac users should
+be able to follow along with their corresponding language.
+
+Run 'Anaconda Prompt' as administrator. Navigate to your local PULSEE directory by running
+```shell
+cd {path_to_PULSEE}
+```
+where `path_to_PULSEE` is the path to your local PULSEE directory.
+
+Instead of working in the base environment, we will create a new & clean Conda environment with just the required packages ([as the recommended standard practice](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs)).\
+Run this command to create a new Conda environment with name `pulsee_env` which installs all the packages specified in the `conda-requirements.yml` file.
+(Click [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for details on conda environment management)
+```shell
+conda env create -f conda-requirements.yml
+```
+Verify that this environment was successfully installed by running `conda env list` and checking that there's an environment listed as `pulsee_env` along with the path to its location.
+
+Activate this new environment by running
+```shell
+conda activate pulsee_env
+```
+Running `conda list` will let you see all the packages installed in this environment.
+Verify that the version of Python is 3.11 or higher.
+
+Now we will install PULSEE in our `pulsee_env` environment by adding a pointer to your local repository of PULSEE.
+We do this by running the following command while inside the PULSEE directory (where `setup.py` is located):
+```shell
+pip install -e .
+```
+We now have a working environment with PULSEE and all its dependencies!
+
+Any changes to your local PULSEE directory will be reflected immediately, so make sure to keep your local PULSEE directory up to date for any recent changes.
+
+Finally, we can make sure that we will be able to use this new Conda environment in Jupyter by making sure
+to install the kernel of our new environment by running:
+```shell
+python -m ipykernel install --user --name=pulsee_env
+```
+Now when we open Jupyter, we should be able to choose the pulsee_env kernel (instead of the default `python3`).
+
+### Editable Installation of PULSEE
+(For users not using Conda)
+
+Once all the required packages have been installed with `requirements.txt`, git clone the PULSEE repository to your local machine.
+Then do an editable installation by running the following command in the PULSEE directory (where `setup.py` is located):
+```shell
+pip install -e .
+```
+
+### Notes About Requirements
+
+All dependencies are summarized in the `conda-requirements.yml` and `requirements.txt` files. 
+
+PULSEE has been mainly developed in Python 3.11, and a Python version of 3.11 is required.
 
 The operative systems where it has been tested and executed are
 * Ubuntu
-* Windows 10 (through the Spyder interface provided by the distribution Anaconda)
+* Windows 10 (Through the Anaconda distribution)
 
-The software makes wide use of many of the standard Python modules (namely `numpy`, `scipy`, `pandas`, `matplotlib`) for its general purposes. 
+The software makes wide use of many of the standard Python modules (namely `numpy`, `scipy`, `pandas`, `matplotlib`) for its general purposes.
 
-The Quantum toolbox in Python (QuTiP) -> https://qutip.org/ is required. 
+The QuTip package is required -> https://qutip.org/.
+We downgrade cython to version 0.29 in our requirements, since QuTip only supports up to cython 0.29.
 
 Tests have been carried out using the `pytest` framework and the `hypothesis` module.
 
@@ -176,11 +245,7 @@ The GUI has been implemented with the tools provided by the Python library `kivy
 
 In order to run the GUI, it is required the additional installation of the module `kivy.`
 
-### Installation 
-The development version of the package may be installed by navigating to the 
-directory `PULSEE` (where the file `setup.py` is located) and running 
-
-`$ pip install -e .`
+## Software
 
 ### Modules of the software
 
@@ -204,9 +269,9 @@ Below, the content and usage of these modules is reported briefly:
   Class `Operator` defines the properties of a generic linear application acting in the Hilbert space of a finite-dimensional quantum system. Its main attribute is `matrix`, a square array of complex numbers which gives the matrix representation of the operator in a certain basis. The methods of this class implement the basic algebraic operations and other common actions involving operators, such as the change of basis.
   
   Class `DensityMatrix` characterizes the operators which represent the state (pure or mixed) of the quantum system. It is defined by three fundamental properties:
-  1. hermitianity
-  1. unit trace
-  1. positivity
+  1. Hermicity
+  2. Unit trace
+  3. Positivity
 
   Class `Observable` characterizes the hermitian operators which represent the physical properties of the system.
   
@@ -217,7 +282,7 @@ Below, the content and usage of these modules is reported briefly:
 
 * `many_body`
 
-  This module defines two functions which allow us to pass an operator from a single particle Hilbert space to a many particle space and viceversa.
+  This module defines two functions which allow us to pass an operator from a single particle Hilbert space to a many particle space and vice-versa.
   
   * `tensor_product`
   
@@ -255,7 +320,7 @@ Below, the content and usage of these modules is reported briefly:
     
     Returns the Hamiltonian of interaction of a nuclear spin with a linearly polarized electromagnetic wave, once the properties of the wave and the time of evaluation have been passed.
     
-    This function is iterativily called by `h_multiple_mode_pulse`, which returns the Hamiltonian of interaction between a nuclear spin system and a superposition of pulses.
+    This function is iteratively called by `h_multiple_mode_pulse`, which returns the Hamiltonian of interaction between a nuclear spin system and a superposition of pulses.
     
   * `h_changed_picture`
     
@@ -272,26 +337,26 @@ Below, the content and usage of these modules is reported briefly:
   
      Constructs the system under study: creates the objects associated with the nuclear spin system, the unperturbed Hamiltonian (Zeeman + quadrupole contributions), and the initial state.      
   
-  1. `power_absorption_spectrum`
+  2. `power_absorption_spectrum`
   
      Computes the power absorbed by the system from a pulse described by the theoretical formula derived from Fermi's golden rule.
      
-  1. `evolve`
+  3. `evolve`
      
      Evolves the state of the system under the action of a given electromagnetic pulse or the stationary Hamiltonian. Evolution is carried out in one of the three methods: 
-     - Direct diagonalization for time independet Hamiltonians.
+     - Direct diagonalization for time independent Hamiltonians.
      - Average Hamiltonian Theory: approximating the evolution operator with the first terms of the Magnus expansion. The user can specify in which dynamical picture to evolve the system.
-     - QuTiP evolution with mesolve.
+     - QuTiP's evolution with mesolve.
 
-  1. `FID_signal`
+  4. `FID_signal`
   
      Simulates the free induction decay signal generated by the transverse magnetization of the system after the application of a pulse.
     
-  1. `fourier_transform_signal`
+  5. `fourier_transform_signal`
   
      Performs the Fourier analysis of a signal (in this context, the FID).
     
-  1. `fourier_phase_shift`
+  6. `fourier_phase_shift`
   
      Computes the phase shift to be applied to the FID in order to correct the shape of the Fourier spectrum of the system and recover the typical absorptive/dispersive lorentzian shapes at a given peak.
     
@@ -334,7 +399,7 @@ from pulsee.simulation import *
 
 The simplest experiment one can simulate is the case of pure NMR, where a static magnetic field (conventionally directed along z) is applied to a nucleus where the quadrupolar interaction is negligible.
 
-Take for instance a spin 1 nucleus: the set up of the system is carried out passing to `nuclear_system_setup` the following parameters:
+Take for instance a spin 1 nucleus: the set-up of the system is carried out passing to `nuclear_system_setup` the following parameters:
 ```
 spin_par = {'quantum number' : 1.,
             'gamma/2pi' : 1.}

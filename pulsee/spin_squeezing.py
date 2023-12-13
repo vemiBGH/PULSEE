@@ -1,13 +1,12 @@
-import numpy as np
-
 import matplotlib.pyplot as plt
-from qutip import tensor, spin_coherent
+import numpy as np
+from qutip import Qobj, spin_coherent, tensor
 
-from .nuclear_spin import NuclearSpin, ManySpins
+from .nuclear_spin import ManySpins, NuclearSpin
 from .operators import calc_e_ops
 
 
-class useful_sqz_ops:
+class UsefulSqzOps:
     """
     Class that holds useful operators for spin squeezing calculations.
 
@@ -44,7 +43,7 @@ class useful_sqz_ops:
                'and their average values, av[op].'
 
 
-def CSS(spin_system, initial_state):
+def coherent_spin_state(spin_system, initial_state: list[dict]) -> Qobj:
     """
     If a dictionary {'theta' : rad, 'phi' : rad} is passed, a spin coherent
     state is created. Can pass a list of dictionaries for a ManySpins system
@@ -55,7 +54,9 @@ def CSS(spin_system, initial_state):
     Parameters
     ----------
     spin_system : NuclearSpin
-    initial_state : Qobj
+
+    initial_state : list of dictionaries. Each dictionary must have keys
+    'theta' and 'phi'.
 
     Returns
     -------
@@ -63,25 +64,23 @@ def CSS(spin_system, initial_state):
         The density matrix representing the state of the system at time t=0,
         initialised according to initial_state.
     """
-    if 'theta' in np.all(initial_state) and 'phi' in np.all(initial_state):
-        if isinstance(spin_system, ManySpins):
-            assert isinstance(initial_state, list), 'The initial_state for CSS for ManySpins must be specified ' \
-                                                    'as a list with theta and phi specified for each spin.'
-            dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'],
-                               type='dm')
+    for d in initial_state:
+        if ('theta' not in d.keys()) or ('phi' not in d.keys()):
+            raise ValueError(
+                "coherent_spin_state: Please check that both angles, theta and phi, are given for all the ManySpins.")
 
-            for i in range(1, spin_system.n_spins):
-                dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
-                                              initial_state[i]['phi'], type='dm'))
-        else:
-            assert isinstance(spin_system, NuclearSpin), 'Must give a NuclearSpin type.'
-            assert isinstance(initial_state, dict), 'The initial_state for CSS must be given as a dictionary, ' \
-                                                    'with theta and phi specified'
+    if isinstance(spin_system, NuclearSpin):
+        assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
+        dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+        return dm
 
-            dm = spin_coherent(spin_system.I['I'], initial_state['theta'], initial_state['phi'], type='dm')
-    else:
-        raise ValueError("CSS: Please check that both angles, theta and phi, are given for all the ManySpins.")
+    assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
+    assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
 
+    dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+    for i in range(1, spin_system.n_spins):
+        dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
+                                      initial_state[i]['phi'], type='dm'))
     return dm
 
 
@@ -93,7 +92,7 @@ def populate_averge_values(dms, sqz_ops):
     Parameters
     ----------
     dms : list of Qobj
-    sqz_ops : useful_sqz_ops
+    sqz_ops : UsefulSqzOps
 
     Returns
     -------
@@ -113,22 +112,22 @@ def populate_averge_values(dms, sqz_ops):
     return sqz_ops
 
 
-def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_spher=False):
+def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_sphere=False):
     """
-    Calculates the generalized squeezing paramter and the squeezing angle.
+    Calculates the generalized squeezing parameter and the squeezing angle.
 
     Parameters
     ----------
-    sqz_ops : useful_sqz_ops
+    sqz_ops : UsefulSqzOps
         the class useful_sqz_ops
 
     I : int
         quantum number of the system
 
     xi_sq : bool
-        If false, it won't square the squeezing paramter
+        If false, it won't square the squeezing parameter
 
-    return_av_spher : bool
+    return_av_sphere : bool
         Return the average value of the spin operators in spherical coords
 
     Returns
@@ -164,7 +163,7 @@ def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_spher=False):
     Jn_3 = Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
 
     A = (1 / 2) * (np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2) - (1 + np.cos(th) ** 2) * (
-            Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) + \
+            Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) +
                    np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
 
     C = I * (I + 1) - Jz2 - Jp2.imag * np.sin(2 * phi) - Jp2.real * np.cos(2 * phi) - A
@@ -179,15 +178,15 @@ def calc_squeez_param(sqz_ops, I, xi_sq=False, return_av_spher=False):
 
     alpha = (1 / 2) * np.arctan(B / A)
 
-    if return_av_spher:
+    if return_av_sphere:
         return xi, alpha, Jn_1, Jn_2, Jn_3
     else:
         return xi, alpha
 
 
 def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magnetization',
-                x_label='Time (MHz)', y_label='Mangetization (Arb.)', labels=['I_x', 'I_y', 'I_z', 'I_T'],
-                colors=['b', 'r', 'g', 'y'], put_brackets=True):
+                x_label='Time (MHz)', y_label='Magnetization (Arb.)', labels=None,
+                colors=None, put_brackets=True):
     """
     Helper plotting function for the squeezing module
     Parameters
@@ -195,13 +194,13 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
     vals: list of list of average operators
         E.g. signal of Ix at each time step.
 
-    times: list
+    times: numpy array
 
     num_plots : int or list
         How many plots to plot
 
     axis_scaler : float
-        Usuful to plot in terms of natural frequency of the system
+        Useful to plot in terms of natural frequency of the system
 
     title : str
 
@@ -220,12 +219,18 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
 
     """
 
+    if colors is None:
+        colors = ['b', 'r', 'g', 'y']
+    if labels is None:
+        labels = ['I_x', 'I_y', 'I_z', 'I_T']
+
     brackets = ["\langle ", " \\rangle"]
     times = times / axis_scaler
 
-    if (isinstance(num_plots, int)):
+    if isinstance(num_plots, int):
         fig, axs = plt.subplots(num_plots)
 
+        # axis is a list here! Maybe meant axs[i] ?
         for i in range(len(vals)):
             if put_brackets:
                 axs.plot(times, vals[i], colors[i], label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]))
@@ -234,7 +239,7 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
         axs.set_xlabel(x_label)
         axs.set_ylabel(y_label)
 
-    elif (num_plots[0] == 1 or num_plots[1] == 1):
+    elif isinstance(num_plots, list) and (num_plots[0] == 1 or num_plots[1] == 1):
         fig, axs = plt.subplots(*num_plots)
         for i in range(max(num_plots[0], num_plots[1])):
             if put_brackets:
@@ -243,7 +248,8 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
                 axs[i].plot(times, vals[i], colors[i], label=r"${}$".format(labels[i]))
         axs.flat[1].set_xlabel(x_label)
         axs.flat[0].set_ylabel(y_label)
-    else:
+
+    elif isinstance(num_plots, list):
         fig, axs = plt.subplots(*num_plots, sharey=False, sharex=True)
         cnt = 0
         for i in range(num_plots[0]):
@@ -256,6 +262,10 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
                 cnt += 1
         axs.flat[2].set_xlabel(x_label)
         axs.flat[0].set_ylabel(y_label)
+
+    else:
+        raise TypeError('`num_plot` should either be type int or list!')
+
     fig.suptitle(title)
     fig.legend()
 

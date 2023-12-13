@@ -1,8 +1,8 @@
 import numpy as np
+from qutip import Qobj
 from scipy.constants import Planck, Boltzmann
-from qutip import Qobj, rand_herm
-
 from tqdm import tqdm
+
 
 def exp_diagonalize(q):
     """
@@ -98,6 +98,7 @@ def positivity(q):
     eigenvalues = q.eigenenergies()
     return np.all(np.real(eigenvalues) >= -1e-10)
 
+
 def apply_op(q, U):
     """
     Applies the operator U onto the density matrix q
@@ -112,6 +113,7 @@ def apply_op(q, U):
     """
     return U * q * U.dag()
 
+
 def apply_exp_op(q, U):
     """
     Applies the operator U.expm() onto the density matrix q
@@ -125,6 +127,7 @@ def apply_exp_op(q, U):
     apply_op(U) = U.expm() * dm * U.expm()_dagger
     """
     return U.expm() * q * (U.expm()).dag()
+
 
 def evolve_by_hamiltonian(dm, static_hamiltonian, time):
     """
@@ -166,8 +169,8 @@ def random_operator(d):
     with real and imaginary parts in the half-open interval [-10., 10.].
     """
     round_elements = np.vectorize(round)
-    real_part = round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
-    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1/2), 2)
+    real_part = round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
+    imaginary_part = 1j * round_elements(20 * (np.random.rand(d, d) - 1 / 2), 2)
     random_array = real_part + imaginary_part
     return Qobj(random_array)
 
@@ -194,16 +197,16 @@ def canonical_density_matrix(hamiltonian, temperature):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - ((Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 
-                  / temperature)
+    exponent = - (Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 / temperature
     numerator = exponent.expm()
     try:
         canonical_dm = numerator.unit()
     except ValueError:
-        raise ValueError('Most likely exponent cannot be taken because the value is too large. '\
-              'Either hamiltonian has a very strong interaction in MHz, or the temperature'\
-              'is too low.')
+        raise ValueError('Most likely exponent cannot be taken because the value is too large. '
+                         'Either hamiltonian has a very strong interaction in MHz, or the temperature'
+                         'is too low.')
     return canonical_dm
+
 
 def calc_e_ops(dms, e_ops):
     """
@@ -227,3 +230,29 @@ def calc_e_ops(dms, e_ops):
             exp_vals[i].append((dm * e_ops[i]).tr())
 
     return np.array(exp_vals)
+
+
+def apply_rot_pulse(rho, duration, rot_axis):
+    """
+    Apply a "pulse" to the given state by rotating the given state by  
+    the given duration. i.e., transforms the density matrix by 
+    `U = exp(- i * duration * rot_axis)`:
+        `U * rho * U.dag()`
+
+    Parameters:
+    -----------
+    rho : Qobj
+        The density matrix of the state to apply the pulse to.
+    duration : float
+        The duration of the applied pulse as an angle in radians.
+    rot_axis : Qobj
+        Angular momentum operator for the corresponding axis of rotation. 
+
+    Returns:
+    --------
+    The transformed density matrix as a Qobj. 
+    """
+
+    rot_op = (-1j * duration * rot_axis).expm()
+    return apply_op(rho, rot_op)
+    # return rho.transform((-1j * duration * rot_axis).expm())

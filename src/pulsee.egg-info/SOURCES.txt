@@ -1,7 +1,0 @@
-LICENSE
-README.md
-setup.py
-src/pulsee.egg-info/PKG-INFO
-src/pulsee.egg-info/SOURCES.txt
-src/pulsee.egg-info/dependency_links.txt
-src/pulsee.egg-info/top_level.txt

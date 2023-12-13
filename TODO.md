@@ -2,9 +2,10 @@
 - [ ] Fix ipyparallel for Jyputer notebook
 
 Jiwoo: 
-- [ ] update 
 - [ ] simulate CNOT on ADP
 - [ ] Update `plot_complex_density_matrix` and `plot_real_part_density_matrix` (fix element labels & optional arguments to rotate the plot)
+- [ ] Replace the use of matplotlib.pylab (strongly discouraged by matplotlib documentation) with matplotlib.pyplot
+- [ ] Replace all use of the plotting functions with pulsee.plot instead of pulsee.simulation
 - [ ] Test, QA
 
 Ilija
