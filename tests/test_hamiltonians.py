@@ -6,9 +6,9 @@ from hypothesis import given, note
 
 from qutip import Qobj, rand_dm
 
-from pulsee.operators import random_operator, random_observable
+from pulsee import random_operator, random_observable
 
-from pulsee.many_body import ptrace_subspace
+from pulsee import ptrace_subspace
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 

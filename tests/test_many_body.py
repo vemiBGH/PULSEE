@@ -5,9 +5,9 @@ from hypothesis import given, settings, note
 
 from qutip import tensor, rand_dm
 
-from pulsee.operators import random_operator, random_observable
+from pulsee import random_operator, random_observable
 
-from pulsee.many_body import ptrace_subspace
+from pulsee import ptrace_subspace
 
 @given(d = st.integers(min_value=2, max_value=8))
 @settings(deadline = None)

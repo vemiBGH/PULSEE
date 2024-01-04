@@ -38,14 +38,14 @@ try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
 except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
-    from pulsee.backend_kivyagg import FigureCanvasKivyAgg
+    from pulsee import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
-from pulsee.operators import *
+from pulsee import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
-from pulsee.simulation import nuclear_system_setup, \
+from pulsee import nuclear_system_setup, \
     evolve, plot_real_part_density_matrix, \
     FID_signal, fourier_transform_signal, \
     plot_fourier_transform, fourier_phase_shift

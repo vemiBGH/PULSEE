@@ -10,13 +10,13 @@ from matplotlib.pyplot import xticks, yticks
 import hypothesis.strategies as st
 from hypothesis import given, assume
 
-from pulsee.operators import changed_picture
+from pulsee import changed_picture
 
 from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.hamiltonians import h_j_coupling
 
-from pulsee.simulation import nuclear_system_setup, \
+from pulsee import nuclear_system_setup, \
                        power_absorption_spectrum, \
                        evolve, \
                        RRF_operator, \

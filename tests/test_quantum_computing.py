@@ -1,6 +1,6 @@
 import numpy as np
 
-from pulsee.quantum_computing import CompositeQubitSpace, QubitSpace, \
+from pulsee import CompositeQubitSpace, QubitSpace, \
 							  MatrixRepresentationError
 
 import hypothesis.strategies as st

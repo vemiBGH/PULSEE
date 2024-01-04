@@ -38,7 +38,7 @@ try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
 except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
-    from pulsee.backend_kivyagg import FigureCanvasKivyAgg
+    from pulsee import FigureCanvasKivyAgg
 
     # catch an ImportError that happens due to some versions of kivy.
     # This shouldn't be a problem in future updates of matplotlib and kivy.
@@ -48,7 +48,7 @@ from qutip import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
-from pulsee.simulation import nuclear_system_setup, \
+from pulsee import nuclear_system_setup, \
     evolve, plot_real_part_density_matrix, \
     FID_signal, fourier_transform_signal, \
     plot_fourier_transform, \
