@@ -357,11 +357,11 @@ def power_absorption_spectrum(spin, h_unperturbed: list[Qobj], normalized=True, 
     if isinstance(spin, ManySpins):
         magnetic_moment = Qobj(np.zeros(shape), dims=dims)
         for i in range(spin.n_spins):
-            mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I["x"]
+            mm_i = spin.spins[i].gyro_ratio_over_2pi * spin.spins[i].I["x"]
             for j in range(i):
-                mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
+                mm_i = tensor(Qobj(qeye(spin.spins[j].d)), mm_i)
             for k in range(spin.n_spins)[i + 1 :]:
-                mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
+                mm_i = tensor(mm_i, Qobj(qeye(spin.spins[k].d)))
             magnetic_moment += mm_i
     else:
         magnetic_moment = spin.gyro_ratio_over_2pi * spin.I["x"]

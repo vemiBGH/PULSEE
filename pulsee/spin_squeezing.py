@@ -76,9 +76,9 @@ def coherent_spin_state(spin_system, initial_state: list[dict]) -> Qobj:
     assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
     assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
 
-    dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+    dm = spin_coherent(spin_system.spins[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
     for i in range(1, spin_system.n_spins):
-        dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
+        dm = tensor(dm, spin_coherent(spin_system.spins[i].I['I'], initial_state[i]['theta'],
                                       initial_state[i]['phi'], type='dm'))
     return dm
 
