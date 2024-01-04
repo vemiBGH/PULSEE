@@ -4,9 +4,7 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from qutip import Qobj, rand_dm
-
-from pulsee import random_operator, random_observable
+from qutip import Qobj
 
 from pulsee import ptrace_subspace
 

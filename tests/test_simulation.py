@@ -3,12 +3,8 @@ import pandas as pd
 
 from qutip import mesolve, Qobj, rand_dm, tensor
 
-import matplotlib.pylab as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.pyplot import xticks, yticks
-
 import hypothesis.strategies as st
-from hypothesis import given, assume
+from hypothesis import given
 
 from pulsee import changed_picture
 
