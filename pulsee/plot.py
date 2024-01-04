@@ -1,11 +1,12 @@
 from fractions import Fraction
 
-import matplotlib.pylab as plt
+import matplotlib.colors
+import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib import colorbar as clrbar, colors as clrs
 from matplotlib.patches import Patch
-from matplotlib.pyplot import xticks, yticks
 from qutip import Qobj
+# import proplot as pplt
 
 
 def plot_power_absorption_spectrum(
@@ -239,8 +240,8 @@ def plot_real_part_density_matrix(
         tick_label[i] = "|" + tick_label[i]
 
     ax.tick_params(axis="both", which="major", labelsize=6)
-    xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
-    yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
+    plt.xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
+    plt.yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
 
     ax.set_zlabel("Re(\N{GREEK SMALL LETTER RHO})")
     legend_elements = [
@@ -290,14 +291,13 @@ def plot_complex_density_matrix(
         many_spin_indexing=None,
         show=True,
         phase_limits=None,
-        phi_label=r"$\phi$",
+        phi_label="Phase",
         show_legend=True,
         fig_dpi=400,
         save_to="",
         figsize=None,
         labelsize=6,
-        elev=45,
-        azim=-15,
+        view_angle=(45, -15),
 ):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
@@ -355,8 +355,8 @@ def plot_complex_density_matrix(
     labelsize : int
          Default is 6
 
-    (azim, elev) : (float, float)
-         Angle of viewing for the 3D plot.
+    view_angle : (float, float)
+         A tuple of (azimuthal, elevation) viewing angles for the 3D plot.
          Default is (45 deg, -15 deg)
 
     Action
@@ -378,26 +378,20 @@ def plot_complex_density_matrix(
 
     dm = np.array(dm)
 
-    # Create a figure for plotting the data as a 3D histogram.
-    fig = plt.figure()
-    if figsize:
-        fig = plt.figure(figsize=figsize)
-    ax = fig.add_subplot(111, projection="3d")
-
-    # Create an X-Y mesh of the same dimension as the 2D data
-    # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(np.arange(dm.shape[1]) + 0.25, np.arange(dm.shape[0]) + 0.25)
-
+    n = np.size(dm)
+    # Create an X-Y mesh of the same dimension as the 2D data. You can think of this as the floor of the plot
+    xpos, ypos = np.meshgrid(range(dm.shape[0]), range(dm.shape[1]))
+    xpos = xpos.T.flatten() - 0.5
+    ypos = ypos.T.flatten() - 0.5
+    zpos = np.zeros(n)
     # Set width of the vertical bars
-    dx = dy = 0.5
+    dx = dy = 0.5 * np.ones(n)
+    dm_data = dm.flatten()
+    dz = np.abs(dm_data)
 
-    # Flatten out the arrays so that they may be passed to "ax.bar3d".
-    # Basically, ax.bar3d expects three one-dimensional arrays: x_data, y_data, z_data.
-    # The following call boils down to picking one entry from each array and plotting a bar from
-    # (x_data[i], y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
-    x_data = x_data.flatten()
-    y_data = y_data.flatten()
-    z_data = dm.flatten()
+    # make small numbers real, to avoid random colors
+    idx, = np.where(abs(dm_data) < 0.001)
+    dm_data[idx] = abs(dm_data[idx])
 
     if phase_limits:  # check that limits is a list type
         phase_min = phase_limits[0]
@@ -407,50 +401,24 @@ def plot_complex_density_matrix(
         phase_max = np.pi
 
     norm = clrs.Normalize(phase_min, phase_max)
-    cmap = complex_phase_cmap()
-    colors = cmap(norm(np.angle(z_data)))
+    # cmap = pplt.Colormap('vikO', shift=-90)  # Using 'VikO' colormap from ProPlot
+    # cmap = plt.get_cmap('twilight_shifted')
+    cmap = rotate_colormap(plt.get_cmap('twilight'), 90)
+    colors = cmap(norm(np.angle(dm_data)))
 
-    ax.bar3d(x_data, y_data, np.zeros(len(z_data)), dx, dy, np.absolute(z_data), color=colors, shade=True)
-    ax.view_init(elev=elev, azim=azim)  # rotating the plot so the "diagonal" direction is more clear
+    # Create a figure for plotting the data as a 3D histogram.
+    fig = plt.figure(constrained_layout=True)
+    if figsize:
+        fig.set_size_inches(figsize)
 
-    d = dm.shape[0]
-    tick_label = []
+    ax = fig.add_subplot(111, projection="3d")
 
-    d_sub = many_spin_indexing
-    n_sub = len(d_sub)
-    m_dict = []  # dictionary of labels for the spin orientation "m"
+    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)  # TODO: change light source? Make color more
+    # consistent between elements
+    ax.view_init(elev=view_angle[0], azim=view_angle[1])  # rotating the plot so the "diagonal" direction is more clear
 
-    # For example, for a two spin-1/2 system:
-    # m_dict = [{0: '1/2', 1:'-1/2'}, {0: '1/2', 1:'-1/2'}]
-    for i in range(n_sub):
-        m_dict.append({})
-        for j in range(d_sub[i]):
-            m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
+    label_indices(ax, dm, labelsize, many_spin_indexing)
 
-    for i in range(d):
-        tick_label.append(">")
-
-    for i in range(n_sub)[::-1]:
-        d_downhill = int(np.prod(d_sub[i + 1:]))
-        d_uphill = int(np.prod(d_sub[0:i]))
-
-        for j in range(d_uphill):
-            for k in range(d_sub[i]):
-                for l in range(d_downhill):
-                    comma = ", "
-                    if j == n_sub - 1:
-                        comma = ""
-                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
-                            m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
-                    )
-
-    for i in range(d):
-        tick_label[i] = "|" + tick_label[i]
-
-    ax.tick_params(axis="both", which="major", labelsize=labelsize)
-
-    xticks(np.arange(start=0.5, stop=dm.shape[0] + 0.5), tick_label)
-    yticks(np.arange(start=1.0, stop=dm.shape[0] + 1.0), tick_label)
     if show_legend:
         cax, kw = clrbar.make_axes(ax, location="right", shrink=0.75, pad=0.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
@@ -466,6 +434,62 @@ def plot_complex_density_matrix(
 
     return fig, ax
 
+
+def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float):
+    """
+    Parameters
+    ----------
+    cmap: Colormap
+        The colormap class to be shifted.
+    angle: float
+        IN DEGREES!
+
+    Returns
+    -------
+    a newly shifted colormap
+    """
+    n = 256
+    nums = np.linspace(0, 1, n)
+    shifted_nums = np.roll(nums, int(n * angle / 360))
+    shifted_cmap = matplotlib.colors.LinearSegmentedColormap.from_list(f"{cmap.name}_new", cmap(shifted_nums))
+    return shifted_cmap
+
+
+def label_indices(ax, dm, labelsize, many_spin_indexing):
+    # x & y axex tick labelling:
+    d = dm.shape[0]
+    tick_label = []
+    d_sub = many_spin_indexing
+    n_sub = len(d_sub)
+    m_dict = []  # dictionary of labels for the spin orientation "m"
+    # For example, for a two spin-1/2 system:
+    # m_dict = [{0: '1/2', 1:'-1/2'}, {0: '1/2', 1:'-1/2'}]
+    for i in range(n_sub):
+        m_dict.append({})
+        for j in range(d_sub[i]):
+            m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
+    for i in range(d):
+        tick_label.append(r"$\rangle$")
+    for i in range(n_sub)[::-1]:
+        d_downhill = int(np.prod(d_sub[i + 1:]))
+        d_uphill = int(np.prod(d_sub[0:i]))
+
+        for j in range(d_uphill):
+            for k in range(d_sub[i]):
+                for l in range(d_downhill):
+                    comma = ", "
+                    if j == n_sub - 1:
+                        comma = ""
+                    tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
+                            m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
+                    )
+    for i in range(d):
+        tick_label[i] = "|" + tick_label[i]
+
+    ax.tick_params(axis="both", which="major", labelsize=labelsize)
+    tick_locations = np.arange(start=0.5, stop=dm.shape[0] + 0.5)
+    ax.set(xticks=tick_locations - 1.5, xticklabels=tick_label,
+           yticks=tick_locations - 0.5, yticklabels=tick_label)
 
 def plot_real_part_FID_signal(
         times,
