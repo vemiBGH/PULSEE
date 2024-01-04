@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "pulsee"
-version = "0.1.2"
-description = ""
-authors = ["Alan Bidart <alanbidart@gmail.com>", "Jiwoo Seo <lemon6927@gmail.com>"]
+version = "0.1.3"
+description = "Program for the Simulation of Nuclear Spin Ensemble Evolution"
+authors = ["Jiwoo Seo <lemon6927@gmail.com>", "Alan Bidart <alanbidart@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
