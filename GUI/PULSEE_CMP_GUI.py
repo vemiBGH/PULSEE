@@ -41,7 +41,6 @@ except (ImportError, KeyError) as e:
     from pulsee import FigureCanvasKivyAgg
 
 # NMR-NQRSimulationSoftware imports
-from pulsee import *
 
 from pulsee.nuclear_spin import NuclearSpin
 

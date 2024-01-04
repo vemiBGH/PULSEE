@@ -3,7 +3,6 @@ import numpy as np
 import hypothesis.strategies as st
 from hypothesis import given, settings, note
 
-from pulsee import random_operator, random_observable
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 
 from qutip import commutator

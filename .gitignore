@@ -16,7 +16,7 @@ src/pulsee.egg-info/PKG-INFO
 tests/plot_complex_density_matrix test.py
 src/pulsee.egg-info/SOURCES.txt
 src/pulsee.egg-info/PKG-INFO
-pulsee/__pycache__/
+src/pulsee/__pycache__/
 *.egg-info
 dist
 
