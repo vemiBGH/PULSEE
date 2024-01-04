@@ -409,13 +409,13 @@ def h_multiple_mode_pulse(
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term = pulse_t_independent_op(spin.spin[n], amplitudes[i], thetas[i], phis[i])
+                    term = pulse_t_independent_op(spin.spins[n], amplitudes[i], thetas[i], phis[i])
                     ops = []
                     for m in range(spin.n_spins):
                         if m == n:
                             ops.append(term)
                         else:
-                            ops.append(qeye(spin.spin[m].d))
+                            ops.append(qeye(spin.spins[m].d))
                     term_n = tensor(ops)
                     h_t_independent += term_n
 
@@ -451,7 +451,7 @@ def h_multiple_mode_pulse(
                 # is the identity, add those together
                 for n in range(spin.n_spins):
                     term = h_single_mode_pulse(
-                        spin.spin[n],
+                        spin.spins[n],
                         omegas[i],
                         amplitudes[i],
                         phases[i],
@@ -466,7 +466,7 @@ def h_multiple_mode_pulse(
                         if m == n:
                             ops.append(term)
                         else:
-                            ops.append(qeye(spin.spin[m].d))
+                            ops.append(qeye(spin.spins[m].d))
                     term_n = tensor(ops)
                     h_pulse += term_n
         elif isinstance(spin, NuclearSpin):
@@ -579,14 +579,14 @@ def h_j_coupling(spins: ManySpins, j_matrix: NDArray) -> Qobj:
     for m in range(j_matrix.shape[0]):
         # column
         for n in range(m):
-            term_nm = j_matrix[n, m] * spins.spin[n].I["z"]
+            term_nm = j_matrix[n, m] * spins.spins[n].I["z"]
             for l in range(n):
-                term_nm = tensor(qeye(spins.spin[l].d), term_nm)
+                term_nm = tensor(qeye(spins.spins[l].d), term_nm)
             for k in range(m)[n + 1 :]:
-                term_nm = tensor(term_nm, qeye(spins.spin[k].d))
-            term_nm = tensor(term_nm, spins.spin[m].I["z"])
+                term_nm = tensor(term_nm, qeye(spins.spins[k].d))
+            term_nm = tensor(term_nm, spins.spins[m].I["z"])
             for j in range(spins.n_spins)[m + 1 :]:
-                term_nm = tensor(term_nm, qeye(spins.spin[j].d))
+                term_nm = tensor(term_nm, qeye(spins.spins[j].d))
 
             h_j = h_j + term_nm
 
@@ -650,9 +650,9 @@ def h_D1(spins: ManySpins, b_D: float, theta: float) -> Qobj:
         * (1 / 2)
         * (3 * (np.cos(theta) ** 2) - 1)
         * (
-            2 * tensor(spins.spin[0].I["z"], spins.spin[1].I["z"])
-            - tensor(spins.spin[0].I["x"], spins.spin[1].I["x"])
-            - tensor(spins.spin[0].I["y"], spins.spin[1].I["y"])
+            2 * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
+            - tensor(spins.spins[0].I["x"], spins.spins[1].I["x"])
+            - tensor(spins.spins[0].I["y"], spins.spins[1].I["y"])
         )
     )
     return Qobj(h_d1)
@@ -679,7 +679,7 @@ def h_D2(spins: ManySpins, b_D: float, theta: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_d2 = b_D * (3 * (np.cos(theta) ** 2) - 1) * (tensor(spins.spin[0].I["z"], spins.spin[1].I["z"]))
+    h_d2 = b_D * (3 * (np.cos(theta) ** 2) - 1) * (tensor(spins.spins[0].I["z"], spins.spins[1].I["z"]))
     return Qobj(h_d2)
 
 
@@ -703,8 +703,8 @@ def h_HF_secular(spins: ManySpins, A: float, B: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_hf = A * tensor(spins.spin[0].I["z"], spins.spin[1].I["z"]) + B * tensor(
-        spins.spin[0].I["z"], spins.spin[1].I["x"]
+    h_hf = A * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"]) + B * tensor(
+        spins.spins[0].I["z"], spins.spins[1].I["x"]
     )
     return Qobj(h_hf)
 
@@ -726,7 +726,7 @@ def h_j_secular(spins: ManySpins, J: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_j = J * tensor(spins.spin[0].I["z"], spins.spin[1].I["z"])
+    h_j = J * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
     return Qobj(h_j)
 
 
@@ -755,8 +755,8 @@ def h_tensor_coupling(spins: ManySpins, t: NDArray) -> Qobj:
     representing the Hamiltonian of this interaction.
     """
 
-    spin_0_ops = [spins.spin[0].I[key] for key in ["x", "y", "z"]]
-    spin_1_ops = [spins.spin[1].I[key] for key in ["x", "y", "z"]]
+    spin_0_ops = [spins.spins[0].I[key] for key in ["x", "y", "z"]]
+    spin_1_ops = [spins.spins[1].I[key] for key in ["x", "y", "z"]]
 
     # Initialize empty operator of appropriate dimension as base case for the for loop.
     h = Qobj(np.zeros((spins.d, spins.d)), dims=spins.dims)
@@ -921,9 +921,17 @@ def make_h_unperturbed(
     h_unperturbed = []
     h_quad = []
     h_zeem = []
-    spins = spin_system.spin
+    if isinstance(spin_system, NuclearSpin):
+        spins = [spin_system]
+        n_spins = 1
+    else:
+        spins = spin_system.spins
+        n_spins = spin_system.n_spins
+
     for i in range(len(spin_par)):
-        if quad_par is not None:
+        if quad_par is None:
+            h_quad.append(h_quadrupole(spins[i], 0.0, 0.0, 0.0, 0.0, 0.0))
+        else:
             h_quad.append(
                 h_quadrupole(
                     spins[i],
@@ -935,23 +943,21 @@ def make_h_unperturbed(
                     quad_par[i]["order"],
                 )
             )
-        else:
-            h_quad.append(h_quadrupole(spins[i], 0.0, 0.0, 0.0, 0.0, 0.0))
 
-        if zeem_par is not None:
-            h_zeem.append(h_zeeman(spins[i], zeem_par["theta_z"], zeem_par["phi_z"], zeem_par["field magnitude"]))
-        else:
+        if zeem_par is None:
             h_zeem.append(h_zeeman(spins[i], 0.0, 0.0, 0.0))
+        else:
+            h_zeem.append(h_zeeman(spins[i], zeem_par["theta_z"], zeem_par["phi_z"], zeem_par["field magnitude"]))
 
         if (cs_param is not None) and (cs_param != 0.0):
             h_zeem.append(h_CS_isotropic(spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]))
 
-    for i in range(spin_system.n_spins):
+    for i in range(n_spins):
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
-            h_i = tensor(qeye(spin_system.spin[j].d), h_i)
-        for k in range(spin_system.n_spins)[i + 1 :]:
-            h_i = tensor(h_i, qeye(spin_system.spin[k].d))
+            h_i = tensor(qeye(spin_system.spins[j].d), h_i)
+        for k in range(n_spins)[i + 1:]:
+            h_i = tensor(h_i, qeye(spin_system.spins[k].d))
         h_unperturbed = h_unperturbed + [Qobj(h_i)]
 
     if j_matrix is not None:

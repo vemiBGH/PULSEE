@@ -96,7 +96,7 @@ from kivy.properties import ObjectProperty
 from kivy.base import EventLoop
 from kivy.uix.floatlayout import FloatLayout
 from kivy.core.image import Image
-from pulsee.backend_kivy import FigureCanvasKivy,\
+from pulsee import FigureCanvasKivy,\
                             FigureManagerKivy, show, new_figure_manager,\
                             NavigationToolbar2Kivy
 

@@ -38,7 +38,7 @@ try:
     from kivy.garden.matplotlib import FigureCanvasKivyAgg
 except (ImportError, KeyError) as e:
     print("Locally imported FigureCanvasKivy")
-    from pulsee.backend_kivyagg import FigureCanvasKivyAgg
+    from pulsee import FigureCanvasKivyAgg
 
     # catch an ImportError that happens due to some versions of kivy.
     # This shouldn't be a problem in future updates of matplotlib and kivy.
@@ -48,7 +48,7 @@ from qutip import *
 
 from pulsee.nuclear_spin import NuclearSpin
 
-from pulsee.simulation import nuclear_system_setup, \
+from pulsee import nuclear_system_setup, \
     evolve, plot_real_part_density_matrix, \
     FID_signal, fourier_transform_signal, \
     plot_fourier_transform, \
@@ -336,7 +336,7 @@ class System_Parameters(FloatLayout):
             quad_paramters = [sim_man.quad_par, sim_man.quad_par2]
 
             if sim_man.canonical_dm_0:
-                sim_man.spin, sim_man.h_unperturbed, sim_man.dm[0] = \
+                sim_man.spins, sim_man.h_unperturbed, sim_man.dm[0] = \
                     nuclear_system_setup(spin_paramters, \
                                          quad_paramters, \
                                          sim_man.zeem_par, \
@@ -355,7 +355,7 @@ class System_Parameters(FloatLayout):
                     for j in range(self.d):
                         self.manual_dm_elements[i, j] = complex(null_string(self.dm_elements[i, j].text))
 
-                sim_man.spin, sim_man.h_unperturbed, sim_man.dm[0] = \
+                sim_man.spins, sim_man.h_unperturbed, sim_man.dm[0] = \
                     nuclear_system_setup(spin_paramters, \
                                          quad_paramters, \
                                          sim_man.zeem_par, \
@@ -1259,7 +1259,7 @@ class Evolution_Results(FloatLayout):
             self.remove_widget(self.evolved_dm_panels)
 
             for i in range(sim_man.n_pulses):
-                sim_man.dm[i + 1] = evolve(sim_man.spin, sim_man.h_unperturbed, sim_man.dm[i], \
+                sim_man.dm[i + 1] = evolve(sim_man.spins, sim_man.h_unperturbed, sim_man.dm[i], \
                                            sim_man.pulse[i], sim_man.pulse_time[i], \
                                            picture=sim_man.evolution_algorithm[i], \
                                            RRF_par=sim_man.RRF_par[i])
@@ -1432,7 +1432,7 @@ class NMR_Spectrum(FloatLayout):
 
             input_n_points = float(null_string(self.sample_points.text))
 
-            sim_man.FID_times, sim_man.FID = FID_signal(sim_man.spin, sim_man.h_unperturbed, \
+            sim_man.FID_times, sim_man.FID = FID_signal(sim_man.spins, sim_man.h_unperturbed, \
                                                         sim_man.dm[sim_man.n_pulses], \
                                                         acquisition_time=input_time_aq, \
                                                         T2=sim_man.decoherence_time, \

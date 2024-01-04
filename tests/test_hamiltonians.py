@@ -4,11 +4,9 @@ import pandas as pd
 import hypothesis.strategies as st
 from hypothesis import given, note
 
-from qutip import Qobj, rand_dm
+from qutip import Qobj
 
-from pulsee.operators import random_operator, random_observable
-
-from pulsee.many_body import ptrace_subspace
+from pulsee import ptrace_subspace
 
 from pulsee.nuclear_spin import NuclearSpin, ManySpins
 
