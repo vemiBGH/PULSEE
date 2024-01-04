@@ -66,8 +66,7 @@ def coherent_spin_state(spin_system, initial_state: list[dict]) -> Qobj:
     """
     for d in initial_state:
         if ('theta' not in d.keys()) or ('phi' not in d.keys()):
-            raise ValueError(
-                "coherent_spin_state: Please check that both angles, theta and phi, are given for all the ManySpins.")
+            raise ValueError("Please check that both 'theta' and 'phi' are given for all the spins.")
 
     if isinstance(spin_system, NuclearSpin):
         assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"

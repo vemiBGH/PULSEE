@@ -921,9 +921,17 @@ def make_h_unperturbed(
     h_unperturbed = []
     h_quad = []
     h_zeem = []
-    spins = spin_system.spin
+    if isinstance(spin_system, NuclearSpin):
+        spins = [spin_system]
+        n_spins = 1
+    else:
+        spins = spin_system.spins
+        n_spins = spin_system.n_spins
+
     for i in range(len(spin_par)):
-        if quad_par is not None:
+        if quad_par is None:
+            h_quad.append(h_quadrupole(spins[i], 0.0, 0.0, 0.0, 0.0, 0.0))
+        else:
             h_quad.append(
                 h_quadrupole(
                     spins[i],
@@ -935,18 +943,16 @@ def make_h_unperturbed(
                     quad_par[i]["order"],
                 )
             )
-        else:
-            h_quad.append(h_quadrupole(spins[i], 0.0, 0.0, 0.0, 0.0, 0.0))
 
-        if zeem_par is not None:
-            h_zeem.append(h_zeeman(spins[i], zeem_par["theta_z"], zeem_par["phi_z"], zeem_par["field magnitude"]))
-        else:
+        if zeem_par is None:
             h_zeem.append(h_zeeman(spins[i], 0.0, 0.0, 0.0))
+        else:
+            h_zeem.append(h_zeeman(spins[i], zeem_par["theta_z"], zeem_par["phi_z"], zeem_par["field magnitude"]))
 
         if (cs_param is not None) and (cs_param != 0.0):
             h_zeem.append(h_CS_isotropic(spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]))
 
-    for i in range(spin_system.n_spins):
+    for i in range(n_spins):
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
             h_i = tensor(qeye(spin_system.spin[j].d), h_i)

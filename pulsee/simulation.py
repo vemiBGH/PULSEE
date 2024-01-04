@@ -204,7 +204,7 @@ def nuclear_system_setup(
         of the system.
         Default value is None.
 
-    initial_state : string or numpy.ndarray or dict
+    initial_state : string or numpy.ndarray or dict or list[dict]
         Specifies the state of the system at time t=0.
 
         If the keyword canonical is passed, the function will return a
@@ -239,19 +239,19 @@ def nuclear_system_setup(
     """
 
     if not isinstance(spin_par, list):
-        assert isinstance(spin_par, dict), ""
+        assert isinstance(spin_par, dict), "spin_par must be a dict or a list of dicts!"
         spin_par = [spin_par]
     if (quad_par is not None) and (not isinstance(quad_par, list)):
+        assert isinstance(quad_par, dict), "quad_par must be a dict or a list of dicts!"
         quad_par = [quad_par]
     if (quad_par is not None) and (len(spin_par) != len(quad_par)):
-        raise IndexError(
-            "The number of passed sets of spin parameters must be" + " equal to the number of the quadrupolar ones."
-        )
+        raise IndexError("The length of spin_par and quad_par must be equal!")
 
-    spins = []
-    for i in range(len(spin_par)):
-        spins.append(NuclearSpin(spin_par[i]["quantum number"], spin_par[i]["gamma/2pi"]))
-    spin_system = ManySpins(spins)
+    if len(spin_par) == 1:
+        spin_system = NuclearSpin(spin_par[0]["quantum number"], spin_par[0]["gamma/2pi"])
+    else:
+        spins = [NuclearSpin(par["quantum number"], par["gamma/2pi"]) for par in spin_par]
+        spin_system = ManySpins(spins)
 
     # Very ugly to have this many arguments, so might make a "InitialParams" class
     h_unperturbed = make_h_unperturbed(
@@ -271,10 +271,7 @@ def nuclear_system_setup(
 
     dm_initial = make_dm_initial(initial_state, spin_system, h_unperturbed, temperature)
 
-    if len(spins) == 1:
-        return spins[0], h_unperturbed, dm_initial
-    else:
-        return spin_system, h_unperturbed, dm_initial
+    return spin_system, h_unperturbed, dm_initial
 
 
 def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Qobj:
@@ -293,7 +290,7 @@ def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Q
     elif isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
         dm_initial = Qobj(initial_state)
     else:
-        raise ValueError("Please check the type of the initial state passed.")
+        raise TypeError("Please check the type of the initial state passed.")
 
     return dm_initial
 
