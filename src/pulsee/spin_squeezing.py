@@ -68,7 +68,7 @@ def coherent_spin_state(spin_system, initial_state: list[dict]) -> Qobj:
         if ('theta' not in d.keys()) or ('phi' not in d.keys()):
             raise ValueError("Please check that both 'theta' and 'phi' are given for all the spins.")
 
-    if isinstance(spin_system, NuclearSpin):
+    if isinstance(spin_system, NuclearSpin) and not isinstance(spin_system, ManySpins):
         assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
         dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
         return dm
@@ -83,7 +83,7 @@ def coherent_spin_state(spin_system, initial_state: list[dict]) -> Qobj:
     return dm
 
 
-def populate_averge_values(dms, sqz_ops):
+def populate_average_values(dms, sqz_ops):
     """
     Populates the class useful_sqz_ops with the average value of the operators in the states
     [density matrices] given.
