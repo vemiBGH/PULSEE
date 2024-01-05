@@ -921,12 +921,12 @@ def make_h_unperturbed(
     h_unperturbed = []
     h_quad = []
     h_zeem = []
-    if isinstance(spin_system, NuclearSpin):
-        spins = [spin_system]
-        n_spins = 1
-    else:
+    if isinstance(spin_system, ManySpins):
         spins = spin_system.spins
         n_spins = spin_system.n_spins
+    else:
+        spins = [spin_system]
+        n_spins = 1
 
     for i in range(len(spin_par)):
         if quad_par is None:
