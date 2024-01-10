@@ -403,7 +403,7 @@ def plot_complex_density_matrix(
     norm = clrs.Normalize(phase_min, phase_max)
     # cmap = pplt.Colormap('vikO', shift=-90)  # Using 'VikO' colormap from ProPlot
     # cmap = plt.get_cmap('twilight_shifted')
-    cmap = rotate_colormap(plt.get_cmap('twilight'), 90)
+    cmap = rotate_colormap(plt.get_cmap('twilight'), angle=90, flip=True)
     colors = cmap(norm(np.angle(dm_data)))
 
     # Create a figure for plotting the data as a 3D histogram.
@@ -435,7 +435,7 @@ def plot_complex_density_matrix(
     return fig, ax
 
 
-def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float):
+def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float, flip: bool = False):
     """
     Parameters
     ----------
@@ -443,14 +443,18 @@ def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float):
         The colormap class to be shifted.
     angle: float
         IN DEGREES!
+    flip: bool
+        Whether to flip the color wheel. Note the flip is done AFTER the rotation.
 
     Returns
     -------
-    a newly shifted colormap
+    a newly shifted colormap. Note that the flip is done AFTER the rotation.
     """
     n = 256
     nums = np.linspace(0, 1, n)
     shifted_nums = np.roll(nums, int(n * angle / 360))
+    if flip:
+        shifted_nums = np.flip(shifted_nums)
     shifted_cmap = matplotlib.colors.LinearSegmentedColormap.from_list(f"{cmap.name}_new", cmap(shifted_nums))
     return shifted_cmap
 
