@@ -407,7 +407,7 @@ def plot_complex_density_matrix(
     colors = cmap(norm(np.angle(dm_data)))
 
     # Create a figure for plotting the data as a 3D histogram.
-    fig = plt.figure(constrained_layout=True)
+    fig = plt.figure(constrained_layout=False)
     if figsize:
         fig.set_size_inches(figsize)
 
