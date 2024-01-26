@@ -215,7 +215,7 @@ Now when we open Jupyter, we should be able to choose the pulsee_env kernel (ins
 Once all the required packages have been installed with `requirements.txt`, git clone the PULSEE repository to your local machine.
 Then do an editable installation by running the following command in the PULSEE directory (where `setup.py` is located):
 ```shell
-pip install -e .
+pip install -U --no-deps -e .
 ```
 
 ### Notes About Requirements
