@@ -196,7 +196,7 @@ Verify that the version of Python is 3.11 or higher.
 Now we will install PULSEE in our `pulsee_env` environment by adding a pointer to your local repository of PULSEE.
 We do this by running the following command while inside the PULSEE directory (where `setup.py` is located):
 ```shell
-pip install -e .
+pip install -U --no-deps -e .
 ```
 We now have a working environment with PULSEE and all its dependencies!
 
