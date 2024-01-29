@@ -413,8 +413,8 @@ def plot_complex_density_matrix(
 
     ax = fig.add_subplot(111, projection="3d")
 
-    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)  # TODO: change light source? Make color more
-    # consistent between elements
+    ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)
+    # TODO: change light source? Make color more consistent between elements
     ax.view_init(elev=view_angle[0], azim=view_angle[1])  # rotating the plot so the "diagonal" direction is more clear
 
     label_indices(ax, dm, labelsize, many_spin_indexing)

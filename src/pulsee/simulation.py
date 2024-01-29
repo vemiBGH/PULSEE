@@ -438,6 +438,14 @@ def evolve(
         where the meaning of each column is analogous to the corresponding
         parameters in h_single_mode_pulse.
 
+        Theta is the polar angle (away from the z axis) of the pulse.
+        So theta=pi/2 (default) corresponds to a pulse in the transverse plane,
+        and theta=0 would correspond to a pulse in the z-direction (a very rare case).
+
+        Phi is the azimuthal angle of the pulse.
+        Phi=0 corresponds to a pulse in the x direction (in the rotating frame).
+        Phi=pi/2 corresponds to a pulse in the y direction.
+
         Important: The amplitude value is B_1, not 2*B_1. The code will
         automatically multiply by 2!
 
