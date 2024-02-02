@@ -715,9 +715,9 @@ def h_j_secular(spins: ManySpins, J: float) -> Qobj:
 
     Parameters
     ----------
-    spins: ManySpins
+    spins : ManySpins
         2 Spins in the system under study.
-    J: float
+    J : float
         The J-coupling constant in MHz.
 
     Returns
@@ -764,7 +764,6 @@ def h_tensor_coupling(spins: ManySpins, t: NDArray) -> Qobj:
     for m, op_1 in enumerate(spin_0_ops):
         for n, op_2 in enumerate(spin_1_ops):
             h += t[m, n] * tensor(op_1, op_2)
-    print(f"THIS IS THE J COUPLING TERM: {h}")
     return h
 
 

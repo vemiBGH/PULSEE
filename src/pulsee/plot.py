@@ -109,6 +109,7 @@ def plot_real_part_density_matrix(
         show_legend=True,
         name="RealPartDensityMatrix",
         destination="",
+        label_size=6
 ):
     """
     Generates a 3D histogram displaying the real part of the elements of the
@@ -146,6 +147,9 @@ def plot_real_part_density_matrix(
     xmin, xmax, ymin, ymax : float
         Set axis limits of the graph.
 
+    show_legend : float
+        Whether to show the phase legend or not.
+
     name : string
         Name with which the graph will be saved.
         Default value is 'RealPartDensityMatrix'.
@@ -155,6 +159,9 @@ def plot_real_part_density_matrix(
         from the current directory). The name of the directory must
         be terminated with a slash /.
         Default value is the empty string (current directory).
+
+    label_size : float
+        Font size of the indices labels
 
     Action
     ------
@@ -169,11 +176,14 @@ def plot_real_part_density_matrix(
     matplotlib.axis.Axis representing the figure built up by the function.
 
     """
+    if not isinstance(dm, Qobj):
+        raise TypeError("The matrix must be an instance of Qobj!")
+
+    if many_spin_indexing is None:
+        many_spin_indexing = dm.dims[0]
+
     real_part = np.vectorize(np.real)
-    if isinstance(dm, Qobj):
-        data_array = real_part(dm)
-    else:
-        data_array = real_part(dm)
+    dmr = real_part(dm)
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
@@ -181,7 +191,7 @@ def plot_real_part_density_matrix(
 
     # Create an X-Y mesh of the same dimension as the 2D data
     # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(np.arange(data_array.shape[1]) + 0.25, np.arange(data_array.shape[0]) + 0.25)
+    x_data, y_data = np.meshgrid(np.arange(dmr.shape[1]) + 0.25, np.arange(dmr.shape[0]) + 0.25)
 
     # Set width of the vertical bars
     dx = dy = 0.5
@@ -192,8 +202,7 @@ def plot_real_part_density_matrix(
     # y_data[i], 0) to (x_data[i], y_data[i], z_data[i]).
     x_data = x_data.flatten()
     y_data = y_data.flatten()
-    z_data = data_array.flatten()
-
+    z_data = dmr.flatten()
     bar_color = np.zeros(len(z_data), dtype=object)
 
     for i in range(len(z_data)):
@@ -204,44 +213,7 @@ def plot_real_part_density_matrix(
 
     ax.bar3d(x_data, y_data, np.zeros(len(z_data)), dx, dy, np.absolute(z_data), color=bar_color)
 
-    d = data_array.shape[0]
-    tick_label = []
-
-    if not many_spin_indexing:
-        many_spin_indexing = dm.dims[0]
-
-    d_sub = many_spin_indexing
-    n_sub = len(d_sub)
-    m_dict = []
-
-    for i in range(n_sub):
-        m_dict.append({})
-        for j in range(d_sub[i]):
-            m_dict[i][j] = str(Fraction((d_sub[i] - 1) / 2 - j))
-
-    for i in range(d):
-        tick_label.append(">")
-
-    for i in range(n_sub)[::-1]:
-        d_downhill = int(np.prod(d_sub[i + 1: n_sub]))
-        d_uphill = int(np.prod(d_sub[0:i]))
-
-        for j in range(d_uphill):
-            for k in range(d_sub[i]):
-                for l in range(d_downhill):
-                    comma = ", "
-                    if j == n_sub - 1:
-                        comma = ""
-                    tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l] = (
-                            m_dict[i][k] + comma + tick_label[j * d_sub[i] * d_downhill + k * d_downhill + l]
-                    )
-
-    for i in range(d):
-        tick_label[i] = "|" + tick_label[i]
-
-    ax.tick_params(axis="both", which="major", labelsize=6)
-    plt.xticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
-    plt.yticks(np.arange(start=0.5, stop=data_array.shape[0] + 0.5), tick_label)
+    label_indices(ax, dm, label_size, many_spin_indexing)
 
     ax.set_zlabel("Re(\N{GREEK SMALL LETTER RHO})")
     legend_elements = [
@@ -265,39 +237,18 @@ def plot_real_part_density_matrix(
     return fig, ax
 
 
-def complex_phase_cmap():
-    """
-    Create a cyclic colormap for representing the phase of complex variables
-
-    From QuTiP 4.0:
-    https://qutip.org
-
-    Returns
-    -------
-    cmap : A matplotlib linear segmented colormap.
-    """
-    cdict = {
-        "blue": ((0.00, 0.0, 0.0), (0.25, 0.0, 0.0), (0.50, 1.0, 1.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
-        "green": ((0.00, 0.0, 0.0), (0.25, 1.0, 1.0), (0.50, 0.0, 0.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
-        "red": ((0.00, 1.0, 1.0), (0.25, 0.5, 0.5), (0.50, 0.0, 0.0), (0.75, 0.0, 0.0), (1.00, 1.0, 1.0)),
-    }
-
-    cmap = clrs.LinearSegmentedColormap("phase_colormap", cdict, 256)
-    return cmap
-
-
 def plot_complex_density_matrix(
         dm,
         many_spin_indexing=None,
         show=True,
         phase_limits=None,
-        phi_label="Phase",
         show_legend=True,
         fig_dpi=400,
         save_to="",
-        figsize=None,
-        labelsize=6,
+        fig_size=None,
+        label_size=6,
         view_angle=(45, -15),
+        zlim=None
 ):
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
@@ -332,9 +283,6 @@ def plot_complex_density_matrix(
     phase_limits : list/array of two floats
         The phase-axis (colorbar) limits [min, max]
 
-    phi_label : str
-        Label for the legend for the angle of the complex number.
-
     show_legend : bool
         Show the legend for the complex angle.
 
@@ -348,16 +296,19 @@ def plot_complex_density_matrix(
 
         Default value is the empty string.
 
-    figsize :  (float, float)
+    fig_size :  (float, float)
          Width, height in inches.
          Default value is the empty string.
 
-    labelsize : int
+    label_size : int
          Default is 6
 
     view_angle : (float, float)
          A tuple of (azimuthal, elevation) viewing angles for the 3D plot.
          Default is (45 deg, -15 deg)
+         
+    zlim : (int, int)
+        The z axis limits of the plot.
 
     Action
     ------
@@ -371,9 +322,9 @@ def plot_complex_density_matrix(
 
     """
     if not isinstance(dm, Qobj):
-        raise TypeError("First argument must be an instance of Qobj!")
+        raise TypeError("The matrix must be an instance of Qobj!")
 
-    if not many_spin_indexing:
+    if many_spin_indexing is None:
         many_spin_indexing = dm.dims[0]
 
     dm = np.array(dm)
@@ -408,26 +359,27 @@ def plot_complex_density_matrix(
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure(constrained_layout=False)
-    if figsize:
-        fig.set_size_inches(figsize)
+    if fig_size:
+        fig.set_size_inches(fig_size)
 
     ax = fig.add_subplot(111, projection="3d")
+    if zlim is not None:
+        ax.set_zlim(zlim)
 
     ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)
     # TODO: change light source? Make color more consistent between elements
     ax.view_init(elev=view_angle[0], azim=view_angle[1])  # rotating the plot so the "diagonal" direction is more clear
-
-    label_indices(ax, dm, labelsize, many_spin_indexing)
+    label_indices(ax, dm, label_size, many_spin_indexing)
 
     if show_legend:
         cax, kw = clrbar.make_axes(ax, location="right", shrink=0.75, pad=0.06)
         cb = clrbar.ColorbarBase(cax, cmap=cmap, norm=norm)
         cb.set_ticks([-np.pi, -np.pi / 2, 0, np.pi / 2, np.pi])
         cb.set_ticklabels((r"$-\pi$", r"$-\pi/2$", r"$0$", r"$\pi/2$", r"$\pi$"))
-        cb.set_label(phi_label)
+        cb.set_label("Phase")
 
     if save_to != "":
-        plt.savefig(save_to, dpi=fig_dpi)
+        plt.savefig(save_to, dpi=fig_dpi, bbox_inches='tight')
 
     if show:
         plt.show()
@@ -435,8 +387,13 @@ def plot_complex_density_matrix(
     return fig, ax
 
 
-def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float, flip: bool = False):
+def rotate_colormap(
+        cmap: matplotlib.colors.Colormap,
+        angle: float,
+        flip: bool = False) -> matplotlib.colors.Colormap:
     """
+    Helper function for `plot_complex_density_matrix`.
+
     Parameters
     ----------
     cmap: Colormap
@@ -459,7 +416,14 @@ def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float, flip: bool =
     return shifted_cmap
 
 
-def label_indices(ax, dm, labelsize, many_spin_indexing):
+def label_indices(
+        ax: plt.Axes,
+        dm: Qobj,
+        label_size: float,
+        many_spin_indexing: list[int]):
+    """
+    Helper function for `plot_complex_density_matrix` and `plot_real_part_density_matrix`.
+    """
     # x & y axex tick labelling:
     d = dm.shape[0]
     tick_label = []
@@ -490,10 +454,11 @@ def label_indices(ax, dm, labelsize, many_spin_indexing):
     for i in range(d):
         tick_label[i] = "|" + tick_label[i]
 
-    ax.tick_params(axis="both", which="major", labelsize=labelsize)
+    ax.tick_params(axis="both", which="major", labelsize=label_size)
     tick_locations = np.arange(start=0.5, stop=dm.shape[0] + 0.5)
     ax.set(xticks=tick_locations - 1.5, xticklabels=tick_label,
            yticks=tick_locations - 0.5, yticklabels=tick_label)
+
 
 def plot_real_part_FID_signal(
         times,
@@ -626,7 +591,7 @@ def plot_fourier_transform(
         imaginary parts, which is the default option (by default,
         `square_modulus=False`).
 
-    xlim (ylim) : 2-element iterable or `None`
+    xlim, ylim : 2-element iterable or `None`
         Lower and upper x-axis (y-axis) limits of the plot.
         When `None` uses `matplotlib` default.
 
@@ -688,6 +653,7 @@ def plot_fourier_transform(
     if fourier_neg is None:
         n_plots = 1
         fourier_data = [fourier]
+        plot_title = "Frequency Spectrum"
     else:
         n_plots = 2
         fourier_data = [fourier, fourier_neg]
@@ -718,7 +684,7 @@ def plot_fourier_transform(
         if n_plots > 1:
             ax[i].title.set_text(plot_title[i])
         else:
-            ax[i].set_title("Frequency Spectrum")
+            ax[i].set_title(plot_title)
 
         ax[i].legend(loc="upper left")
         ax[i].set_xlabel("Frequency (MHz)")

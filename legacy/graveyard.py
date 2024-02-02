@@ -69,7 +69,7 @@
 #     """
 #     return rand_herm(d)
 
-'''legay fourier transform'''
+''' legay fourier transform '''
 
 # def legacy_fourier_transform_signal(times, signal, frequency_start,
 #                                     frequency_stop, opposite_frequency=False):
@@ -144,3 +144,25 @@
 #         return frequencies, np.array(fourier[0])
 #     else:
 #         return frequencies, np.array(fourier[0]), np.array(fourier[1])
+
+
+''' complex_phase_cmap() '''
+# def complex_phase_cmap():
+#     """
+#     Create a cyclic colormap for representing the phase of complex variables
+#
+#     From QuTiP 4.0:
+#     https://qutip.org
+#
+#     Returns
+#     -------
+#     cmap : A matplotlib linear segmented colormap.
+#     """
+#     cdict = {
+#         "blue": ((0.00, 0.0, 0.0), (0.25, 0.0, 0.0), (0.50, 1.0, 1.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+#         "green": ((0.00, 0.0, 0.0), (0.25, 1.0, 1.0), (0.50, 0.0, 0.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+#         "red": ((0.00, 1.0, 1.0), (0.25, 0.5, 0.5), (0.50, 0.0, 0.0), (0.75, 0.0, 0.0), (1.00, 1.0, 1.0)),
+#     }
+#
+#     cmap = clrs.LinearSegmentedColormap("phase_colormap", cdict, 256)
+#     return cmap
