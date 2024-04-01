@@ -10,7 +10,7 @@ from qutip import Qobj, expect, rand_dm
 import hypothesis.strategies as st
 from hypothesis import given, settings, note, assume
 
-from pulsee.operators import random_operator, random_observable, \
+from pulsee import random_operator, random_observable, \
     magnus_expansion_1st_term, magnus_expansion_2nd_term, \
     magnus_expansion_3rd_term, canonical_density_matrix, changed_picture, \
     evolve_by_hamiltonian, positivity, unit_trace

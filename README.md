@@ -163,7 +163,8 @@ conveniently.
 For most users (using Windows or Mac), we recommend using the popular Anaconda distribution which the developers have mainly used and are most familiar with.
 If you are not familiar with Anaconda, there are many resources online and you can start [here](https://docs.anaconda.com/free/anaconda/):
 
-For users using Linux, more experienced with package management, or prefer to not use Anaconda, they can skip to the 'Installation of PULSEE' section.
+For users using Linux, more experienced with package management, or prefer not to use Anaconda,
+they can skip to the ['Editable Installation of PULSEE'](#editable-installation-of-pulsee) section.
 
 ### Creating a Conda Environment with Required Packages
 
@@ -195,7 +196,7 @@ Verify that the version of Python is 3.11 or higher.
 Now we will install PULSEE in our `pulsee_env` environment by adding a pointer to your local repository of PULSEE.
 We do this by running the following command while inside the PULSEE directory (where `setup.py` is located):
 ```shell
-pip install -e .
+pip install -U --no-deps -e .
 ```
 We now have a working environment with PULSEE and all its dependencies!
 
@@ -214,7 +215,7 @@ Now when we open Jupyter, we should be able to choose the pulsee_env kernel (ins
 Once all the required packages have been installed with `requirements.txt`, git clone the PULSEE repository to your local machine.
 Then do an editable installation by running the following command in the PULSEE directory (where `setup.py` is located):
 ```shell
-pip install -e .
+pip install -U --no-deps -e .
 ```
 
 ### Notes About Requirements

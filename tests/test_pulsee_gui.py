@@ -11,7 +11,7 @@ from functools import partial
 import matplotlib
 import matplotlib.pylab as plt
 
-from pulsee.PULSEE_CMP_GUI import null_string, Simulation_Manager, System_Parameters
+from pulsee import null_string, Simulation_Manager, System_Parameters
     
 def test_null_string():
     test_text = 'test_text'

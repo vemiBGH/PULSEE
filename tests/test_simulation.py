@@ -3,20 +3,16 @@ import pandas as pd
 
 from qutip import mesolve, Qobj, rand_dm, tensor
 
-import matplotlib.pylab as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.pyplot import xticks, yticks
-
 import hypothesis.strategies as st
-from hypothesis import given, assume
+from hypothesis import given
 
-from pulsee.operators import changed_picture
+from pulsee import changed_picture
 
 from pulsee.nuclear_spin import NuclearSpin
 
 from pulsee.hamiltonians import h_j_coupling
 
-from pulsee.simulation import nuclear_system_setup, \
+from pulsee import nuclear_system_setup, \
                        power_absorption_spectrum, \
                        evolve, \
                        RRF_operator, \

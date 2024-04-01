@@ -28,9 +28,9 @@ def exp_diagonalize(q):
         dexp[i, i] = np.exp(e)
         i += 1
 
-    d = Qobj(d)
-    dexp = Qobj(dexp)
-    u = Qobj(np.concatenate(eigvects, axis=1))
+    d = Qobj(d, dims=q.dims)
+    dexp = Qobj(dexp, dims=q.dims)
+    u = Qobj(np.concatenate(eigvects, axis=1), dims=q.dims)
 
     return u, d, dexp
 

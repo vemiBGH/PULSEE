@@ -1,7 +1,10 @@
 - [ ] Add zero-field NQR example
-- [ ] Fix ipyparallel for Jyputer notebook
+- [ ] Fix ipyparallel for Jupyter notebook
 
 Jiwoo: 
+- [ ] Update poetry files for package management
+- [ ] Add type hints to simulation.py
+- [ ] Replace pd dataframe (mode) with a new class. Should simplify the code and remove dependency on pandas package
 - [ ] simulate CNOT on ADP
 - [ ] Update `plot_complex_density_matrix` and `plot_real_part_density_matrix` (fix element labels & optional arguments to rotate the plot)
 - [ ] Replace the use of matplotlib.pylab (strongly discouraged by matplotlib documentation) with matplotlib.pyplot
