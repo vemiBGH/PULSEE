@@ -2,7 +2,7 @@ import numpy as np
 from qutip import Qobj
 
 
-def partial_trace(operator, subspaces_dimensions, index_positions):
+def partial_trace(operator : Qobj, subspaces_dimensions : list, index_positions : int):
     """
     Legacy wrapper for pulsee.many_body.ptrace_subspace.
 
@@ -26,7 +26,7 @@ def partial_trace(operator, subspaces_dimensions, index_positions):
     return ptrace_subspace(operator, subspaces_dimensions, index_positions)
 
 
-def ptrace_subspace(operator, subspaces_dimensions, index_position):
+def ptrace_subspace(operator : Qobj, subspaces_dimensions : list, index_position : int):
     """
     Returns the partial trace of an operator over the specified subspace of the Hilbert space.
     Different from QuTip.Qobj.ptrace() in that it *traces over* the given subspace as opposed to *keeping* the given subspace.

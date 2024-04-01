@@ -2,8 +2,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 from qutip import Qobj, spin_coherent, tensor
 
-from pulsee.nuclear_spin import ManySpins, NuclearSpin
-from pulsee.operators import calc_e_ops
+from .nuclear_spin import ManySpins, NuclearSpin
+from .operators import calc_e_ops
 
 
 class UsefulSqzOps:
@@ -66,10 +66,9 @@ def coherent_spin_state(spin_system : NuclearSpin, initial_state: list[dict]) ->
     """
     for d in initial_state:
         if ('theta' not in d.keys()) or ('phi' not in d.keys()):
-            raise ValueError(
-                "coherent_spin_state: Please check that both angles, theta and phi, are given for all the ManySpins.")
+            raise ValueError("Please check that both 'theta' and 'phi' are given for all the spins.")
 
-    if isinstance(spin_system, NuclearSpin):
+    if isinstance(spin_system, NuclearSpin) and not isinstance(spin_system, ManySpins):
         assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
         dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
         return dm
@@ -77,9 +76,9 @@ def coherent_spin_state(spin_system : NuclearSpin, initial_state: list[dict]) ->
     assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
     assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
 
-    dm = spin_coherent(spin_system.spin[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+    dm = spin_coherent(spin_system.spins[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
     for i in range(1, spin_system.n_spins):
-        dm = tensor(dm, spin_coherent(spin_system.spin[i].I['I'], initial_state[i]['theta'],
+        dm = tensor(dm, spin_coherent(spin_system.spins[i].I['I'], initial_state[i]['theta'],
                                       initial_state[i]['phi'], type='dm'))
     return dm
 

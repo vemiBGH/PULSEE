@@ -14,11 +14,12 @@ from qutip.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
-from pulsee.hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
-from pulsee.nuclear_spin import ManySpins, NuclearSpin
+
+from .hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
+from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
-from pulsee.operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
-from pulsee.spin_squeezing import coherent_spin_state
+from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
+from .spin_squeezing import coherent_spin_state
 
 
 def nuclear_system_setup(
@@ -135,7 +136,7 @@ def nuclear_system_setup(
         |       'theta'       |       float      |
 
         where b_d is the magnitude of dipolar constant,
-        `b_D\\equiv \\frac{\\mu_0\\gamma_1\\gamma_2}{4\\pi r^3_{21}}`, and 
+        `b_D\\equiv \\frac{\\mu_0\\gamma_1\\gamma_2}{4\\pi r^3_{21}}`, and
         theta is the polar angle between the two spins (expressed in radians).
 
         When it is None, the dipolar interaction in the secular approximation
@@ -203,7 +204,7 @@ def nuclear_system_setup(
         of the system.
         Default value is None.
 
-    initial_state : string or numpy.ndarray or dict
+    initial_state : string or numpy.ndarray or dict or list[dict]
         Specifies the state of the system at time t=0.
 
         If the keyword canonical is passed, the function will return a
@@ -238,19 +239,19 @@ def nuclear_system_setup(
     """
 
     if not isinstance(spin_par, list):
-        assert isinstance(spin_par, dict), ""
+        assert isinstance(spin_par, dict), "spin_par must be a dict or a list of dicts!"
         spin_par = [spin_par]
     if (quad_par is not None) and (not isinstance(quad_par, list)):
+        assert isinstance(quad_par, dict), "quad_par must be a dict or a list of dicts!"
         quad_par = [quad_par]
     if (quad_par is not None) and (len(spin_par) != len(quad_par)):
-        raise IndexError(
-            "The number of passed sets of spin parameters must be" + " equal to the number of the quadrupolar ones."
-        )
+        raise IndexError("The length of spin_par and quad_par must be equal!")
 
-    spins = []
-    for i in range(len(spin_par)):
-        spins.append(NuclearSpin(spin_par[i]["quantum number"], spin_par[i]["gamma/2pi"]))
-    spin_system = ManySpins(spins)
+    if len(spin_par) == 1:
+        spin_system = NuclearSpin(spin_par[0]["quantum number"], spin_par[0]["gamma/2pi"])
+    else:
+        spins = [NuclearSpin(par["quantum number"], par["gamma/2pi"]) for par in spin_par]
+        spin_system = ManySpins(spins)
 
     # Very ugly to have this many arguments, so might make a "InitialParams" class
     h_unperturbed = make_h_unperturbed(
@@ -270,10 +271,7 @@ def nuclear_system_setup(
 
     dm_initial = make_dm_initial(initial_state, spin_system, h_unperturbed, temperature)
 
-    if len(spins) == 1:
-        return spins[0], h_unperturbed, dm_initial
-    else:
-        return spin_system, h_unperturbed, dm_initial
+    return spin_system, h_unperturbed, dm_initial
 
 
 def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Qobj:
@@ -292,7 +290,7 @@ def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Q
     elif isinstance(initial_state, Qobj) or isinstance(initial_state, np.ndarray):
         dm_initial = Qobj(initial_state)
     else:
-        raise ValueError("Please check the type of the initial state passed.")
+        raise TypeError("Please check the type of the initial state passed.")
 
     return dm_initial
 
@@ -360,11 +358,11 @@ def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list
     if isinstance(spin, ManySpins):
         magnetic_moment = Qobj(np.zeros(shape), dims=dims)
         for i in range(spin.n_spins):
-            mm_i = spin.spin[i].gyro_ratio_over_2pi * spin.spin[i].I["x"]
+            mm_i = spin.spins[i].gyro_ratio_over_2pi * spin.spins[i].I["x"]
             for j in range(i):
-                mm_i = tensor(Qobj(qeye(spin.spin[j].d)), mm_i)
-            for k in range(spin.n_spins)[i + 1:]:
-                mm_i = tensor(mm_i, Qobj(qeye(spin.spin[k].d)))
+                mm_i = tensor(Qobj(qeye(spin.spins[j].d)), mm_i)
+            for k in range(spin.n_spins)[i + 1 :]:
+                mm_i = tensor(mm_i, Qobj(qeye(spin.spins[k].d)))
             magnetic_moment += mm_i
     else:
         magnetic_moment = spin.gyro_ratio_over_2pi * spin.I["x"]
@@ -390,8 +388,8 @@ def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list
 
 def evolve(
         spin: NuclearSpin,
-        h_unperturbed: list[Qobj] | list[(Qobj, )],
-        dm_initial,
+        h_unperturbed: list[Qobj] | list,
+        dm_initial : Qobj,
         solver=mesolve,
         mode=None,
         evolution_time=0.0,
@@ -440,6 +438,14 @@ def evolve(
 
         where the meaning of each column is analogous to the corresponding
         parameters in h_single_mode_pulse.
+
+        Theta is the polar angle (away from the z axis) of the pulse.
+        So theta=pi/2 (default) corresponds to a pulse in the transverse plane,
+        and theta=0 would correspond to a pulse in the z-direction (a very rare case).
+
+        Phi is the azimuthal angle of the pulse.
+        Phi=0 corresponds to a pulse in the x direction (in the rotating frame).
+        Phi=pi/2 corresponds to a pulse in the y direction.
 
         Important: The amplitude value is B_1, not 2*B_1. The code will
         automatically multiply by 2!
@@ -653,26 +659,26 @@ def RRF_operator(spin, RRF_par):
     # The minus sign is to take care of the `Interaction picture' problem when rotating
     # the system
     RRF_o = -nu * (
-            spin.I["z"] * np.cos(theta)
-            + spin.I["x"] * np.sin(theta) * np.cos(phi)
-            + spin.I["y"] * np.sin(theta) * np.sin(phi)
+        spin.I["z"] * np.cos(theta)
+        + spin.I["x"] * np.sin(theta) * np.cos(phi)
+        + spin.I["y"] * np.sin(theta) * np.sin(phi)
     )
     return Qobj(RRF_o)
 
 
 def FID_signal(
-        spin,
-        h_unperturbed,
-        dm,
-        acquisition_time,
-        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
-        theta=0,
-        phi=0,
-        ref_freq=0,
-        n_points=1000,
-        pulse_mode=None,
-        opts=None,
-        display_progress=None,
+    spin,
+    h_unperturbed,
+    dm,
+    acquisition_time,
+    T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
+    theta=0,
+    phi=0,
+    ref_freq=0,
+    n_points=1000,
+    pulse_mode=None,
+    opts=None,
+    display_progress=None,
 ):
     """
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -849,12 +855,12 @@ def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False,
 
         # zero pad the ends to "interpolate" in frequency domain
         zn = padding  # power of zeros
-        N_z = 2 * (2 ** zn) + nt  # number of elements in padded array
+        N_z = 2 * (2**zn) + nt  # number of elements in padded array
         zero_pad = np.zeros(N_z, dtype=complex)
 
         M0_trunc_z = zero_pad
-        num = 2 ** zn
-        M0_trunc_z[num: (num + nt)] = signal
+        num = 2**zn
+        M0_trunc_z[num : (num + nt)] = signal
 
         # figure out the "frequency axis" after the FFT
         dt = (times[-1] - times[0]) / (len(times) - 1)
@@ -985,16 +991,16 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
 
 def ed_evolve(
-        h,
-        rho0,
-        spin,
-        tlist,
-        e_ops=None,
-        state=True,
-        fid=False,
-        parallel=False,
-        all_t=False,
-        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
+    h,
+    rho0,
+    spin,
+    tlist,
+    e_ops=None,
+    state=True,
+    fid=False,
+    parallel=False,
+    all_t=False,
+    T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
 ):
     """
     Evolve the given density matrix with the interactions given by the provided
