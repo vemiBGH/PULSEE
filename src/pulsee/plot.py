@@ -247,6 +247,7 @@ def plot_complex_density_matrix(
         save_to="",
         fig_size=None,
         label_size=6,
+        label_qubit=False,
         view_angle=(45, -15),
         zlim=None
 ):
@@ -302,6 +303,11 @@ def plot_complex_density_matrix(
 
     label_size : int
          Default is 6
+
+    label_qubit : bool
+        Whether to show the labels in the qubit convention:
+        ex) |01> as opposed to |1/2, -1/2>.
+        Default is False
 
     view_angle : (float, float)
          A tuple of (azimuthal, elevation) viewing angles for the 3D plot.
@@ -365,11 +371,19 @@ def plot_complex_density_matrix(
     ax = fig.add_subplot(111, projection="3d")
     if zlim is not None:
         ax.set_zlim(zlim)
+    elif label_qubit:  # To display as figure in a paper.
+        ax.set_zlim(0, 1)
+        ax.set_zticks([0, 0.5, 1], [0, 0.5, 1], fontsize=label_size, verticalalignment='center')
+    # Adjust the z tick label locations to they line up better with the ticks
+    ax.tick_params('z', pad=0)
 
     ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)
     # TODO: change light source? Make color more consistent between elements
     ax.view_init(elev=view_angle[0], azim=view_angle[1])  # rotating the plot so the "diagonal" direction is more clear
-    label_indices(ax, dm, label_size, many_spin_indexing)
+    if label_qubit:
+        label_qubit_indices(ax, label_size, xpos, ypos)
+    else:
+        label_indices(ax, dm, label_size, many_spin_indexing)
 
     if show_legend:
         cax, kw = clrbar.make_axes(ax, location="right", shrink=0.75, pad=0.06)
@@ -458,6 +472,26 @@ def label_indices(
     tick_locations = np.arange(start=0.5, stop=dm.shape[0] + 0.5)
     ax.set(xticks=tick_locations - 1.5, xticklabels=tick_label,
            yticks=tick_locations - 0.5, yticklabels=tick_label)
+
+
+def label_qubit_indices(ax: plt.Axes, label_size: float, xpos, ypos):
+    # convert the 16 coordinates into 4
+    xpos = np.sort(np.unique(np.array(xpos))) + 0.25
+    ypos = np.sort(np.unique(np.array(ypos))) + 0.25
+    # adapted from qutip's `matrix_histogram_complex`
+    labels = [r"$|$00$\rangle$", r"$|$01$\rangle$", r"$|$10$\rangle$", r"$|$11$\rangle$"]
+    # ax.axes.xaxis.set_major_locator(plt.IndexLocator(1, -0.5))
+    # ax.set_xticklabels(labels)
+    # ax.tick_params(axis='x', labelsize=label_size)
+    #
+    # ax.axes.yaxis.set_major_locator(plt.IndexLocator(1, -0.5))
+    # ax.set_yticklabels(labels)
+    # ax.tick_params(axis='y', labelsize=label_size)
+
+    ax.set_xticks(xpos, labels=labels, fontsize=label_size, va='bottom')
+    ax.set_yticks(ypos, labels=labels, fontsize=label_size)
+    ax.tick_params(axis='x', direction='in', pad=7)
+    ax.tick_params(axis='y', direction='in', pad=-3)
 
 
 def plot_real_part_FID_signal(
