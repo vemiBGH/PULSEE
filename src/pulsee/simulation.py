@@ -20,6 +20,7 @@ from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
 from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
 from .spin_squeezing import coherent_spin_state
+from .pulses import Pulses
 
 
 def nuclear_system_setup(
@@ -391,7 +392,7 @@ def evolve(
         h_unperturbed: list[Qobj] | list,
         dm_initial : Qobj,
         solver=mesolve,
-        mode=None,
+        mode : Pulses =None,
         evolution_time=0.0,
         picture="IP",
         RRF_par=None,
@@ -546,21 +547,19 @@ def evolve(
     dims = spin.dims
 
     if mode is None:
-        mode = pd.DataFrame(
-            [(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)],
-            columns=["frequency", "amplitude", "phase", "theta_p", "phi_p", "pulse_time"],
-        )
-    if np.min(mode["pulse_time"]) < 0:
-        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode["pulse_time"])))
-
+        mode = Pulses()
+        mode.add_pulse()
+    if np.min(mode.pulse_times) < 0:
+        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode.pulse_times)))
+    mode.clean_up()
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
     if spin.gyro_ratio_over_2pi > 0:
         mode = mode.copy()  # in case the user wants to use same 'mode' variable for later uses.
-        mode.loc[:, "phase"] = mode.loc[:, "phase"].add(np.pi)
+        mode.phase_add_pi()
 
-    pulse_time = max(np.max(mode["pulse_time"]), evolution_time)
+    pulse_time = max(np.max(mode.pulse_times), evolution_time)
     if (pulse_time == 0.0) or np.allclose(dm_initial, np.identity(spin.d)):
         return dm_initial
 
