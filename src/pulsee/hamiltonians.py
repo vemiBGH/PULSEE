@@ -83,7 +83,8 @@ def h_quadrupole(
 
     """
     if np.isclose(spin.quantum_number, 1 / 2, rtol=1e-10):
-        return Qobj(spin.d) * 0
+        qobj_array = np.zeros((spin.d, spin.d))
+        return Qobj(qobj_array)
     I = spin.quantum_number
     h_q = (e2qQ / (I * (2 * I - 1))) * (
         (1 / 2) * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q)
@@ -809,9 +810,9 @@ def magnus(
     if order > 3:
         raise ValueError("Magnus expansion solver does not support order > 3. " + f"Given order {order}.")
 
-    output = Result()
-    output.times = tlist
-    output.solver = "magnus"
+    #output = Result()
+    #output.times = tlist
+    #output.solver = "magnus"
     time_step = (tlist[-1] - tlist[0]) / (len(tlist) - 1)
     h = []
     integral = 0
@@ -873,8 +874,9 @@ def magnus(
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
     # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()
     dm_evolved_new_picture = apply_exp_op(rho0, -integral)
-    output.states = [rho0, dm_evolved_new_picture]
-    return output
+    #output.states = [rho0, dm_evolved_new_picture]
+    #return output
+    return dm_evolved_new_picture
 
 
 def multiply_by_2pi(h_unscaled: list[Qobj]) -> list[Qobj]:
@@ -951,8 +953,9 @@ def make_h_unperturbed(
 
         if (cs_param is not None) and (cs_param != 0.0):
             h_zeem.append(h_CS_isotropic(spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]))
-
+    
     for i in range(n_spins):
+        
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
             h_i = tensor(qeye(spin_system.spins[j].d), h_i)

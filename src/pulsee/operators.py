@@ -30,7 +30,10 @@ def exp_diagonalize(q : Qobj) -> list[Qobj]:
 
     d = Qobj(d, dims=q.dims)
     dexp = Qobj(dexp, dims=q.dims)
-    u = Qobj(np.concatenate(eigvects, axis=1), dims=q.dims)
+    eigvects_temp = []
+    for i in range(len(eigvects)):
+        eigvects_temp.append(eigvects[i].full())
+    u = Qobj(np.concatenate(eigvects_temp, axis=1), dims=q.dims)
 
     return u, d, dexp
 

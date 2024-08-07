@@ -10,7 +10,7 @@ import pandas as pd
 from numpy.typing import NDArray
 from qutip import Options, Qobj, expect, mesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
-from qutip.parallel import parallel_map
+from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
@@ -548,10 +548,9 @@ def evolve(
 
     if mode is None:
         mode = Pulses()
-        mode.add_pulse()
     if np.min(mode.pulse_times) < 0:
         raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode.pulse_times)))
-    mode.clean_up()
+    mode.numpify()
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
@@ -560,7 +559,8 @@ def evolve(
         mode.phase_add_pi()
 
     pulse_time = max(np.max(mode.pulse_times), evolution_time)
-    if (pulse_time == 0.0) or np.allclose(dm_initial, np.identity(spin.d)):
+   
+    if (pulse_time == 0.0) or np.allclose(dm_initial.full(), np.identity(spin.d)):
         return dm_initial
 
     if order is None and (solver == magnus or solver == "magnus"):
@@ -568,7 +568,7 @@ def evolve(
 
     # match tolerance to operators.positivity tolerance.
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+        opts = Options(atol=1e-14, rtol=1e-14)
 
     if times is None:
         times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
@@ -587,7 +587,7 @@ def evolve(
         if return_allstates:
             raise NotImplementedError("Return all states not implemented with Magnus. " "Use mesolve instead.")
         else:
-            dm_evolved = changed_picture(result.states[-1], o_change_of_picture, pulse_time, invert=True)
+            dm_evolved = changed_picture(result, o_change_of_picture, pulse_time, invert=True)
             # TODO: Problem of the conj
             # return dm_evolved.conj()
         return dm_evolved
@@ -782,7 +782,7 @@ def FID_signal(
 
     # Measuring the expectation value of Ix rotated:
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+        opts = Options(atol=1e-14, rtol=1e-14)
     if not display_progress:
         display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
 
@@ -1065,7 +1065,7 @@ def ed_evolve(
     if e_ops is None:
         e_ops = []
     if fid:
-        e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
+        e_ops.append(Qobj(spin.I["+"], dims=h.dims))
 
     decay_functions = make_decay_functions(T2)
 
