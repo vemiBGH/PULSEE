@@ -1,6 +1,6 @@
 # PULSEE (**P**rogram for the Sim**ul**ation of Nuclear **S**pin **E**nsemble **E**volution)
 
-Developers: Jiwoo S., Ilija N., Lucas B., Stephen C., Alex A. (Brown University), Davide Candoli (Università di Bologna)
+Developers: Jiwoo Seo, Alex Aoki, Ilija Nikolov, Lucas Brito, Stephen Carr (Brown University), Davide Candoli (Università di Bologna)
 
 PULSEE is an open-source software for the simulation of typical nuclear quadrupole/magnetic resonance experiments on a solid-state sample, describing the dynamics of nuclear spins in condensed matter under the effect of external magnetic fields and reproducing the traditional results observed in laboratory.
 
@@ -156,6 +156,8 @@ Angles do not have a standard unit: they are measured in radians when they are p
 
 ## Installation
 
+For questions or troubles with installation, please contact Jiwoo at `jiwoo_seo@brown.edu` or Github username `jiwooseo98`
+
 In the current development phase, we recommend git cloning the repository into your local machine and following the 
 later instructions of installing the local project in "editable" mode, so that any changes are reflected immediately &
 conveniently.
@@ -172,17 +174,18 @@ We assume the user has successfully installed Anaconda and have a cloned PULSEE 
 This section is mainly written in language of Windows, but Mac users should
 be able to follow along with their corresponding language.
 
-Run 'Anaconda Prompt' as administrator. Navigate to your local PULSEE directory by running
+Run 'Anaconda Prompt' as administrator (or just your regular terminal for Mac users).
+Navigate to your local PULSEE directory by running
 ```shell
-cd {path_to_PULSEE}
+cd path/to/PULSEE
 ```
-where `path_to_PULSEE` is the path to your local PULSEE directory.
+where `path/to/PULSEE` is the path to your local PULSEE directory.
 
-Instead of working in the base environment, we will create a new & clean Conda environment with just the required packages ([as the recommended standard practice](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs)).\
-Run this command to create a new Conda environment with name `pulsee_env` which installs all the packages specified in the `conda-requirements.yml` file.
+Instead of installing anything in the base environment, we will create a new & clean Conda environment with just the required packages ([as the recommended standard practice](https://conda.io/projects/conda/en/latest/user-guide/getting-started.html#managing-envs)).\
+Run this command to create a new Conda environment with name `pulsee_env` with Python version 3.11.
 (Click [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for details on conda environment management)
 ```shell
-conda env create -f conda-requirements.yml
+conda env create -n pulsee_env python=3.11
 ```
 Verify that this environment was successfully installed by running `conda env list` and checking that there's an environment listed as `pulsee_env` along with the path to its location.
 
@@ -191,38 +194,58 @@ Activate this new environment by running
 conda activate pulsee_env
 ```
 Running `conda list` will let you see all the packages installed in this environment.
-Verify that the version of Python is 3.11 or higher.
+Verify that the version of Python is 3.11.
 
 Now we will install PULSEE in our `pulsee_env` environment by adding a pointer to your local repository of PULSEE.
-We do this by running the following command while inside the PULSEE directory (where `setup.py` is located):
+We do this by running the following command while inside the PULSEE directory (where `pyproject.toml` is located):
 ```shell
-pip install -U --no-deps -e .
+pip install -e .
 ```
-We now have a working environment with PULSEE and all its dependencies!
+Normally, using `conda install` is preferred over `pip install` (and mixing the two can cause nightmare-inducing 
+troubles, so should be avoided at all cost).
+However, PULSEE is currently only on PyPI and not on Anaconda, so using pip install with the `.toml` file is
+currently the simplest solution.
 
-Any changes to your local PULSEE directory will be reflected immediately, so make sure to keep your local PULSEE directory up to date for any recent changes.
+The -e flag indicates that we downloaded PULSEE as 'editable', meaning any changes to your local PULSEE directory 
+will be reflected immediately.
+This has the advantage that whenever we make changes / fixes to the PULSEE Github, you can git pull the changes
+to your local PULSEE repo.
+So make sure to keep your local PULSEE directory up to date for any recent changes!
 
-Finally, we can make sure that we will be able to use this new Conda environment in Jupyter by making sure
-to install the kernel of our new environment by running:
+Finally, we will only be able to use this new Conda environment in Jupyter by installing the kernel 
+of our new environment by running:
 ```shell
 python -m ipykernel install --user --name=pulsee_env
 ```
-Now when we open Jupyter, we should be able to choose the pulsee_env kernel (instead of the default `python3`).
+There are two options for running Jupyter with PULSEE:
+1. Run Jupyter in the `base` environment, then switch the kernel from `python3` to `pulsee_env`. 
+   This option is usually on the top-right in most Jupyter user-interfaces.
+2. Run Jupyter directly in the `pulsee_env` environment and run the default kernel.
 
-### Editable Installation of PULSEE
-(For users not using Conda)
+From experience the first option seems to work better for most users. As a reminder for the first option:
 
-Once all the required packages have been installed with `requirements.txt`, git clone the PULSEE repository to your local machine.
-Then do an editable installation by running the following command in the PULSEE directory (where `setup.py` is located):
+**It's very important that when you run Jupyter files requiring PULSEE, you switch the kernel from the default
+`python3` to `pulsee_env` (this option is on the top-right in most Jupyter user interfaces.)**
+
+### Installation without Conda
+Assuming the user has created a clean virtual environment with Python version 3.11, (with minimal packages other than Python 3.11),
+you only need to run two commands in the PULSEE directory (where this `TODO.md` file is):
 ```shell
-pip install -U --no-deps -e .
+pip install -e .
 ```
+then
+```shell
+python -m ipykernel install --user --name=pulsee_env
+```
+to install the Jupyter kernel. 
+
 
 ### Notes About Requirements
 
-All dependencies are summarized in the `conda-requirements.yml` and `requirements.txt` files. 
+All dependencies are summarized in the `pyproject.toml` and `poetry.lock` files.
+We used Poetry to build dependencies and do general package management.
 
-PULSEE has been mainly developed in Python 3.11, and a Python version of 3.11 is required.
+PULSEE has been mainly developed in Python version 3.11, so running PULSEE Python version of 3.11 is (required) strongly recommended.
 
 The operative systems where it has been tested and executed are
 * Ubuntu
@@ -231,6 +254,7 @@ The operative systems where it has been tested and executed are
 The software makes wide use of many of the standard Python modules (namely `numpy`, `scipy`, `pandas`, `matplotlib`) for its general purposes.
 
 The QuTip package is required -> https://qutip.org/.
+
 We downgrade cython to version 0.29 in our requirements, since QuTip only supports up to cython 0.29.
 
 Tests have been carried out using the `pytest` framework and the `hypothesis` module.
