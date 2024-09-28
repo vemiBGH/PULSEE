@@ -782,7 +782,7 @@ def FID_signal(
 
     # Measuring the expectation value of Ix rotated:
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14)
+        opts = Options(atol=1e-14, rtol=1e-14, nsteps=20000)
     if not display_progress:
         display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
 

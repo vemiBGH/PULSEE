@@ -2,6 +2,7 @@ from typing import Iterable
 
 import numpy as np
 from qutip import Qobj
+from qutip import tensor
 
 
 class MatrixRepresentationError(Exception):
@@ -190,11 +191,14 @@ class NGate(Qobj):
     def __init__(self, x, qubit_space: CompositeQubitSpace):
         self._qubit_space = qubit_space
         self._n = qubit_space.n
-        x = np.array(x)
-        if not np.shape(x) == (2 ** self._n, 2 ** self._n):
-            raise MatrixRepresentationError(f'Input array shape {np.shape(x)} '
+        if isinstance(x, Qobj):
+            x_array = x.full()
+        else:
+            x_array = np.array(x)
+        if not np.shape(x_array) == (2 ** self._n, 2 ** self._n):
+            raise MatrixRepresentationError(f'Input array shape {np.shape(x_array)} '
                                             + f'invalid for qubit space H^{self._n}')
-        if np.array_equal(np.matmul(adjoint(x), x), np.identity(self._n)):
+        if np.array_equal(np.matmul(adjoint(x_array), x_array), np.identity(self._n)):
             raise MatrixRepresentationError('Input array must be unitary.')
 
         super().__init__(x)
@@ -404,7 +408,7 @@ def gate_tensor_product(g1, g2):
     An NGate object representing the tensor product of `g1` and `g2`.     
     """
     n = g1.n + g2.n
-    prod = np.kron(g1.full(), g2.full())
+    prod = tensor(g1, g2)
     return NGate(prod, CompositeQubitSpace(n))
 
 
