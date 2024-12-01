@@ -10,7 +10,7 @@ import pandas as pd
 from numpy.typing import NDArray
 from qutip import Options, Qobj, expect, mesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
-from qutip.parallel import parallel_map
+from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
@@ -20,6 +20,7 @@ from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
 from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
 from .spin_squeezing import coherent_spin_state
+from .pulses import Pulses
 
 
 def nuclear_system_setup(
@@ -391,7 +392,7 @@ def evolve(
         h_unperturbed: list[Qobj] | list,
         dm_initial : Qobj,
         solver=mesolve,
-        mode=None,
+        mode : Pulses =None,
         evolution_time=0.0,
         picture="IP",
         RRF_par=None,
@@ -546,22 +547,20 @@ def evolve(
     dims = spin.dims
 
     if mode is None:
-        mode = pd.DataFrame(
-            [(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)],
-            columns=["frequency", "amplitude", "phase", "theta_p", "phi_p", "pulse_time"],
-        )
-    if np.min(mode["pulse_time"]) < 0:
-        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode["pulse_time"])))
-
+        mode = Pulses()
+    if np.min(mode.pulse_times) < 0:
+        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode.pulse_times)))
+    mode.numpify()
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
     if spin.gyro_ratio_over_2pi > 0:
         mode = mode.copy()  # in case the user wants to use same 'mode' variable for later uses.
-        mode.loc[:, "phase"] = mode.loc[:, "phase"].add(np.pi)
+        mode.phase_add_pi()
 
-    pulse_time = max(np.max(mode["pulse_time"]), evolution_time)
-    if (pulse_time == 0.0) or np.allclose(dm_initial, np.identity(spin.d)):
+    pulse_time = max(np.max(mode.pulse_times), evolution_time)
+   
+    if (pulse_time == 0.0) or np.allclose(dm_initial.full(), np.identity(spin.d)):
         return dm_initial
 
     if order is None and (solver == magnus or solver == "magnus"):
@@ -569,7 +568,7 @@ def evolve(
 
     # match tolerance to operators.positivity tolerance.
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+        opts = Options(atol=1e-14, rtol=1e-14)
 
     if times is None:
         times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
@@ -588,7 +587,7 @@ def evolve(
         if return_allstates:
             raise NotImplementedError("Return all states not implemented with Magnus. " "Use mesolve instead.")
         else:
-            dm_evolved = changed_picture(result.states[-1], o_change_of_picture, pulse_time, invert=True)
+            dm_evolved = changed_picture(result, o_change_of_picture, pulse_time, invert=True)
             # TODO: Problem of the conj
             # return dm_evolved.conj()
         return dm_evolved
@@ -783,7 +782,7 @@ def FID_signal(
 
     # Measuring the expectation value of Ix rotated:
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14, rhs_reuse=False)
+        opts = Options(atol=1e-14, rtol=1e-14, nsteps=20000)
     if not display_progress:
         display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
 
@@ -1066,7 +1065,7 @@ def ed_evolve(
     if e_ops is None:
         e_ops = []
     if fid:
-        e_ops.append(Qobj(np.array(spin.I["+"]), dims=h.dims))
+        e_ops.append(Qobj(spin.I["+"], dims=h.dims))
 
     decay_functions = make_decay_functions(T2)
 

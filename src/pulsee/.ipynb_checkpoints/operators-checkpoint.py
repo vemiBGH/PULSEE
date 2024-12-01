@@ -30,7 +30,10 @@ def exp_diagonalize(q : Qobj) -> list[Qobj]:
 
     d = Qobj(d, dims=q.dims)
     dexp = Qobj(dexp, dims=q.dims)
-    u = Qobj(np.concatenate(eigvects, axis=1), dims=q.dims)
+    eigvects_temp = []
+    for i in range(len(eigvects)):
+        eigvects_temp.append(eigvects[i].full())
+    u = Qobj(np.concatenate(eigvects_temp, axis=1), dims=q.dims)
 
     return u, d, dexp
 
@@ -198,13 +201,20 @@ def canonical_density_matrix(hamiltonian : Qobj, temperature : float):
         raise ValueError("The temperature must take a positive value")
 
     exponent = - (Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 / temperature
+    print("exponent")
+    print(exponent)
+    print()
     numerator = exponent.expm()
+    print("numerator")
+    print(numerator)
+    print()
     try:
         canonical_dm = numerator.unit()
     except ValueError:
         raise ValueError('Most likely exponent cannot be taken because the value is too large. '
                          'Either hamiltonian has a very strong interaction in MHz, or the temperature'
                          'is too low.')
+    print(canonical_dm)
     return canonical_dm
 
 

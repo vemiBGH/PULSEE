@@ -94,7 +94,7 @@ def plot_real_part_density_matrix(dm : Qobj | np.ndarray, many_spin_indexing : l
                                   show : bool =True, fig_dpi : int=400,
                                   save : bool =False, xmin : float =None, xmax : float =None,
                                   ymin : float =None, ymax : float =None, show_legend : bool =True,
-                                  name : str ='RealPartDensityMatrix', destination : str ='') -> tuple[plt.Figure, plt.Axes]:
+                                  name : str ='RealPartDensityMatrix', destination : str ='', label_size : float | None =None) -> tuple[plt.Figure, plt.Axes]:
     """
     Generates a 3D histogram displaying the real part of the elements of the
     passed density matrix.
@@ -167,7 +167,7 @@ def plot_real_part_density_matrix(dm : Qobj | np.ndarray, many_spin_indexing : l
         many_spin_indexing = dm.dims[0]
 
     real_part = np.vectorize(np.real)
-    dmr = real_part(dm)
+    dmr = real_part(dm.full())
 
     # Create a figure for plotting the data as a 3D histogram.
     fig = plt.figure()
@@ -335,7 +335,7 @@ def plot_complex_density_matrix(dm : Qobj, many_spin_indexing : list | None =Non
     if many_spin_indexing is None:
         many_spin_indexing = dm.dims[0]
 
-    dm = np.array(dm)
+    dm = dm.full()
 
     n = np.size(dm)
     # Create an X-Y mesh of the same dimension as the 2D data. You can think of this as the floor of the plot
