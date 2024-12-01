@@ -185,7 +185,7 @@ Instead of installing anything in the base environment, we will create a new & c
 Run this command to create a new Conda environment with name `pulsee_env` with Python version 3.11.
 (Click [here](https://conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html) for details on conda environment management)
 ```shell
-conda env create -n pulsee_env python=3.11
+conda create -n "pulsee_env" python=3.11 ipython
 ```
 Verify that this environment was successfully installed by running `conda env list` and checking that there's an environment listed as `pulsee_env` along with the path to its location.
 
