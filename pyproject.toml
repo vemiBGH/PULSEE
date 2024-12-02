@@ -8,14 +8,16 @@ readme = "README.md"
 
 [tool.poetry.dependencies]
 python = "~3.11"
-scipy = "1.11.3"
-cython = "<3"
-qutip = "<5"
-ipykernel = "*"
-notebook = "*"
+numpy = ">=1.22, <2.0"
+scipy = ">=1.8"
 matplotlib = ">=1.2.1"
-numpy = ">=1.16"
+cython = ">=0.29.20"
+setuptools = ">=0.29.20"
+filelock = ">=0.29.20"
 tqdm = "*"
+qutip = "^5"
+notebook = "*"
+pandas = "*"
 
 
 [build-system]
