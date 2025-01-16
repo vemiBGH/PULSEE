@@ -6,7 +6,6 @@ from typing import Callable
 
 # Third party imports
 import numpy as np
-import pandas as pd
 from numpy.typing import NDArray
 from qutip import Options, Qobj, expect, mesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
@@ -14,29 +13,28 @@ from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
-
 from .hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
 from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
 from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
-from .spin_squeezing import coherent_spin_state
 from .pulses import Pulses
+from .spin_squeezing import coherent_spin_state
 
 
 def nuclear_system_setup(
         spin_par: dict | list[dict],
-        quad_par: dict | list[dict] | None =None,
-        zeem_par: dict =None,
-        j_matrix: np.ndarray =None,
-        cs_param: dict | None =None,
-        D1_param: dict | None =None,
-        D2_param: dict | None =None,
-        hf_param: dict | None =None,
-        h_tensor_inter: np.ndarray | list[np.ndarray] =None,
-        j_sec_param: dict =None,
-        h_user: np.ndarray =None,
-        initial_state: str | np.ndarray | dict ="canonical",
-        temperature: float =1e-4,
+        quad_par: dict | list[dict] | None = None,
+        zeem_par: dict = None,
+        j_matrix: np.ndarray = None,
+        cs_param: dict | None = None,
+        D1_param: dict | None = None,
+        D2_param: dict | None = None,
+        hf_param: dict | None = None,
+        h_tensor_inter: np.ndarray | list[np.ndarray] = None,
+        j_sec_param: dict = None,
+        h_user: np.ndarray = None,
+        initial_state: str | np.ndarray | dict = "canonical",
+        temperature: float = 1e-4,
 ) -> NuclearSpin | ManySpins | Qobj | list[Qobj]:
     """
     Sets up the nuclear system under study, returning the objects representing
@@ -296,8 +294,8 @@ def make_dm_initial(initial_state, spin_system, h_unperturbed, temperature) -> Q
     return dm_initial
 
 
-def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list[Qobj], 
-                              normalized: bool =True, dm_initial: Qobj | None =None) -> list:
+def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list[Qobj],
+                              normalized: bool = True, dm_initial: Qobj | None = None) -> list:
     """
     Computes the spectrum of power absorption of the system due to x-polarized
     monochromatic pulses.
@@ -362,7 +360,7 @@ def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list
             mm_i = spin.spins[i].gyro_ratio_over_2pi * spin.spins[i].I["x"]
             for j in range(i):
                 mm_i = tensor(Qobj(qeye(spin.spins[j].d)), mm_i)
-            for k in range(spin.n_spins)[i + 1 :]:
+            for k in range(spin.n_spins)[i + 1:]:
                 mm_i = tensor(mm_i, Qobj(qeye(spin.spins[k].d)))
             magnetic_moment += mm_i
     else:
@@ -390,18 +388,18 @@ def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list
 def evolve(
         spin: NuclearSpin,
         h_unperturbed: list[Qobj] | list,
-        dm_initial : Qobj,
-        solver=mesolve,
-        mode : Pulses =None,
-        evolution_time=0.0,
-        picture="IP",
-        RRF_par=None,
-        times=None,
-        n_points=30,
-        order=None,
+        dm_initial: Qobj,
+        solver: Callable | str = mesolve,
+        mode: Pulses = None,
+        evolution_time: float = 0.0,
+        picture: str = "IP",
+        RRF_par: dict = None,
+        times: NDArray = None,
+        n_points: float = 30,
+        order: int = None,
         opts=None,
-        return_allstates=False,
-        display_progress=True,
+        return_allstates: bool = False,
+        display_progress: bool | None = True,
 ):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -499,7 +497,7 @@ def evolve(
         of the time-dependent Hamiltonian of the system.
         Default value is 10.
 
-    order : float
+    order : int
         The order of the simulation method to use. For `magnus` must be <= 3.
         Defaults to 1 for `magnus` and 12 for `mesolve` and any other solver.
 
@@ -559,7 +557,7 @@ def evolve(
         mode.phase_add_pi()
 
     pulse_time = max(np.max(mode.pulse_times), evolution_time)
-   
+
     if (pulse_time == 0.0) or np.allclose(dm_initial.full(), np.identity(spin.d)):
         return dm_initial
 
@@ -658,26 +656,26 @@ def RRF_operator(spin, RRF_par):
     # The minus sign is to take care of the `Interaction picture' problem when rotating
     # the system
     RRF_o = -nu * (
-        spin.I["z"] * np.cos(theta)
-        + spin.I["x"] * np.sin(theta) * np.cos(phi)
-        + spin.I["y"] * np.sin(theta) * np.sin(phi)
+            spin.I["z"] * np.cos(theta)
+            + spin.I["x"] * np.sin(theta) * np.cos(phi)
+            + spin.I["y"] * np.sin(theta) * np.sin(phi)
     )
     return Qobj(RRF_o)
 
 
 def FID_signal(
-    spin,
-    h_unperturbed,
-    dm,
-    acquisition_time,
-    T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
-    theta=0,
-    phi=0,
-    ref_freq=0,
-    n_points=1000,
-    pulse_mode=None,
-    opts=None,
-    display_progress=None,
+        spin,
+        h_unperturbed,
+        dm,
+        acquisition_time,
+        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
+        theta=0,
+        phi=0,
+        ref_freq=0,
+        n_points=1000,
+        pulse_mode=None,
+        opts=None,
+        display_progress=None,
 ):
     """
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -854,12 +852,12 @@ def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False,
 
         # zero pad the ends to "interpolate" in frequency domain
         zn = padding  # power of zeros
-        N_z = 2 * (2**zn) + nt  # number of elements in padded array
+        N_z = 2 * (2 ** zn) + nt  # number of elements in padded array
         zero_pad = np.zeros(N_z, dtype=complex)
 
         M0_trunc_z = zero_pad
-        num = 2**zn
-        M0_trunc_z[num : (num + nt)] = signal
+        num = 2 ** zn
+        M0_trunc_z[num: (num + nt)] = signal
 
         # figure out the "frequency axis" after the FFT
         dt = (times[-1] - times[0]) / (len(times) - 1)
@@ -990,16 +988,16 @@ def _ed_evolve_solve_t(t, h, rho0, e_ops):
 
 
 def ed_evolve(
-    h,
-    rho0,
-    spin,
-    tlist,
-    e_ops=None,
-    state=True,
-    fid=False,
-    parallel=False,
-    all_t=False,
-    T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
+        h,
+        rho0,
+        spin,
+        tlist,
+        e_ops=None,
+        state=True,
+        fid=False,
+        parallel=False,
+        all_t=False,
+        T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
 ):
     """
     Evolve the given density matrix with the interactions given by the provided

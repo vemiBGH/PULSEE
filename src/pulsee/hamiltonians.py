@@ -606,7 +606,7 @@ def h_CS_isotropic(spin: NuclearSpin, delta_iso: float, B_0: float) -> Qobj:
     spin : NuclearSpin
         Spin under study.
     delta_iso : float
-        Magnitude of the chemical shift in Hz - H_CS = -delta_iso\omega_0 Iz
+        Magnitude of the chemical shift in Hz: H_CS = -delta_iso\omega_0 Iz
     B_0 : non-negative float
         Magnitude of the external magnetic field (expressed in tesla).
 
@@ -620,7 +620,7 @@ def h_CS_isotropic(spin: NuclearSpin, delta_iso: float, B_0: float) -> Qobj:
     ValueError, when the passed B_0 is a negative number.
     """
     if B_0 < 0:
-        raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
+        raise ValueError("The magnitude of the magnetic field must be a non-negative quantity")
     h_cs = -delta_iso * spin.gyro_ratio_over_2pi * B_0 * spin.I["z"]
     return Qobj(h_cs)
 
