@@ -147,14 +147,12 @@ class ManySpins(NuclearSpin):
         self.spins = spins
         self.d = np.prod([spin.d for spin in spins])  # multiply all the d's together
 
-        self.dims = spins[0].dims
-
+        self.dims = spins[0].dims  # updated below!
         for s in spins[1:]:
             self.dims = np.concatenate([self.dims, s.dims], axis=1)
             # Careful of qutip's convention for `dims`. For example,
             # A tensor product of a 2x2 matrix (dims = [[2],[2]]) with a 3x3 matrix (dims = [[3],[3]])
             # will result in a dims = [[2,3], [2,3]]. 
-
         if not isinstance(self.dims, list):
             self.dims = self.dims.tolist()
 

@@ -93,7 +93,7 @@ class Simulation_Manager:
     hf_par = {'A': 0.,
               'B': 0.}
 
-    J_sec_par = {'J': 0.}
+    j_secular = {'J': 0.}
 
     nu_q = 0
 
@@ -321,7 +321,7 @@ class System_Parameters(FloatLayout):
 
             sim_man.hf_par['B'] = float(null_string(self.hfB.text))
 
-            sim_man.J_sec_par['J'] = float(null_string(self.Jparam.text))
+            sim_man.j_secular['J'] = float(null_string(self.Jparam.text))
 
             if not np.isclose(sim_man.spin_par['quantum number'], 1 / 2, rtol=1e-10):
                 self.store_and_write_nu_q(sim_man)
@@ -346,7 +346,7 @@ class System_Parameters(FloatLayout):
                                          sim_man.D2_par, \
                                          sim_man.hf_par, \
                                          None, \
-                                         sim_man.J_sec_par, \
+                                         sim_man.j_secular, \
                                          initial_state='canonical', \
                                          temperature=sim_man.temperature)
 
@@ -365,7 +365,7 @@ class System_Parameters(FloatLayout):
                                          sim_man.D2_par, \
                                          sim_man.hf_par, \
                                          None, \
-                                         sim_man.J_sec_par, \
+                                         sim_man.j_secular, \
                                          initial_state=self.manual_dm_elements, \
                                          temperature=300)
 
@@ -744,7 +744,7 @@ class System_Parameters(FloatLayout):
         self.Bunits = Label(text='MHz', size=(10, 5), pos=(x_shift + 250, y_shift + 90), font_size='15sp')
         self.add_widget(self.Bunits)
 
-    def j_sec_param(self, x_shift=0, y_shift=0):
+    def j_secular(self, x_shift=0, y_shift=0):
         # Secular J-coupling interaction
         # title
         self.JLabel = Label(text='Secular J-coupling', size=(10, 5), pos=(x_shift - 300, y_shift + 90),
@@ -836,7 +836,7 @@ class System_Parameters(FloatLayout):
 
         self.hf_parameters(0, 25)
 
-        self.j_sec_param(0, -10)
+        self.j_secular(0, -10)
 
         self.decoherence_param(0, -30)
 
@@ -1318,7 +1318,7 @@ class Evolution_Results(FloatLayout):
 
             print('\n')
 
-            print("J_secular = " + str(sim_man.J_sec_par['J']) + " MHz")
+            print("J_secular = " + str(sim_man.j_secular['J']) + " MHz")
 
             print('\n')
 
@@ -1795,7 +1795,7 @@ class Panels(TabbedPanel):
 
             p1.hfB.text = configuration['hf_par']['B']
 
-            p1.Jparam.text = configuration['J_sec_par']['J']
+            p1.Jparam.text = configuration['j_secular']['J']
 
             p1.remove_widget(p1.nu_q_label)
 
@@ -1931,7 +1931,7 @@ class Panels(TabbedPanel):
             configuration['hf_par'] = {'A': p1.hfA.text,
                                        'B': p1.hfB.text}
 
-            configuration['J_sec_par'] = {'J': p1.Jparam.text}
+            configuration['j_secular'] = {'J': p1.Jparam.text}
 
             configuration['decoherence time'] = p1.decoherence.text
 

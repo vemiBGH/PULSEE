@@ -42,19 +42,25 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
         raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
 
     h_z = (
-        -spin.gyro_ratio_over_2pi
-        * B_0
-        * (
-            np.sin(theta_z) * np.cos(phi_z) * spin.I["x"]
-            + np.sin(theta_z) * np.sin(phi_z) * spin.I["y"]
-            + np.cos(theta_z) * spin.I["z"]
-        )
+            -spin.gyro_ratio_over_2pi
+            * B_0
+            * (
+                    np.sin(theta_z) * np.cos(phi_z) * spin.I["x"]
+                    + np.sin(theta_z) * np.sin(phi_z) * spin.I["y"]
+                    + np.cos(theta_z) * spin.I["z"]
+            )
     )
     return Qobj(h_z)
 
 
 def h_quadrupole(
-    spin: NuclearSpin, e2qQ: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float, component_order: int = 0
+        spin: NuclearSpin,
+        e2qQ: float,
+        eta: float,
+        alpha_q: float,
+        beta_q: float,
+        gamma_q: float,
+        component_order: int = 0
 ) -> Qobj:
     """
     Computes the term of the Hamiltonian associated with the quadrupolar interaction.
@@ -87,20 +93,18 @@ def h_quadrupole(
         return Qobj(qobj_array)
     I = spin.quantum_number
     h_q = (e2qQ / (I * (2 * I - 1))) * (
-        (1 / 2) * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q)
+            (1 / 2) * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q)
     )
     if component_order > 0:
-        h_q += (e2qQ / (I * (2 * I - 1))) * (
-            (np.sqrt(6) / 4)
-            * (
+        h_q += (e2qQ / (I * (2 * I - 1))) * (np.sqrt(6) / 4 * (
                 (spin.I["z"] * spin.I["+"] + spin.I["+"] * spin.I["z"]) * v1_EFG(-1, eta, alpha_q, beta_q, gamma_q)
                 + (spin.I["z"] * spin.I["-"] + spin.I["-"] * spin.I["z"]) * v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)
-            )
-        )
+        ))
+
     if component_order > 1:
         h_q += (e2qQ / (I * (2 * I - 1))) * (
-            (spin.I["+"] ** 2) * v2_EFG(-2, eta, alpha_q, beta_q, gamma_q)
-            + (spin.I["-"] ** 2) * v2_EFG(2, eta, alpha_q, beta_q, gamma_q)
+                (spin.I["+"] ** 2) * v2_EFG(-2, eta, alpha_q, beta_q, gamma_q)
+                + (spin.I["-"] ** 2) * v2_EFG(2, eta, alpha_q, beta_q, gamma_q)
         )
     return Qobj(h_q)
 
@@ -162,14 +166,14 @@ def v1_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
         raise ValueError("The asymmetry parameter must fall within the interval [0, 1]")
     sign = np.sign(sign)
     v1 = (1 / 2) * (
-        -1j * sign * np.sqrt(3 / 8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q)
-        + 1j
-        * (eta / (np.sqrt(6)))
-        * np.sin(beta_q)
-        * (
-            ((1 + sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q + 2 * gamma_q))
-            - ((1 - sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q - 2 * gamma_q))
-        )
+            -1j * sign * np.sqrt(3 / 8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q)
+            + 1j
+            * (eta / (np.sqrt(6)))
+            * np.sin(beta_q)
+            * (
+                    ((1 + sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q + 2 * gamma_q))
+                    - ((1 - sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q - 2 * gamma_q))
+            )
     )
     return v1
 
@@ -205,21 +209,21 @@ def v2_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
         raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
     v2 = (
-        1
-        / 2
-        * (
-            np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q)
-            + (eta / np.sqrt(6))
-            * np.exp(sign * 2j * alpha_q)
+            1
+            / 2
             * (
-                np.exp(2j * gamma_q)
-                * (1 + sign * np.cos(beta_q)) ** 2
-                / 4
-                * np.exp(-2j * gamma_q)
-                * (1 - sign * np.cos(beta_q)) ** 2
-                / 4
+                    np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q)
+                    + (eta / np.sqrt(6))
+                    * np.exp(sign * 2j * alpha_q)
+                    * (
+                            np.exp(2j * gamma_q)
+                            * (1 + sign * np.cos(beta_q)) ** 2
+                            / 4
+                            * np.exp(-2j * gamma_q)
+                            * (1 - sign * np.cos(beta_q)) ** 2
+                            / 4
+                    )
             )
-        )
     )
 
     return v2
@@ -273,27 +277,27 @@ def pulse_t_independent_op(spin: NuclearSpin, B_1: float, theta_1: float, phi_1:
     Qobj
     """
     return (
-        -2
-        * spin.gyro_ratio_over_2pi
-        * B_1
-        * (
-            np.sin(theta_1) * np.cos(phi_1) * spin.I["x"]
-            + np.sin(theta_1) * np.sin(phi_1) * spin.I["y"]
-            + np.cos(theta_1) * spin.I["z"]
-        )
+            -2
+            * spin.gyro_ratio_over_2pi
+            * B_1
+            * (
+                    np.sin(theta_1) * np.cos(phi_1) * spin.I["x"]
+                    + np.sin(theta_1) * np.sin(phi_1) * spin.I["y"]
+                    + np.cos(theta_1) * spin.I["z"]
+            )
     )
 
 
 def h_single_mode_pulse(
-    spin: NuclearSpin,
-    frequency: float,
-    B_1: float,
-    phase: float,
-    theta_1: float,
-    phi_1: float,
-    t: float,
-    pulse_time: float,
-    factor_t_dependence: bool = False,
+        spin: NuclearSpin,
+        frequency: float,
+        B_1: float,
+        phase: float,
+        theta_1: float,
+        phi_1: float,
+        t: float,
+        pulse_time: float,
+        factor_t_dependence: bool = False,
 ):
     """
     Computes the term of the Hamiltonian describing the interaction with a monochromatic
@@ -347,7 +351,7 @@ def h_single_mode_pulse(
 
 
 def h_multiple_mode_pulse(
-    spin: NuclearSpin | ManySpins, mode: Pulses, t: float, factor_t_dependence: bool = False
+        spin: NuclearSpin | ManySpins, mode: Pulses, t: float, factor_t_dependence: bool = False
 ) -> Qobj | list:
     """
     Computes the term of the Hamiltonian describing the interaction with
@@ -490,7 +494,7 @@ def h_multiple_mode_pulse(
 # Global Hamiltonian of the system (stationary term + pulse term) cast in the picture generated by
 # the Operator h_change_of_picture
 def h_changed_picture(
-    spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
+        spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
 ) -> Qobj:
     """
     Returns the global Hamiltonian of the system, made up of the time-dependent
@@ -517,7 +521,7 @@ def h_changed_picture(
 
 
 def h_changed_picture_func(
-    spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
+        spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
 ) -> Callable:
     """
     Returns the global Hamiltonian of the system, made up of the time-dependent
@@ -584,10 +588,10 @@ def h_j_coupling(spins: ManySpins, j_matrix: NDArray) -> Qobj:
             term_nm = j_matrix[n, m] * spins.spins[n].I["z"]
             for l in range(n):
                 term_nm = tensor(qeye(spins.spins[l].d), term_nm)
-            for k in range(m)[n + 1 :]:
+            for k in range(m)[n + 1:]:
                 term_nm = tensor(term_nm, qeye(spins.spins[k].d))
             term_nm = tensor(term_nm, spins.spins[m].I["z"])
-            for j in range(spins.n_spins)[m + 1 :]:
+            for j in range(spins.n_spins)[m + 1:]:
                 term_nm = tensor(term_nm, qeye(spins.spins[j].d))
 
             h_j = h_j + term_nm
@@ -648,14 +652,14 @@ def h_D1(spins: ManySpins, b_D: float, theta: float) -> Qobj:
 
     """
     h_d1 = (
-        b_D
-        * (1 / 2)
-        * (3 * (np.cos(theta) ** 2) - 1)
-        * (
-            2 * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
-            - tensor(spins.spins[0].I["x"], spins.spins[1].I["x"])
-            - tensor(spins.spins[0].I["y"], spins.spins[1].I["y"])
-        )
+            b_D
+            * (1 / 2)
+            * (3 * (np.cos(theta) ** 2) - 1)
+            * (
+                    2 * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
+                    - tensor(spins.spins[0].I["x"], spins.spins[1].I["x"])
+                    - tensor(spins.spins[0].I["y"], spins.spins[1].I["y"])
+            )
     )
     return Qobj(h_d1)
 
@@ -711,7 +715,7 @@ def h_HF_secular(spins: ManySpins, A: float, B: float) -> Qobj:
     return Qobj(h_hf)
 
 
-def h_j_secular(spins: ManySpins, J: float) -> Qobj:
+def h_j_secular(spins: ManySpins, j_secular: dict[tuple[int, int], float]) -> Qobj:
     """
     Computes the term of the Hamiltonian associated with the J-coupling in the secular approximation  between two spins.
 
@@ -719,8 +723,18 @@ def h_j_secular(spins: ManySpins, J: float) -> Qobj:
     ----------
     spins : ManySpins
         2 Spins in the system under study.
-    J : float
-        The J-coupling constant in MHz.
+    j_secular : dict
+        (copy & pasted from `nuclear_system_setup`)
+        Map containing information about the J-couping in the secular
+        approximation. The keys and values required to this argument are shown in
+        the table below:
+
+        |         key         |       value      |
+        |         ---         |       -----      |
+        |     (i,j): tuple    |      J: float    |
+
+        where (i,j) is a tuple of spin indices i and j, between which J-coupling is present, and
+        J is the J-coupling value in Hz.
 
     Returns
     -------
@@ -728,7 +742,30 @@ def h_j_secular(spins: ManySpins, J: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_j = J * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
+    h_j = None
+    for (i, j) in j_secular.keys():
+        # construct the term: (where id is the identity matrix and "x" is the tensor product)
+        # term_tensored = id_0 x id_1 x ... x Iz_i ... x Iz_j x ... x id_(n-1) x id_n
+        # spin operator Iz at index i and j, but the identity operator at every other index.
+        # else.
+        term_tensored = None
+        for k in range(spins.n_spins):
+            if k == i or k == j:
+                term = spins.spins[k].I["z"]
+            else:
+                term = qeye(spins.dims[0][k])
+
+            if term_tensored is None:  # initialize
+                term_tensored = term
+            else:
+                term_tensored = tensor((term_tensored, term))
+
+        J = j_secular[(i, j)] * 1E-6  # Convert Hz to MHz
+        if h_j is None:  # initialize
+            h_j = J * term_tensored
+        else:
+            h_j += J * term_tensored
+
     return Qobj(h_j)
 
 
@@ -771,13 +808,13 @@ def h_tensor_coupling(spins: ManySpins, t: NDArray) -> Qobj:
 
 # TODO: Better way to calculate Magnus terms...
 def magnus(
-    h_total: Qobj,
-    rho0: Qobj,
-    tlist: list[float],
-    order: int,
-    spin: NuclearSpin,
-    mode: pd.DataFrame,
-    o_change_of_picture: Qobj,
+        h_total: Qobj,
+        rho0: Qobj,
+        tlist: list[float],
+        order: int,
+        spin: NuclearSpin,
+        mode: pd.DataFrame,
+        o_change_of_picture: Qobj,
 ) -> Result:
     """
     Magnus expansion solver, up to 3rd order.
@@ -810,9 +847,9 @@ def magnus(
     if order > 3:
         raise ValueError("Magnus expansion solver does not support order > 3. " + f"Given order {order}.")
 
-    #output = Result()
-    #output.times = tlist
-    #output.solver = "magnus"
+    # output = Result()
+    # output.times = tlist
+    # output.solver = "magnus"
     time_step = (tlist[-1] - tlist[0]) / (len(tlist) - 1)
     h = []
     integral = 0
@@ -865,17 +902,17 @@ def magnus(
                         factor *= 2
 
                     integral += (
-                        factor
-                        * (commutator(h[t], commutator(h[t2], h[t3])) + commutator(h[t3], commutator(h[t2], h[t])))
-                        * ((2 * np.pi * time_step) ** 3)
-                        * (-1j / 6)
+                            factor
+                            * (commutator(h[t], commutator(h[t2], h[t3])) + commutator(h[t3], commutator(h[t2], h[t])))
+                            * ((2 * np.pi * time_step) ** 3)
+                            * (-1j / 6)
                     )
 
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
     # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()
     dm_evolved_new_picture = apply_exp_op(rho0, -integral)
-    #output.states = [rho0, dm_evolved_new_picture]
-    #return output
+    # output.states = [rho0, dm_evolved_new_picture]
+    # return output
     return dm_evolved_new_picture
 
 
@@ -904,18 +941,18 @@ def multiply_by_2pi(h_unscaled: list[Qobj]) -> list[Qobj]:
 
 
 def make_h_unperturbed(
-    spin_system,
-    spin_par,
-    quad_par,
-    zeem_par,
-    cs_param,
-    j_matrix,
-    D1_param,
-    D2_param,
-    hf_param,
-    h_tensor_inter,
-    j_sec_param,
-    h_user,
+        spin_system,
+        spin_par,
+        quad_par,
+        zeem_par,
+        cs_param,
+        j_matrix,
+        D1_param,
+        D2_param,
+        hf_param,
+        h_tensor_inter,
+        j_secular,
+        h_user,
 ) -> list[Qobj]:
     """
     Helper for 'nuclear_system_setup' in simulation.py
@@ -953,47 +990,44 @@ def make_h_unperturbed(
 
         if (cs_param is not None) and (cs_param != 0.0):
             h_zeem.append(h_CS_isotropic(spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]))
-    
+
     for i in range(n_spins):
-        
+
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
             h_i = tensor(qeye(spin_system.spins[j].d), h_i)
         for k in range(n_spins)[i + 1:]:
             h_i = tensor(h_i, qeye(spin_system.spins[k].d))
-        h_unperturbed = h_unperturbed + [Qobj(h_i)]
+        h_unperturbed.append(Qobj(h_i))
 
     if j_matrix is not None:
         h_j = h_j_coupling(spin_system, j_matrix)
-        h_unperturbed = h_unperturbed + [Qobj(h_j)]
+        h_unperturbed.append(Qobj(h_j))
 
     if D1_param is not None:
         if (D1_param["b_D"] == 0.0) and (D1_param["theta"] == 0.0):
             pass
         else:
             h_d1 = h_D1(spin_system, D1_param["b_D"], D1_param["theta"])
-            h_unperturbed = h_unperturbed + [Qobj(h_d1)]
+            h_unperturbed.append(Qobj(h_d1))
 
     if D2_param is not None:
         if (D2_param["b_D"] == 0.0) and (D2_param["theta"] == 0.0):
             pass
         else:
             h_d2 = h_D2(spin_system, D2_param["b_D"], D2_param["theta"])
-            h_unperturbed = h_unperturbed + [Qobj(h_d2)]
+            h_unperturbed.append(Qobj(h_d2))
 
     if hf_param is not None:
         if (hf_param["A"] == 0.0) and (hf_param["B"] == 0.0):
             pass
         else:
             h_hf = h_HF_secular(spin_system, hf_param["A"], hf_param["B"])
-            h_unperturbed = h_unperturbed + [Qobj(h_hf)]
+            h_unperturbed.append(Qobj(h_hf))
 
-    if j_sec_param is not None:
-        if j_sec_param["J"] == 0.0:
-            pass
-        else:
-            h_j = h_j_secular(spin_system, j_sec_param["J"])
-            h_unperturbed = h_unperturbed + [Qobj(h_j)]
+    if j_secular is not None:
+        h_j = h_j_secular(spin_system, j_secular)
+        h_unperturbed.append(Qobj(h_j))
 
     if h_tensor_inter is not None:
         if not isinstance(h_tensor_inter, list):

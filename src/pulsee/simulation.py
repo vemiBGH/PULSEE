@@ -31,7 +31,7 @@ def nuclear_system_setup(
         D2_param: dict | None = None,
         hf_param: dict | None = None,
         h_tensor_inter: np.ndarray | list[np.ndarray] = None,
-        j_sec_param: dict = None,
+        j_secular: dict[tuple[int, int], float] = None,
         h_user: np.ndarray = None,
         initial_state: str | np.ndarray | dict = "canonical",
         temperature: float = 1e-4,
@@ -183,16 +183,17 @@ def nuclear_system_setup(
         When it is None, the interaction is not taken into account.
         Default value is None.
 
-    j_sec_param : dict
+    j_secular : dict
         Map containing information about the J-couping in the secular
         approximation. The keys and values required to this argument are shown in
         the table below:
 
         |         key         |       value      |
         |         ---         |       -----      |
-        |         'J'         |       float      |
+        |     (i,j): tuple    |      J: float    |
 
-        where J is the J-coupling constant in Hz.
+        where (i,j) is a tuple of spin indices i and j, between which J-coupling is present, and
+        J is the J-coupling value in Hz.
 
         When it is None, the J-couping in the secular approximation is not taken
         into account. Default value is None.
@@ -264,7 +265,7 @@ def nuclear_system_setup(
         D2_param,
         hf_param,
         h_tensor_inter,
-        j_sec_param,
+        j_secular,
         h_user,
     )
 
