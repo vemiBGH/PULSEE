@@ -396,7 +396,7 @@ def evolve(
         picture: str = "IP",
         RRF_par: dict = None,
         times: NDArray = None,
-        n_points: float = 30,
+        n_points: float = 1000,
         order: int = None,
         opts=None,
         return_allstates: bool = False,
@@ -493,10 +493,9 @@ def evolve(
         Default is None.
 
     n_points : float
-        Factor that multiplies the number of points, (points = [pulse_time * n_points])
-        in which the time interval [0, pulse_time] is sampled in the discrete approximation
-        of the time-dependent Hamiltonian of the system.
-        Default value is 10.
+        The number of points sampled in the discrete approximation of the time-dependent Hamiltonian of the system.
+        i.e. The length of the time array
+        Default value is 1000.
 
     order : int
         The order of the simulation method to use. For `magnus` must be <= 3.
@@ -665,18 +664,18 @@ def RRF_operator(spin, RRF_par):
 
 
 def FID_signal(
-        spin,
-        h_unperturbed,
-        dm,
-        acquisition_time,
+        spin: NuclearSpin,
+        h_unperturbed: list[Qobj],
+        dm: Qobj,
+        acquisition_time: float,
         T2: float | list[float] | Callable[[float], float] | list[Callable[[float], float]] = 100,
-        theta=0,
-        phi=0,
-        ref_freq=0,
-        n_points=1000,
-        pulse_mode=None,
+        theta: float = 0,
+        phi: float = 0,
+        ref_freq: float = 0,
+        n_points: int = 1000,
+        pulse_mode: Pulses | None = None,
         opts=None,
-        display_progress=None,
+        display_progress: bool | None = None,
 ):
     """
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -704,12 +703,12 @@ def FID_signal(
     T2 : float, or
          iterable[float], or
          function with signature (float) -> float, or
-         iterable[function with signature (float) -> float]
+         list[function with signature (float) -> float]
 
         If float, characteristic time of relaxation of the component of the
-        magnetization on the plane of detection vanishing, i.e., T2.
+        magnetization on the plane of detection vanishing in microS i.e., T2.
         If function, the decay envelope.
-        If iterable, total decay envelope will be product of decays in list.
+        If list of functions, total decay envelope will be product of decays in list.
 
         In units of microseconds. Default value is 100 (microseconds).
 
