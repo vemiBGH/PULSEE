@@ -97,20 +97,19 @@ def plot_power_absorption_spectrum(
     return fig
 
 
-def plot_real_part_density_matrix(
-        dm: Qobj | np.ndarray,
-        many_spin_indexing: list | None = None,
-        show: bool = True,
-        fig_dpi: int = 400,
-        save: bool = False,
-        xmin: float = None,
-        xmax: float = None,
-        ymin: float = None,
-        ymax: float = None,
-        show_legend: bool = True,
-        name: str = 'RealPartDensityMatrix',
-        destination: str = '',
-        label_size: float | None = None) -> tuple[plt.Figure, plt.Axes]:
+def plot_real_part_density_matrix(dm: Qobj | np.ndarray,
+                                  many_spin_indexing: list | None = None,
+                                  show: bool = True,
+                                  fig_dpi: int = 400,
+                                  save: bool = False,
+                                  xmin: float = None,
+                                  xmax: float = None,
+                                  ymin: float = None,
+                                  ymax: float = None,
+                                  show_legend: bool = True,
+                                  name: str = 'RealPartDensityMatrix',
+                                  destination: str = '',
+                                  label_size: float | None = None) -> tuple[plt.Figure, plt.Axes]:
     """
     Generates a 3D histogram displaying the real part of the elements of the
     passed density matrix.
