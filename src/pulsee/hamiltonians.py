@@ -32,7 +32,7 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
     -------
     Qobj
     An Observable object which represents the Zeeman Hamiltonian
-    in the laboratory reference frame (expressed in rad/sec).
+    in the laboratory reference frame (expressed in MHZ).
 
     Raises
     ------

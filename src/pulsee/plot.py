@@ -6,14 +6,21 @@ import numpy as np
 from matplotlib import colorbar as clrbar, colors as clrs
 from matplotlib.patches import Patch
 from qutip import Qobj
+
+
 # import proplot as pplt
 
 
-
-def plot_power_absorption_spectrum(frequencies : np.ndarray, intensities : np.ndarray, show : bool =True,
-                                   xlim : list[float, float] | None =None, ylim : list[float, float] | None =None, 
-                                   fig_dpi : int =400, save : bool =False, name : str ='PowerAbsorptionSpectrum', 
-                                   destination : str ='') -> plt.Figure:
+def plot_power_absorption_spectrum(
+        frequencies: np.ndarray,
+        intensities: np.ndarray,
+        show: bool = True,
+        xlim: list[float, float] | None = None,
+        ylim: list[float, float] | None = None,
+        fig_dpi: int = 400,
+        save: bool = False,
+        name: str = 'PowerAbsorptionSpectrum',
+        destination: str = '') -> plt.Figure:
     """
     Plots the power absorption intensities as a function of the corresponding
     frequencies.
@@ -90,11 +97,19 @@ def plot_power_absorption_spectrum(frequencies : np.ndarray, intensities : np.nd
     return fig
 
 
-def plot_real_part_density_matrix(dm : Qobj | np.ndarray, many_spin_indexing : list | None =None,
-                                  show : bool =True, fig_dpi : int=400,
-                                  save : bool =False, xmin : float =None, xmax : float =None,
-                                  ymin : float =None, ymax : float =None, show_legend : bool =True,
-                                  name : str ='RealPartDensityMatrix', destination : str ='', label_size : float | None =None) -> tuple[plt.Figure, plt.Axes]:
+def plot_real_part_density_matrix(dm: Qobj | np.ndarray,
+                                  many_spin_indexing: list | None = None,
+                                  show: bool = True,
+                                  fig_dpi: int = 400,
+                                  save: bool = False,
+                                  xmin: float = None,
+                                  xmax: float = None,
+                                  ymin: float = None,
+                                  ymax: float = None,
+                                  show_legend: bool = True,
+                                  name: str = 'RealPartDensityMatrix',
+                                  destination: str = '',
+                                  label_size: float | None = None) -> tuple[plt.Figure, plt.Axes]:
     """
     Generates a 3D histogram displaying the real part of the elements of the
     passed density matrix.
@@ -253,20 +268,19 @@ def complex_phase_cmap() -> clrs.LinearSegmentedColormap:
 
 
 def plot_complex_density_matrix(
-        dm : Qobj, many_spin_indexing : list | None = None,
-        show : bool = True,
-        phase_limits : list | np.ndarray | None = None,
-        phi_label : str = r'$\phi$',
-        show_legend : bool = True,
-        fig_dpi : int = 400,
-        save_to : str = "",
-        fig_size : tuple[float, float] | None =None,
-        label_size : int =6,
-        label_qubit : bool = False,
-        view_angle : tuple[float] =(45, -15),
-        zlim : tuple[float, float] | None = None
+        dm: Qobj, many_spin_indexing: list | None = None,
+        show: bool = True,
+        phase_limits: list | np.ndarray | None = None,
+        phi_label: str = r'$\phi$',
+        show_legend: bool = True,
+        fig_dpi: int = 400,
+        save_to: str = "",
+        fig_size: tuple[float, float] | None = None,
+        label_size: int = 6,
+        label_qubit: bool = False,
+        view_angle: tuple[float] = (45, -15),
+        zlim: tuple[float, float] | None = None
 ) -> tuple[plt.Figure, plt.Axes]:
-
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
     of the elements of the passed density matrix.
@@ -511,9 +525,13 @@ def label_qubit_indices(ax: plt.Axes, label_size: float, xpos, ypos):
 
 
 def plot_real_part_FID_signal(
-        times : np.ndarray, FID : np.ndarray, show : bool =True, fig_dpi : int =400, save : bool =False,
-        name : str ='FIDSignal', destination : str ='', xlim : tuple | None =None, ylim : tuple | None =None, 
-        figure : plt.Figure | None =None) -> plt.Figure:
+        times: np.ndarray,
+        FID: np.ndarray, show: bool = True,
+        fig_dpi: int = 400, save: bool = False,
+        name: str = 'FIDSignal', destination: str = '',
+        xlim: tuple | None = None,
+        ylim: tuple | None = None,
+        figure: plt.Figure | None = None) -> plt.Figure:
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -595,10 +613,21 @@ def plot_real_part_FID_signal(
 # one at the top interpreted as the NMR signal produced by a magnetization rotating counter-clockwise,
 # the one at the bottom corresponding to the opposite sense of rotation
 def plot_fourier_transform(
-        frequencies : np.ndarray, fourier : np.ndarray, fourier_neg : np.ndarray =None, square_modulus : bool =False,
-        xlim : list[float, float] =None, ylim : list[float, float] =None, scaling_factor : float =None, norm : bool =True, 
-        fig_dpi : int =400, show : bool =True, save : bool =False, name : str ='FTSignal', destination : str ='', 
-        figure : tuple[plt.Figure, plt.Axes] | None =None, my_label : str ="") -> tuple[plt.Figure, plt.Axes]:
+        frequencies: np.ndarray,
+        fourier: np.ndarray,
+        fourier_neg: np.ndarray = None,
+        square_modulus: bool = False,
+        xlim: list[float, float] = None,
+        ylim: list[float, float] = None,
+        scaling_factor: float = None,
+        norm: bool = True,
+        fig_dpi: int = 400,
+        show: bool = True,
+        save: bool = False,
+        name: str = 'FTSignal',
+        destination: str = '',
+        figure: tuple[plt.Figure, plt.Axes] | None = None,
+        my_label: str = "") -> tuple[plt.Figure, plt.Axes]:
     """
     Plots the Fourier transform of a signal as a function of the frequency.
 
