@@ -35,7 +35,7 @@ def nuclear_system_setup(
         h_user: np.ndarray = None,
         initial_state: str | np.ndarray | dict = "canonical",
         temperature: float = 1e-4,
-) -> NuclearSpin | ManySpins | Qobj | list[Qobj]:
+) -> tuple[NuclearSpin | ManySpins, Qobj, list[Qobj]]:
     """
     Sets up the nuclear system under study, returning the objects representing
     the spin (either a single one or a multiple spins' system), the unperturbed
@@ -227,7 +227,7 @@ def nuclear_system_setup(
     Returns
     -------
     [0]: NuclearSpin / ManySpins
-        The single spin/spin system subject to the NMR/NQR experiment.
+        The single / many spin system subject to the NMR/NQR experiment.
 
     [1]: List[Qobj]
         The unperturbed Hamiltonian, consisting of the Zeeman, quadrupolar

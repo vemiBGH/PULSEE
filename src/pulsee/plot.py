@@ -280,7 +280,8 @@ def plot_complex_density_matrix(
         label_size: int = 6,
         label_qubit: bool = False,
         view_angle: tuple[float] = (45, -15),
-        zlim: tuple[float, float] | None = None
+        zlim: tuple[float, float] | None = None,
+        small_values_no_color: bool = False,
 ) -> tuple[plt.Figure, plt.Axes]:
     """
     Generates a 3D histogram displaying the amplitude and phase (with colors)
@@ -347,6 +348,10 @@ def plot_complex_density_matrix(
     zlim : (int, int)
         The z axis limits of the plot.
 
+    small_values_no_color : bool
+        If True, makes very small bars have no phase so the colors look more uniform.
+        Default is False
+
     Action
     ------
     If show=True, draws a histogram on a 2-dimensional grid representing the
@@ -378,8 +383,9 @@ def plot_complex_density_matrix(
     dz = np.abs(dm_data)
 
     # make small numbers real, to avoid random colors
-    idx, = np.where(abs(dm_data) < 0.001)
-    dm_data[idx] = abs(dm_data[idx])
+    if small_values_no_color:
+        idx, = np.where(abs(dm_data) < 1E-3 * np.max(np.abs(dm_data)))
+        dm_data[idx] = abs(dm_data[idx])
 
     if phase_limits:  # check that limits is a list type
         phase_min = phase_limits[0]

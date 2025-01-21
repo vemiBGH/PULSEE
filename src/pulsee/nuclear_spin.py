@@ -1,6 +1,5 @@
 import numpy as np
-
-from qutip import Qobj, tensor, spin_J_set, qeye
+from qutip import Qobj, qeye, spin_J_set, tensor
 
 
 class NuclearSpin:
@@ -33,7 +32,7 @@ class NuclearSpin:
     shape
     """
 
-    def __init__(self, s: float =1, gamma_over_2pi: float =1):
+    def __init__(self, s: float = 1, gamma_over_2pi: float = 1):
         """
         Constructs an instance of NuclearSpin.
         
@@ -152,7 +151,7 @@ class ManySpins(NuclearSpin):
             self.dims = np.concatenate([self.dims, s.dims], axis=1)
             # Careful of qutip's convention for `dims`. For example,
             # A tensor product of a 2x2 matrix (dims = [[2],[2]]) with a 3x3 matrix (dims = [[3],[3]])
-            # will result in a dims = [[2,3], [2,3]]. 
+            # will result in a dims = [[2,3], [2,3]].
         if not isinstance(self.dims, list):
             self.dims = self.dims.tolist()
 
@@ -169,52 +168,89 @@ class ManySpins(NuclearSpin):
     def __repr__(self):
         return f' shape: {self.shape}, dims: {self.dims}'
 
-    def many_spin_operator(self, component: str | list, spin_target: str | int | list[int] = 'all'):
+    def many_spin_operator(
+            self,
+            component: str | list[str],
+            spin_target: str | int | list[int] = 'all') -> Qobj:
         """
-        Returns the specified spherical or cartesian component of the spin operator of the
-        ManySpins system. If spin_target == 'all' it applied the spin component to all the spins;
-        otherwise, only to the specified spins.
+        Returns a spin operator with the dimension of the ManySpins system, with the specified components at
+        specified indices (details below).
+        If spin_target == 'all' it applies the specified spin component to all the spins;
+        otherwise, they're applied only to the specified spins.
 
-        This functions outputs:
-        component[0] (x) Id (x) Id (x) Id (x) ...
-        + Id (x) component[1] (x) Id (x) Id (x) ...
+        In the most general case (both component and spin_targets are lists), this functions outputs the operator:
+        I_{component[0]} (x) Id (x) Id (x) ... (x) Id
+        + Id (x) I_{component[1]} (x) Id (x) Id ... (x) Id
+        + Id (x) Id (x) I_{component[2]} (x) Id ... (x) Id
         + ...
-        + Id (x) Id (x) Id (x) ... (x) component[-1],
+        + Id (x) Id (x) Id (x) ... (x) I_{component[-1]}
 
-        where (x) is the tensor product.
+        where (x) is the tensor product, 'Id' is the identity operator in whatever dimension it appears in.
+        Important details in the Parameters documentation below.
 
         Parameters
         ----------
-        component: string/list
-            Specifies which component of the overall spin is to be computed,
-            following the key-value correspondence of the attribute I of NuclearSpin.
+        component: string or list[strings]
+            Specifies which component of the spin operator is to be computed, following the key-value correspondence
+            of the attribute `I` of `NuclearSpin`.
 
-        spin_target: string or int or list of ints
+            If string, must be one of: {'x', 'y', 'z', '+', '-'}.
+            Passing in a string will apply this spin component operator to all the spins.
+
+            If list, must be a list consisting of: {'x', 'y', 'z', '+', '-', None},
+            with the length equal to the number of  spins in this system ('n_spins').
+            A user should pass in a list only if they want to apply different component operators at different spins.
+            Passing in a list will apply the operator I_{component[i]} to the spin at index i.
+            If the value at component[i] is None, no operator is applied to the spin at index i.
+
+        spin_target: string or int or list[ints]
             The target spin(s) that the spin operator component is applied to
 
-            Default is 'all': apply the spin component to every spin in the ManySpins.
+            If string, must be 'all', which applies the same spin operator component to all the spins in `ManySpins`.
+            If int, just applies the operator to that single spin at that index value.
+            If list, must be a list of index values to which the operators should apply.
+
+            If `component` is a list, `spin_target` gets overwritten as a list of index values at which components
+            are not None.
+
+            Default is 'all'.
 
         Returns
         -------
-        If (component is '+' or '-'), an Operator object representing the corresponding
-        spherical spin component is returned.
-        If (component is 'x' or 'y' or 'z'), an Observable object representing the
-        corresponding cartesian spin component is returned.
+        A Qobj operator with the same dimension of the ManySpins system, with details given above.
         """
-
-        many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
+        # Processing the parameters
         if isinstance(component, list):
-            assert len(component) == self.n_spins, 'If spin components are different for each spin, ' \
-                                                   'must specify the operator as a string for each spin. ' \
-                                                   'If no operator acts on spin at a position, put a placeholder ' \
-                                                   'in that position, such as None.'
-            spin_target = [i for i in range(len(component)) if component[i] in self.I]
-        else:
+            if not len(component) == self.n_spins:
+                raise ValueError(
+                f"The length of `component` ({len(component)}) must be equal to the number of spins ({self.n_spins}). "
+                "You must specify the spin component for every spin. At positions where you do not want to apply an "
+                "operator, put a dummy placeholder in that position, such as None.")
+
+            # If component is a list, overwrite spin_target as a list of indices with proper component values
+            spin_target = []
+            for i, comp in enumerate(component):
+                if comp in self.I:  # {'x', 'y', 'z', '+', '-'}
+                    spin_target.append(self.I[comp])
+                elif comp is not None:  # To prevent unexpected bugs when a user makes a typo
+                    raise ValueError(f"Every element of `component` must be one of: ('x', 'y', 'z', '+', '-', None)")
+        elif isinstance(component, str):  # A string specifying the component, which will be applied to ALL spins.
             component = self.n_spins * [component]
+        else:
+            raise TypeError(f"The argument `component` must be a string or a list of strings.")
 
         if isinstance(spin_target, int):
             spin_target = [spin_target]
+        elif isinstance(spin_target, str):
+            assert spin_target == "all", "If `spin_target` is a string, must be 'all'."
+        elif isinstance(spin_target, list):
+            for s in spin_target:
+                assert isinstance(s, int), "If `spin_target` is a list, must be a list of integers!"
+        else:
+            raise TypeError(f"The argument `spin_target` must be a string, int, or a list of ints.")
 
+        # Constructing the operator
+        many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
         for i in range(self.n_spins):
             if spin_target == 'all':
                 # Apply the spin operator component to all the spins
@@ -223,14 +259,15 @@ class ManySpins(NuclearSpin):
                 # Only apply the spin operator component to the spin specified in spin_target
                 term = self.spins[i].I[component[i]]
             else:
-                # Apply nothing to the given spin
+                # Apply nothing to the given spin, and make the current term 0
                 term = Qobj(0 * qeye(self.spins[i].d))
 
-            for j in range(self.n_spins)[:i]:
-                term = tensor(qeye(self.spins[j].d), term)
-            for k in range(self.n_spins)[i + 1:]:
-                term = tensor(term, qeye(self.spins[k].d))
-            many_spin_op += Qobj(term.full(), dims=self.dims)
+            for i_left in range(self.n_spins)[:i]:
+                term = tensor(qeye(self.spins[i_left].d), term)
+            for i_right in range(self.n_spins)[i + 1:]:
+                term = tensor(term, qeye(self.spins[i_right].d))
+            assert term.dims == self.dims
+            many_spin_op += term
 
         return many_spin_op
 
