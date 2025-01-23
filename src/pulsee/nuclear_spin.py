@@ -262,12 +262,16 @@ class ManySpins(NuclearSpin):
                 # Apply nothing to the given spin, and make the current term 0
                 term = Qobj(0 * qeye(self.spins[i].d))
 
-            for i_left in range(self.n_spins)[:i]:
-                term = tensor(qeye(self.spins[i_left].d), term)
-            for i_right in range(self.n_spins)[i + 1:]:
-                term = tensor(term, qeye(self.spins[i_right].d))
-            assert term.dims == self.dims
-            many_spin_op += term
+            terms_to_tensor = []
+            for j in range(self.n_spins):
+                if i == j:
+                    terms_to_tensor.append(term)
+                else:
+                    terms_to_tensor.append(qeye(self.spins[j].d))
+
+            terms_tensored = tensor(terms_to_tensor)
+            assert terms_tensored.dims == self.dims
+            many_spin_op += terms_tensored
 
         return many_spin_op
 

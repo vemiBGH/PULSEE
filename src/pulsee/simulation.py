@@ -393,6 +393,7 @@ def evolve(
         solver: Callable | str = mesolve,
         mode: Pulses = None,
         evolution_time: float = 0.0,
+        ref_freq: float = 0,
         picture: str = "IP",
         RRF_par: dict = None,
         times: NDArray = None,
@@ -418,9 +419,9 @@ def evolve(
         Density matrix of the system at time t=0, just before the application
         of the pulse.
 
-    solver : function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
+    solver : string
              OR
-             string
+             function: (Qobj, Qobj, ndarray, **kwargs) -> qutip.solver.Result
         Solution method to be used when calculating time evolution of
         state. If string, must be either `mesolve` or `magnus.`
 
@@ -458,8 +459,11 @@ def evolve(
     evolution_time : float
         Duration of the evolution (in microseconds).
 
-        The default value is 0 or the max of pulses specified in mode,
-        whichever is bigger.
+        The user will specify this argument only when they wish to evolve the
+        state longer than the longest pulse's duration.
+
+        The default value is 0 but will be updated to either the user's input
+        or the duration of the longest pulse in `mode`, whichever is bigger.
 
     picture : string
         Sets the dynamical picture where the density matrix of the system
