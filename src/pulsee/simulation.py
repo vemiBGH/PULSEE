@@ -7,13 +7,13 @@ from typing import Callable
 # Third party imports
 import numpy as np
 from numpy.typing import NDArray
-from qutip import Options, Qobj, expect, mesolve, qeye, tensor
+from qutip import Options, Qobj, QobjEvo, expect, mesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
-from .hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi
+from .hamiltonians import h_multiple_mode_pulse, magnus, make_h_unperturbed, multiply_by_2pi, rotating_frame_h
 from .nuclear_spin import ManySpins, NuclearSpin
 # Local imports
 from .operators import (apply_exp_op, canonical_density_matrix, changed_picture, exp_diagonalize)
@@ -602,10 +602,17 @@ def evolve(
     # (refer to QuTiP's mesolve documentation for further detail)
     h_unscaled = h_unperturbed + h_perturbation
 
+    # transform it into the `QobjEvo` object, then cleanup
+    h_unscaled = QobjEvo(h_unscaled, compress=True)
+
+    # Magnus expansion solver includes 2 pi factor in exponentiations;
+    # scale Hamiltonians by this factor for `mesolve` for consistency.
+    h_scaled = 2 * np.pi * h_unscaled
+
+    if ref_freq != 0:
+        h_scaled = rotating_frame_h(h_scaled, ref_freq, spin)
+
     if solver == mesolve or solver == "mesolve":
-        # Magnus expansion solver includes 2 pi factor in exponentiations;
-        # scale Hamiltonians by this factor for `mesolve` for consistency.
-        h_scaled = multiply_by_2pi(h_unscaled)
         result = mesolve(h_scaled, Qobj(dm_initial), times, options=opts, progress_bar=display_progress)
 
         if return_allstates:
@@ -617,7 +624,7 @@ def evolve(
         raise ValueError(f"Invalid solver: {solver}")
 
     else:
-        result = solver(h_unscaled, Qobj(dm_initial), times, options=opts)
+        result = solver(h_scaled, Qobj(dm_initial), times, options=opts)
         final_state = result.states[-1]
         # return last time step of density matrix evolution.
         return final_state

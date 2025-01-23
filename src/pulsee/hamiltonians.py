@@ -1,14 +1,15 @@
-from typing import Any, Callable
+from typing import Any, Callable, Union
+from collections.abc import Iterable
 
 import numpy as np
 import pandas as pd
 from numpy.typing import NDArray
-from qutip import Qobj, commutator, qeye, tensor
+from qutip import Qobj, QobjEvo, commutator, qeye, tensor
 from qutip.solver import Result
 from tqdm import trange
 
 from .nuclear_spin import ManySpins, NuclearSpin
-from .operators import apply_exp_op, changed_picture
+from .operators import apply_exp_op, changed_picture, is_diagonal
 from .pulses import Pulses
 
 
@@ -229,7 +230,7 @@ def v2_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
     return v2
 
 
-def cosine_wrapper(frequency: float, phase: float, pulse_time: float) -> Callable[[float, Any], float]:
+def cosine_wrapper(frequency: float, phase: float, pulse_time: float) -> Callable[[float], float]:
     """
     Return the time-dependent coefficient of a pulse Hamiltonian.
 
@@ -248,7 +249,7 @@ def cosine_wrapper(frequency: float, phase: float, pulse_time: float) -> Callabl
     """
 
     # The second argument 'args' is added to match qutip's documentation convention
-    def time_dependence_function(t, args):
+    def time_dependence_function(t):
         if t <= pulse_time:
             return np.cos(frequency * t - phase)
         else:
@@ -345,9 +346,8 @@ def h_single_mode_pulse(
     if factor_t_dependence:
         return Qobj(h_t_independent), t_dependence
     else:
-        # Need pass empty list because of QuTiP compatability necessary
-        # arguments of t_dependence; `args` argument functionless
-        return Qobj((t_dependence(t, []) * h_t_independent))
+        # evaluate at time `t`
+        return Qobj((t_dependence(t) * h_t_independent))
 
 
 def h_multiple_mode_pulse(
@@ -1040,3 +1040,93 @@ def make_h_unperturbed(
         h_unperturbed += Qobj(h_user)
 
     return h_unperturbed
+
+
+def rotating_frame_h(h: QobjEvo,
+                     w_ref: float,
+                     spins: ManySpins | NuclearSpin) -> QobjEvo:
+    """
+    Transforms the Hamiltonain H into the rotating frame:
+    Rz(-angle) * H * Rz(angle) - w_ref * IZ, where 'angle' = w_ref * t + phi_ref
+    For more details, see 15.3 (pg375) of Spin Dynamics - Levitt
+
+    Parameters
+    ----------
+    h: Qobj
+        the Hamiltonian to transform into the rotating frame
+        Assuming the form of: [H0, [H1, f1(t)], [H2, f2(t)], ...]
+        (refer to QuTiP's mesolve documentation for further detail)
+    w_ref: float
+        The reference frequency of the rotating frame.
+        ** IN THE UNITS OF RAD/SEC !! **
+    spins: ManySpins or NuclearSpins
+        The spin system
+    """
+    if spins.gyro_ratio_over_2pi > 0:
+        phi_ref = np.pi
+    else:
+        phi_ref = 0
+
+    # construct the rotation operator
+    if isinstance(spins, ManySpins):
+        Iz = spins.many_spin_operator(component="z", spin_target="all")
+    elif isinstance(spins, NuclearSpin):
+        Iz = spins.I["z"]
+    else:
+        raise TypeError("`spins` must be of type ManySpins or NuclearSpin")
+
+    def op_rotation(t: float) -> Qobj:
+        return (-1j * (w_ref * t + phi_ref) * Iz).expm()
+
+    # Need to create a 'master function' that takes time as argument and returns a Qobj
+    def h_rotated(t: float) -> Qobj:
+        return op_rotation(t) * h.__call__(t) * op_rotation(t).dag() - w_ref * Iz
+
+    return QobjEvo(h_rotated, compress=True)
+
+    # # Need to create a 'master function' that takes time as argument and returns a Qobj
+    # def h_rotated(t: float) -> Qobj:
+    #     h_final = Qobj(np.zeros(spins.shape), dims=spins.dims)
+    #     for i, h_term in enumerate(h.to_list()):
+    #         if isinstance(h_term, Qobj):  # time-independent term (H0)
+    #             if is_diagonal(h_term):  # If H0 is diagonal, it will not be affected by the transformation
+    #                 h_final += h_term  # this will save computation time
+    #             else:
+    #                 h_final += op_rotation(t) * h_term * op_rotation(t).dag()
+    #         elif isinstance(h_term, Iterable):  # time-dependent term [Hm, fm(t)]
+    #             h_product = h_term[0] * h_term[1](t)
+    #             if is_diagonal(h_product):  # If H0 is diagonal, it will not be affected by the transformation
+    #                 h_final += h_product  # this will save computation time
+    #             else:
+    #                 h_final += op_rotation(t) * h_product * op_rotation(t).dag()
+    #
+    #     return h_final - w_ref * Iz
+    #
+    # return h_rotated
+
+    # Transform the Hamiltonian, term by term
+    # h_rot = []
+    # for i, h_term in enumerate(h.to_list()):
+    #     if isinstance(h_term, Qobj):  # time-independent term (H0)
+    #         if is_diagonal(h_term):  # If H0 is diagonal, it will not be affected by the transformation
+    #             h_rot.append(h_term)  # this will save computation time
+    #         else:
+    #             # Convert to a [identity, Rz * H0 * Rz.dag()] term
+    #             h_rot.append([Qobj(qeye(spins.d), dims=spins.dims),  # identity
+    #                           lambda t: op_rotation(t) * h_term * op_rotation(t).dag()])
+    #     elif isinstance(h_term, Iterable):  # time-dependent term [Hm, fm(t)]
+    #         t_ind_term, t_dep_function = h_term
+    #         if is_diagonal(t_ind_term): # If H0 is diagonal, it will not be affected by the transformation
+    #             h_rot.append(h_term) # this will save computation time
+    #         else:
+    #             def t_dep_rotated(t):
+    #                 return op_rotation(t) * t_dep_function(t) * op_rotation(t).dag()
+    #             h_rot.append([t_ind_term, t_dep_rotated])
+    #     else:
+    #         raise TypeError("Every element of the 'Hamiltonian object' should either be a Qobj or a list, with the "
+    #                         "form [H0, [H1, f1(t)], [H2, f2(t)], ...]")
+    #
+    # # Now the first time-independent term H0 will be: H0 = -w_ref * Iz
+    # h_rot.insert(0, -w_ref * Iz)
+    #
+    # return QobjEvo(h_rot, compress=True)

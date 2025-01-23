@@ -162,7 +162,7 @@ class ManySpins(NuclearSpin):
                   'y': self.many_spin_operator('y'),
                   'z': self.many_spin_operator('z')}
 
-        # SHOULD FIX THIS
+        # For now, we are using just the first gamma value. This should be fixed later.
         self.gyro_ratio_over_2pi = spins[0].gyro_ratio_over_2pi
 
     def __repr__(self):
@@ -273,6 +273,7 @@ class ManySpins(NuclearSpin):
             assert terms_tensored.dims == self.dims
             many_spin_op += terms_tensored
 
+        assert isinstance(many_spin_op, Qobj)  # prevent weird Qobj bugs
         return many_spin_op
 
     def spin_J_set(self):

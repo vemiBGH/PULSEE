@@ -259,3 +259,7 @@ def apply_rot_pulse(rho : Qobj, duration : float, rot_axis : Qobj) -> Qobj:
     rot_op = (-1j * duration * rot_axis).expm()
     return apply_op(rho, rot_op)
     # return rho.transform((-1j * duration * rot_axis).expm())
+
+
+def is_diagonal(rho: Qobj) -> bool:
+    return np.all(rho.full() == np.diag(np.diagonal(rho.full())))
