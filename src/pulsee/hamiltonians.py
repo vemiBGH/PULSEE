@@ -1,5 +1,5 @@
-from typing import Any, Callable, Union
 from collections.abc import Iterable
+from typing import Callable
 
 import numpy as np
 import pandas as pd
@@ -9,7 +9,7 @@ from qutip.solver import Result
 from tqdm import trange
 
 from .nuclear_spin import ManySpins, NuclearSpin
-from .operators import apply_exp_op, changed_picture, is_diagonal
+from .operators import apply_exp_op, changed_picture
 from .pulses import Pulses
 
 
@@ -42,15 +42,10 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
     if B_0 < 0:
         raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
 
-    h_z = (
-            -spin.gyro_ratio_over_2pi
-            * B_0
-            * (
-                    np.sin(theta_z) * np.cos(phi_z) * spin.I["x"]
-                    + np.sin(theta_z) * np.sin(phi_z) * spin.I["y"]
-                    + np.cos(theta_z) * spin.I["z"]
-            )
-    )
+    h_z = (-spin.gyro_ratio_over_2pi * B_0
+           * (np.sin(theta_z) * np.cos(phi_z) * spin.I["x"]
+              + np.sin(theta_z) * np.sin(phi_z) * spin.I["y"]
+              + np.cos(theta_z) * spin.I["z"]))
     return Qobj(h_z)
 
 
@@ -93,20 +88,20 @@ def h_quadrupole(
         qobj_array = np.zeros((spin.d, spin.d))
         return Qobj(qobj_array)
     I = spin.quantum_number
-    h_q = (e2qQ / (I * (2 * I - 1))) * (
-            (1 / 2) * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q)
-    )
+    h_q = (e2qQ / (I * (2 * I - 1))
+           * (1 / 2 * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q)
+              ))
     if component_order > 0:
-        h_q += (e2qQ / (I * (2 * I - 1))) * (np.sqrt(6) / 4 * (
+        h_q += (e2qQ / (I * (2 * I - 1)) * np.sqrt(6) / 4 * (
                 (spin.I["z"] * spin.I["+"] + spin.I["+"] * spin.I["z"]) * v1_EFG(-1, eta, alpha_q, beta_q, gamma_q)
-                + (spin.I["z"] * spin.I["-"] + spin.I["-"] * spin.I["z"]) * v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)
-        ))
+                + (spin.I["z"] * spin.I["-"] + spin.I["-"] * spin.I["z"]) * v1_EFG(+1, eta, alpha_q, beta_q, gamma_q))
+                )
 
     if component_order > 1:
-        h_q += (e2qQ / (I * (2 * I - 1))) * (
+        h_q += (e2qQ / (I * (2 * I - 1)) * (
                 (spin.I["+"] ** 2) * v2_EFG(-2, eta, alpha_q, beta_q, gamma_q)
-                + (spin.I["-"] ** 2) * v2_EFG(2, eta, alpha_q, beta_q, gamma_q)
-        )
+                + (spin.I["-"] ** 2) * v2_EFG(2, eta, alpha_q, beta_q, gamma_q))
+                )
     return Qobj(h_q)
 
 
@@ -166,12 +161,9 @@ def v1_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
     if eta < 0 or eta > 1:
         raise ValueError("The asymmetry parameter must fall within the interval [0, 1]")
     sign = np.sign(sign)
-    v1 = (1 / 2) * (
-            -1j * sign * np.sqrt(3 / 8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q)
-            + 1j
-            * (eta / (np.sqrt(6)))
-            * np.sin(beta_q)
-            * (
+    v1 = 1 / 2 * (
+            - 1j * sign * np.sqrt(3 / 8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q)
+            + 1j * (eta / (np.sqrt(6))) * np.sin(beta_q) * (
                     ((1 + sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q + 2 * gamma_q))
                     - ((1 - sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q - 2 * gamma_q))
             )
@@ -209,23 +201,12 @@ def v2_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
     if eta < 0 or eta > 1:
         raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
     sign = np.sign(sign)
-    v2 = (
-            1
-            / 2
-            * (
-                    np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q)
-                    + (eta / np.sqrt(6))
-                    * np.exp(sign * 2j * alpha_q)
-                    * (
-                            np.exp(2j * gamma_q)
-                            * (1 + sign * np.cos(beta_q)) ** 2
-                            / 4
-                            * np.exp(-2j * gamma_q)
-                            * (1 - sign * np.cos(beta_q)) ** 2
-                            / 4
-                    )
-            )
-    )
+    v2 = (1 / 2 * (np.sqrt(3 / 8) * ((np.sin(beta_q)) ** 2) * np.exp(sign * 2j * alpha_q)
+                   + (eta / np.sqrt(6)) * np.exp(sign * 2j * alpha_q) * (
+                           np.exp(2j * gamma_q) * (1 + sign * np.cos(beta_q)) ** 2 / 4
+                           * np.exp(-2j * gamma_q) * (1 - sign * np.cos(beta_q)) ** 2 / 4)
+                   )
+          )
 
     return v2
 
@@ -277,16 +258,11 @@ def pulse_t_independent_op(spin: NuclearSpin, B_1: float, theta_1: float, phi_1:
     -------
     Qobj
     """
-    return (
-            -2
-            * spin.gyro_ratio_over_2pi
-            * B_1
-            * (
-                    np.sin(theta_1) * np.cos(phi_1) * spin.I["x"]
-                    + np.sin(theta_1) * np.sin(phi_1) * spin.I["y"]
-                    + np.cos(theta_1) * spin.I["z"]
+    return (-2 * spin.gyro_ratio_over_2pi * B_1 * (
+            np.sin(theta_1) * np.cos(phi_1) * spin.I["x"]
+            + np.sin(theta_1) * np.sin(phi_1) * spin.I["y"]
+            + np.cos(theta_1) * spin.I["z"])
             )
-    )
 
 
 def h_single_mode_pulse(
@@ -296,9 +272,9 @@ def h_single_mode_pulse(
         phase: float,
         theta_1: float,
         phi_1: float,
-        t: float,
-        pulse_time: float,
-        factor_t_dependence: bool = False,
+        t: float = None,
+        pulse_time: float = None,
+        factor_t_dependence: bool = True,
 ):
     """
     Computes the term of the Hamiltonian describing the interaction with a monochromatic
@@ -351,7 +327,10 @@ def h_single_mode_pulse(
 
 
 def h_multiple_mode_pulse(
-        spin: NuclearSpin | ManySpins, mode: Pulses, t: float, factor_t_dependence: bool = False
+        spin: NuclearSpin | ManySpins,
+        mode: Pulses,
+        t: float = None,
+        factor_t_dependence: bool = True
 ) -> Qobj | list:
     """
     Computes the term of the Hamiltonian describing the interaction with
@@ -444,8 +423,8 @@ def h_multiple_mode_pulse(
                         factor_t_dependence=True,
                     )
                 )
-                # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
-                # (which returns cos(w0*t)))]
+                # for a simple pulse in the transverse plane:
+                # [(-gamma/2pi * B1 * Ix, 'time_dependence_function' (which returns cos(w0*t)))]
 
         return mode_hamiltonians
     else:
@@ -651,16 +630,12 @@ def h_D1(spins: ManySpins, b_D: float, theta: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_d1 = (
-            b_D
-            * (1 / 2)
-            * (3 * (np.cos(theta) ** 2) - 1)
-            * (
-                    2 * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
-                    - tensor(spins.spins[0].I["x"], spins.spins[1].I["x"])
-                    - tensor(spins.spins[0].I["y"], spins.spins[1].I["y"])
+    h_d1 = (b_D * 1 / 2 * (3 * (np.cos(theta) ** 2) - 1)
+            * (2 * tensor(spins.spins[0].I["z"], spins.spins[1].I["z"])
+               - tensor(spins.spins[0].I["x"], spins.spins[1].I["x"])
+               - tensor(spins.spins[0].I["y"], spins.spins[1].I["y"])
+               )
             )
-    )
     return Qobj(h_d1)
 
 
@@ -857,56 +832,33 @@ def magnus(
         H = h_changed_picture(spin, mode, h_total, o_change_of_picture, tlist[t])
         # Trapezoid Rule
         factor = 1
-        if t == 0 or t == len(tlist) - 1:
-            factor *= 1
-        else:
+        if t != 0 and t != len(tlist) - 1:
             factor *= 2
-
         integral += factor * H * 2j * np.pi * time_step / 2
 
         if order >= 2:
             h.append(H)
             for t2 in range(t + 1):
                 factor = 1
-
-                if t == 0 or t == len(tlist) - 1:
-                    factor *= 1
-                else:
+                if t != 0 and t != len(tlist) - 1:
                     factor *= 2
-
-                if t2 == 0 or t2 == t:
-                    factor *= 1
-                else:
+                if t2 != 0 and t2 != t:
                     factor *= 2
-
                 integral += factor * commutator(h[t], h[t2]) * ((2 * np.pi * time_step) ** 2) * (1 / 2)
 
             # TODO: is this supposed to be inside the for loop? It's weird to reference `t2` outside the loop.
             if order >= 3:
                 for t3 in range(1, t2 + 1):
                     factor = 1
-
-                    if t == 0 or t == len(tlist) - 1:
-                        factor *= 1
-                    else:
+                    if t != 0 and t != len(tlist) - 1:
                         factor *= 2
-
-                    if t2 == 0 or t2 == t:
-                        factor *= 1
-                    else:
+                    if t2 != 0 and t2 != t:
                         factor *= 2
-
-                    if t3 == 0 or t3 == t2:
-                        factor *= 1
-                    else:
+                    if t3 != 0 and t3 != t2:
                         factor *= 2
-
-                    integral += (
-                            factor
-                            * (commutator(h[t], commutator(h[t2], h[t3])) + commutator(h[t3], commutator(h[t2], h[t])))
-                            * ((2 * np.pi * time_step) ** 3)
-                            * (-1j / 6)
-                    )
+                    integral += (factor * ((2 * np.pi * time_step) ** 3) * (-1j / 6)
+                                 * (commutator(h[t], commutator(h[t2], h[t3]))
+                                    + commutator(h[t3], commutator(h[t2], h[t]))))
 
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
     # dm_evolved_new_picture = (- integral).expm() * rho0 * ((- integral).expm()).dag()
@@ -979,9 +931,7 @@ def make_h_unperturbed(
                     quad_par[i]["alpha_q"],
                     quad_par[i]["beta_q"],
                     quad_par[i]["gamma_q"],
-                    quad_par[i]["order"],
-                )
-            )
+                    quad_par[i]["order"]))
 
         if zeem_par is None:
             h_zeem.append(h_zeeman(spins[i], 0.0, 0.0, 0.0))
