@@ -18,7 +18,7 @@ tqdm = "*"
 qutip = "^5"
 notebook = "*"
 pandas = "*"
-
+ipywidgets = "*"
 
 [build-system]
 requires = ["poetry-core"]

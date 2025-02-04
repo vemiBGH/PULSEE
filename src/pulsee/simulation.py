@@ -7,7 +7,7 @@ from typing import Callable
 # Third party imports
 import numpy as np
 from numpy.typing import NDArray
-from qutip import Options, Qobj, QobjEvo, expect, mesolve, qeye, tensor
+from qutip import Options, Qobj, QobjEvo, expect, mesolve, sesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
 from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
@@ -399,9 +399,9 @@ def evolve(
         times: NDArray = None,
         n_points: float = 1000,
         order: int = None,
-        opts=None,
+        opts: dict = None,
         return_allstates: bool = False,
-        display_progress: bool | None = True,
+        display_progress: bool = True,
 ):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -497,34 +497,33 @@ def evolve(
         Default is None.
 
     n_points : float
-        The number of points sampled in the discrete approximation of the time-dependent Hamiltonian of the system.
-        i.e. The length of the time array
+        The number of points sampled in the discrete approximation of the
+        time-dependent Hamiltonian of the system. i.e. The length of the time array
         Default value is 1000.
 
     order : int
         The order of the simulation method to use. For `magnus` must be <= 3.
         Defaults to 1 for `magnus` and 12 for `mesolve` and any other solver.
 
-    opts : Options
-        qutip's Options class (qutip.solver.Options) that will be passed as a parameter
-        in qutip's mesolve function.
+    opts : dict
+        A dictionary containing options that will be passed into qutip's `mesolve` function.
+        Default is None
 
     return_allstates : boolean
         Specify whether to return every calculated state or only last one.
         Default False --> returns only last state.
         [Magnus solver only returns final state]
 
-    display_progress: True or None
-        True: display progress bar for the mesolve method
-        None: don't display progress bar
+    display_progress: bool
+        Whether to display progress bar for the mesolve method.
+        Default is True
 
     Action
     ------
     If
     - evolution_time=0 AND mode=None, or
     - dm_initial is very close to the identity
-      (with an error margin of 1e-10 for each element)
-
+      (with an error margin of 1e-10 for each element):
         the function returns dm_initial without performing any evolution.
 
     Otherwise,
@@ -542,8 +541,8 @@ def evolve(
 
     Returns
     -------
-    The Qobj  representing the state of the system (in the
-    Schroedinger picture) evolved through a time pulse_time under the action of
+    The Qobj representing the state of the system (in the
+    Schrödinger picture) evolved through a time pulse_time under the action of
     the specified pulse.
     """
     dims = spin.dims
@@ -570,7 +569,10 @@ def evolve(
 
     # match tolerance to operators.positivity tolerance.
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14)
+        # opts = {"atol": 1e-14, "rtol": 1e-14}
+        opts = dict()
+    if display_progress:
+        opts["progress_bar"] = "tqdm"
 
     if times is None:
         times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
@@ -588,10 +590,8 @@ def evolve(
         result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         if return_allstates:
             raise NotImplementedError("Return all states not implemented with Magnus. " "Use mesolve instead.")
-        else:
-            dm_evolved = changed_picture(result, o_change_of_picture, pulse_time, invert=True)
-            # TODO: Problem of the conj
-            # return dm_evolved.conj()
+
+        dm_evolved = changed_picture(result, o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
@@ -605,15 +605,15 @@ def evolve(
     # transform it into the `QobjEvo` object, then cleanup
     h_unscaled = QobjEvo(h_unscaled, compress=True)
 
-    # Magnus expansion solver includes 2 pi factor in exponentiations;
-    # scale Hamiltonians by this factor for `mesolve` for consistency.
+    # Magnus expansion solver includes 2 pi factor in the exponents;
+    # scale Hamiltonian by this factor for `mesolve` for consistency.
     h_scaled = 2 * np.pi * h_unscaled
 
     if ref_freq != 0:
         h_scaled = rotating_frame_h(h_scaled, ref_freq, spin)
 
     if solver == mesolve or solver == "mesolve":
-        result = mesolve(h_scaled, Qobj(dm_initial), times, options=opts, progress_bar=display_progress)
+        result = mesolve(h_scaled, Qobj(dm_initial), times, options=opts)
 
         if return_allstates:
             return result.states
