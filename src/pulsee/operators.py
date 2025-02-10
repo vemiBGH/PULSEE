@@ -200,10 +200,12 @@ def canonical_density_matrix(hamiltonian : Qobj, temperature : float):
     if temperature <= 0:
         raise ValueError("The temperature must take a positive value")
 
-    exponent = - (Planck / Boltzmann) * hamiltonian * 2 * np.pi * 1e6 / temperature
+    # `Planck` is h (Planck's constant), not hbar (reduced Planck's constant)!
+    # Must convert hamiltonian from MHz to Hz (* 1e6) since `Planck` is in units of J * second
+    exponent = - (Planck / Boltzmann) * hamiltonian * 1e6 / temperature
     numerator = exponent.expm()
     try:
-        canonical_dm = numerator.unit()
+        canonical_dm = numerator / numerator.tr()
     except ValueError:
         raise ValueError('Most likely exponent cannot be taken because the value is too large. '
                          'Either hamiltonian has a very strong interaction in MHz, or the temperature'

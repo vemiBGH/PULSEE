@@ -170,8 +170,8 @@ class ManySpins(NuclearSpin):
 
     def many_spin_operator(
             self,
-            component: str | list[str],
-            spin_target: str | int | list[int] = 'all') -> Qobj:
+            component: str | list[str] = "z",
+            spin_target: str | int | list[int] = "all") -> Qobj:
         """
         Returns a spin operator with the dimension of the ManySpins system, with the specified components at
         specified indices (details below).
