@@ -1,22 +1,21 @@
-.idea/
 scratch_ipynbs/
-tests/.pytest_cache
-notes/
-.vscode/
-.hypothesis/
-.pytest_cache/
-tests/.hypothesis/
-tests/__pycache__
-.DS_Store
-__pycache__
-/demos/archive
-/demos/archive/.ipynb_checkpoints
-src/pulsee.egg-info/PKG-INFO
-*.code-workspace
-tests/plot_complex_density_matrix test.py
-src/pulsee.egg-info/SOURCES.txt
-src/pulsee.egg-info/PKG-INFO
-src/pulsee/__pycache__/
-*.egg-info
 dist
+__pycache__
+notes/
+.idea/
+.vscode/
+.hypothesis
+.pytest_cache
+.DS_Store
+.ipynb_checkpoints
+tests/.hypothesis/
+tests/.pytest_cache
+*.egg-info
+*.code-workspace
+
+/demos/archive
+tests/plot_complex_density_matrix test.py
+src/pulsee.egg-info/PKG-INFO
+src/pulsee.egg-info/SOURCES.txt
+
 

@@ -353,7 +353,6 @@ def power_absorption_spectrum(spin: NuclearSpin | ManySpins, h_unperturbed: list
 
     # assume that this Hamiltonian is a rank-1 tensor
     d = sum(h_unperturbed_sum.dims[0])
-    print(f"PRINTING OUT DIMS[0]: {h_unperturbed_sum.dims[0]}")
     # Operator of the magnetic moment of the spin system
     if isinstance(spin, ManySpins):
         magnetic_moment = Qobj(np.zeros(shape), dims=dims)
@@ -401,7 +400,7 @@ def evolve(
         order: int = None,
         opts: dict = None,
         return_allstates: bool = False,
-        display_progress: bool = True,
+        display_progress: bool | str = True,
 ):
     """
     Simulates the evolution of the density matrix of a nuclear spin under the
@@ -571,8 +570,14 @@ def evolve(
     if opts is None:
         # opts = {"atol": 1e-14, "rtol": 1e-14}
         opts = dict()
-    if display_progress:
-        opts["progress_bar"] = "tqdm"
+
+    if isinstance(display_progress, bool):
+        if display_progress:
+            opts["progress_bar"] = "tqdm"
+    elif isinstance(display_progress, str):
+        opts["progress_bar"] = display_progress
+    else:
+        raise TypeError("`display_progress` must be a boolean or string.")
 
     if times is None:
         times = np.linspace(0, pulse_time, num=max(3, int(n_points)))
@@ -607,7 +612,10 @@ def evolve(
 
     # Magnus expansion solver includes 2 pi factor in the exponents;
     # scale Hamiltonian by this factor for `mesolve` for consistency.
+
+    # Hamiltonian must be radian units: exp(-i*H*t). The (H*t) must be in units of radians.x
     h_scaled = 2 * np.pi * h_unscaled
+    # h_scaled = h_unscaled
 
     if ref_freq != 0:
         h_scaled = rotating_frame_h(h_scaled, ref_freq, spin)
@@ -685,8 +693,8 @@ def FID_signal(
         ref_freq: float = 0,
         n_points: int = 1000,
         pulse_mode: Pulses | None = None,
-        opts=None,
-        display_progress: bool | None = None,
+        opts: dict = None,
+        display_progress: bool | str = False,
 ):
     """
     Simulates the free induction decay signal (FID) measured after the shut-off
@@ -791,17 +799,22 @@ def FID_signal(
 
     # Measuring the expectation value of Ix rotated:
     if opts is None:
-        opts = Options(atol=1e-14, rtol=1e-14, nsteps=20000)
-    if not display_progress:
-        display_progress = None  # qutip takes in a None instead of False for some reason (bad type check)
+        # opts = {"atol": 1e-14, "rtol": 1e-14, "nsteps": 20000}
+        opts = dict()
+    if isinstance(display_progress, bool):
+        if display_progress:
+            opts["progress_bar"] = "tqdm"
+    elif isinstance(display_progress, str):
+        opts["progress_bar"] = display_progress
+    else:
+        raise TypeError("`display_progress` must be a boolean or string.")
 
-    result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated], progress_bar=display_progress, options=opts)
+    result = mesolve(h_scaled, dm, times, e_ops=[Ix_rotated], options=opts)
 
     measurement_direction = np.exp(-1j * 2 * np.pi * ref_freq)
     fid = np.array(result.expect)[0] * decay_t * measurement_direction
     if np.max(fid) < 0.09:
         import warnings
-
         warnings.warn("Unreliable FID: Weak signal, check simulation!", stacklevel=0)
 
     return result.times, fid
@@ -1087,14 +1100,14 @@ def ed_evolve(
         if "ipykernel" in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=False)
             except OSError:
                 raise OSError(
                     "Make sure to have a running cluster. " + "Try opening a new cmd and running ipcluster start."
                 )
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=True)
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=False)
 
         for r, e in res:
             rho_t.append(r)

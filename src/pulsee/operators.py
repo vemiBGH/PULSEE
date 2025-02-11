@@ -53,7 +53,7 @@ def changed_picture(q : Qobj, h_change_of_picture : Qobj, time : float, invert :
         Instant of evaluation of the operator in the new picture, expressed in microseconds.
     invert : bool
         When it is False, the owner Operator object is assumed to be expressed in the
-        Schroedinger picture and is converted into the new one.
+        Schrödinger picture and is converted into the new one.
         When it is True, the owner object is thought in the new picture and the
         opposite operation is performed.
 

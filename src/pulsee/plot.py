@@ -15,8 +15,8 @@ def plot_power_absorption_spectrum(
         frequencies: np.ndarray,
         intensities: np.ndarray,
         show: bool = True,
-        xlim: list[float, float] | None = None,
-        ylim: list[float, float] | None = None,
+        xlim: tuple[float, float] | None = None,
+        ylim: tuple[float, float] | None = None,
         fig_dpi: int = 400,
         save: bool = False,
         name: str = 'PowerAbsorptionSpectrum',
@@ -538,7 +538,7 @@ def plot_real_part_FID_signal(
         name: str = 'FIDSignal', destination: str = '',
         xlim: tuple | None = None,
         ylim: tuple | None = None,
-        figure: plt.Figure | None = None) -> plt.Figure:
+        figure: tuple[plt.Figure, plt.Axes] | None = None) -> plt.Figure:
     """
     Plots the real part of the FID signal as a function of time.
 
@@ -624,8 +624,8 @@ def plot_fourier_transform(
         fourier: np.ndarray,
         fourier_neg: np.ndarray = None,
         square_modulus: bool = False,
-        xlim: list[float, float] = None,
-        ylim: list[float, float] = None,
+        xlim: tuple[float, float] = None,
+        ylim: tuple[float, float] = None,
         scaling_factor: float = None,
         norm: bool = True,
         fig_dpi: int = 400,

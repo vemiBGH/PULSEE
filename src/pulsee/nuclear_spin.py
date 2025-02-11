@@ -276,6 +276,13 @@ class ManySpins(NuclearSpin):
         assert isinstance(many_spin_op, Qobj)  # prevent weird Qobj bugs
         return many_spin_op
 
+    def tensored_operator(
+            self,
+            component: str | list[str] = "z",
+            spin_target: str | int | list[int] = "all") -> Qobj:
+        pass
+
+
     def spin_J_set(self):
         """
         Returns the Ix, Iy, and Iz operators.
