@@ -137,13 +137,13 @@ def h_multiple_mode_pulse(
         Table of the parameters of each electromagnetic mode in the superposition.
         It is organised according to the following template:
 
-    |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|
-    |-----|-----------|-----------|---------|---------|-------|------------|
-    |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |
-    |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |
-    |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |
-    | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |
-    |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |
+    |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
+    |-----|-----------|-----------|---------|---------|-------|------------|--------|-------|
+    |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
+    |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |gaussian| sig_0 |
+    |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
+    | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
+    |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
 
     where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
 
@@ -170,12 +170,23 @@ def h_multiple_mode_pulse(
     thetas = mode.theta_p
     phis = mode.phi_p
     pulse_times = mode.pulse_times
+    sigmas = mode.sigma
     if factor_t_dependence:
         # Create list of Hamiltonians with unique time dependencies
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in range(mode.size):
-                t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
+                if mode.shape == "cosine":
+                    t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
+                elif mode.shape == "gaussian":
+                    if sigmas is None:
+                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
+                    sigma = sigmas[i]
+                    if sigma <= 0:
+                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
+                    t_dependence = gaussian_wrapper(omegas[i], phases[i], pulse_times[i], sigma)
+                else:
+                    raise ValueError("Unsupported pulse shape. Use 'square' or 'gaussian'.")
                 h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
@@ -209,10 +220,12 @@ def h_multiple_mode_pulse(
                         t,
                         pulse_times[i],
                         factor_t_dependence=True,
+                        sigma=sigmas[i],
+                        pulse_shape=mode.shape
                     )
                 )
-                # for a simple pulse in the transverse plane:
-                # [(-gamma/2pi * B1 * Ix, 'time_dependence_function' (which returns cos(w0*t)))]
+                # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
+                # (which returns cos(w0*t)))]
 
         return mode_hamiltonians
     else:
@@ -233,6 +246,8 @@ def h_multiple_mode_pulse(
                         t,
                         pulse_times[i],
                         factor_t_dependence=False,
+                        sigma=sigmas[i],
+                        pulse_shape=mode.shape
                     )
                     ops = []
                     for m in range(spin.n_spins):
@@ -254,8 +269,11 @@ def h_multiple_mode_pulse(
                     t,
                     pulse_times[i],
                     factor_t_dependence=False,
+                    sigma=sigmas[i],
+                    pulse_shape=mode.shape
                 )
         return Qobj(h_pulse)
+
 
 
 def h_single_mode_pulse(
@@ -268,6 +286,8 @@ def h_single_mode_pulse(
         t: float = None,
         pulse_time: float = None,
         factor_t_dependence: bool = True,
+        sigma: float = None,
+        pulse_shape: str = "square"
 ):
     """
     Computes the term of the Hamiltonian describing the interaction with a monochromatic
@@ -310,12 +330,18 @@ def h_single_mode_pulse(
     if B_1 < 0:
         raise ValueError("The amplitude of the electromagnetic wave must be positive.")
     # Notice the following does not depend on spin
-    t_dependence = cosine_wrapper(frequency, phase, pulse_time)  # this variable is a function!
+    if pulse_shape == "square":
+        t_dependence = cosine_wrapper(frequency, phase, pulse_time)
+    elif pulse_shape == "gaussian":
+        if sigma is None or sigma <= 0:
+            raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
+        t_dependence = gaussian_wrapper(frequency, phase, pulse_time, sigma)
+    else:
+        raise ValueError("Unsupported pulse shape. Use 'square' or 'gaussian'.")
     h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
     if factor_t_dependence:
         return [Qobj(h_t_independent), t_dependence]
     else:
-        # evaluate at time `t`
         return Qobj((t_dependence(t) * h_t_independent))
 
 
@@ -667,7 +693,7 @@ def v2_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: floa
     return v2
 
 
-def gaussian_wrapper(frequency: float, phase: float, pulse_time: float, sigma: float) -> Callable[[float, Any], float]:
+def gaussian_wrapper(frequency: float, phase: float, pulse_time: float, sigma: float) -> Callable[[float], float]:
     """
     Return the time-dependent coefficient of a Gaussian-shaped pulse Hamiltonian.
 
@@ -688,7 +714,7 @@ def gaussian_wrapper(frequency: float, phase: float, pulse_time: float, sigma: f
     """
 
     # The second argument 'args' is added to match QuTiP's documentation convention
-    def time_dependence_function(t, args):
+    def time_dependence_function(t):
         if t <= pulse_time:
             # Gaussian envelope multiplied by the cosine
             gaussian_envelope = np.exp(-((t - pulse_time / 2) ** 2) / (2 * sigma ** 2))
@@ -699,290 +725,10 @@ def gaussian_wrapper(frequency: float, phase: float, pulse_time: float, sigma: f
     return time_dependence_function
 
 
-def cosine_wrapper(frequency: float, phase: float, pulse_time: float) -> Callable[[float, Any], float]:
-    """
-    Return the time-dependent coefficient of a pulse Hamiltonian.
-
-    Parameters
-    ----------
-    frequency : non-negative float
-        Frequency of the monochromatic wave (expressed in rad/sec).
-    phase : float
-        Initial phase of the wave (at t=0) (expressed in radians).
-    pulse_time : float
-        Time duration of the pulse (in microseconds).
-
-    Returns
-    -------
-    A function with signature f(t: float, args: iterable) -> float
-    """
-
-    # The second argument 'args' is added to match qutip's documentation convention
-    def time_dependence_function(t, args):
-        if t <= pulse_time:
-            return np.cos(frequency * t - phase)
-        else:
-            return 0
-
-    return time_dependence_function
 
 
-def pulse_t_independent_op(spin: NuclearSpin, B_1: float, theta_1: float, phi_1: float) -> Qobj:
-    """
-    Computes the time-independent portion of the Hamiltonian interaction with a
-    monochromatic and linearly polarized electromagnetic pulse.
-
-    Parameters
-    ----------
-    spin : NuclearSpin
-        Spin under study.
-    B_1 : non-negative float
-        Maximum amplitude of the oscillating magnetic field (expressed in tesla).
-    theta_1, phi_1 : float
-        Polar and azimuthal angles of the direction of polarization of
-        the magnetic wave in the LAB frame (expressed in radians);
-
-    Returns
-    -------
-    Qobj
-    """
-    return (
-            -2
-            * spin.gyro_ratio_over_2pi
-            * B_1
-            * (
-                    np.sin(theta_1) * np.cos(phi_1) * spin.I["x"]
-                    + np.sin(theta_1) * np.sin(phi_1) * spin.I["y"]
-                    + np.cos(theta_1) * spin.I["z"]
-            )
-    )
 
 
-def h_single_mode_pulse(
-        spin: NuclearSpin,
-        frequency: float,
-        B_1: float,
-        phase: float,
-        theta_1: float,
-        phi_1: float,
-        t: float,
-        pulse_time: float,
-        factor_t_dependence: bool = False,
-        sigma: float = None,
-        pulse_shape: str = "square"
-):
-    """
-    Computes the term of the Hamiltonian describing the interaction with a monochromatic
-    and linearly polarized electromagnetic pulse.
-
-    Parameters
-    ----------
-    spin : NuclearSpin
-        Spin under study.
-    frequency : non-negative float
-        Frequency of the monochromatic wave (expressed in rad/sec).
-    phase : float
-        Initial phase of the wave (at t=0) (expressed in radians).
-    B_1 : non-negative float
-        Maximum amplitude of the oscillating magnetic field (expressed in tesla).
-    theta_1, phi_1 : float
-        Polar and azimuthal angles of the direction of polarization of the magnetic
-        wave in the LAB frame (expressed in radians);
-    t : float
-        Time of evaluation of the Hamiltonian (expressed in microseconds).
-    pulse_time : float
-        Time duration of the pulse
-    factor_t_dependence : bool
-        If true, return tuple (H, f(t)) where f(t) is the  time-dependence of
-        the Hamiltonian as a function.
-        Does not evaluate f(t) at the given time.
-
-    Returns
-    -------
-    A Qobj which represents the Hamiltonian of the coupling with
-    the electromagnetic pulse evaluated at time t (expressed in rad/sec).
-
-    Raises
-    ------
-    ValueError
-    When the passed B_1 parameter is a negative quantity.
-    """
-    # if frequency < 0: raise ValueError("The modulus of the angular frequency of the electromagnetic wave
-    # must be a positive quantity")
-    if B_1 < 0:
-        raise ValueError("The amplitude of the electromagnetic wave must be positive.")
-    # Notice the following does not depend on spin
-    if pulse_shape == "square":
-        t_dependence = cosine_wrapper(frequency, phase, pulse_time)
-    elif pulse_shape == "gaussian":
-        if sigma is None or sigma <= 0:
-            raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
-        t_dependence = gaussian_wrapper(frequency, phase, pulse_time, sigma)
-    else:
-        raise ValueError("Unsupported pulse shape. Use 'cosine' or 'gaussian'.")
-    h_t_independent = pulse_t_independent_op(spin, B_1, theta_1, phi_1)
-    if factor_t_dependence:
-        return Qobj(h_t_independent), t_dependence
-    else:
-        # Need pass empty list because of QuTiP compatability necessary
-        # arguments of t_dependence; `args` argument functionless
-        return Qobj((t_dependence(t, []) * h_t_independent))
-
-
-def h_multiple_mode_pulse(
-        spin: NuclearSpin | ManySpins, mode: Pulses, t: float, factor_t_dependence: bool = False
-) -> Qobj | list:
-    """
-    Computes the term of the Hamiltonian describing the interaction with
-    a superposition of single-mode electromagnetic pulses.
-    If the passed argument spin is a NuclearSpin object, the returned
-    Hamiltonian will describe the interaction between the pulse of radiation
-    and the single spin;
-    if it is a ManySpins object, it will represent the interaction
-    with the whole system of many spins.
-
-    Parameters
-    ----------
-    spin : NuclearSpin or ManySpins
-        Spin or spin system under study;
-    mode : pandas.DataFrame
-        Table of the parameters of each electromagnetic mode in the superposition.
-        It is organised according to the following template:
-
-    |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
-    |-----|-----------|-----------|---------|---------|-------|------------|--------|-------|
-    |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
-    |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |guassian| sig_0 |
-    |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
-    | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
-    |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
-
-    where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
-
-    t : float
-        Time of evaluation of the Hamiltonian (expressed in microseconds).
-
-    factor_t_dependence : bool
-    If true, return tuple (H, f(t)) where f(t) is the
-    time-dependence of the Hamiltonian as a function.
-    Does not evaluate f(t) at the given time.
-
-    Returns
-    -------
-    A Qobj which represents the Hamiltonian of the coupling with
-    the superposition of the given modes evaluated at time t (expressed in rad/sec).
-    OR
-    A list of tuples of the form (H_m, f_m(t)) for each mode m.
-    """
-    dims = spin.dims
-
-    omegas = mode.frequencies
-    amplitudes = mode.amplitudes
-    phases = mode.phases
-    thetas = mode.theta_p
-    phis = mode.phi_p
-    pulse_times = mode.pulse_times
-    sigmas = mode.sigma
-    if factor_t_dependence:
-        # Create list of Hamiltonians with unique time dependencies
-        mode_hamiltonians = []
-        if isinstance(spin, ManySpins):
-            for i in range(mode.size):
-                if mode.shape == "cosine":
-                    t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
-                elif mode.shape == "gaussian":
-                    if sigmas is None:
-                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
-                    sigma = sigmas[i]
-                    if sigma <= 0:
-                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
-                    t_indepndence = gaussian_wrapper(omegas[i], phases[i], pulse_times[i], sigma)
-                h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
-
-                # Construct tensor product of operators acting on each spin.
-                # Take a tensor product where every operator except the nth
-                # is the identity, add those together
-                for n in range(spin.n_spins):
-                    term = pulse_t_independent_op(spin.spins[n], amplitudes[i], thetas[i], phis[i])
-                    ops = []
-                    for m in range(spin.n_spins):
-                        if m == n:
-                            ops.append(term)
-                        else:
-                            ops.append(qeye(spin.spins[m].d))
-                    term_n = tensor(ops)
-                    h_t_independent += term_n
-
-                # Append total hamiltonian for this mode to mode_hamiltonians
-                mode_hamiltonians.append([Qobj(h_t_independent), t_dependence])
-
-        elif isinstance(spin, NuclearSpin):
-            for i in range(mode.size):
-                # Ix term
-                mode_hamiltonians.append(
-                    h_single_mode_pulse(
-                        spin,
-                        omegas[i],
-                        amplitudes[i],
-                        phases[i],
-                        thetas[i],
-                        phis[i],
-                        t,
-                        pulse_times[i],
-                        factor_t_dependence=True,
-                        sigma=sigmas[i],
-                        pulse_shape=mode.shape
-                    )
-                )
-                # for a simple pulse in the transverse plane: [(-gamma/2pi * B1 * Ix, 'time_dependence_function'
-                # (which returns cos(w0*t)))]
-
-        return mode_hamiltonians
-    else:
-        h_pulse = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
-        if isinstance(spin, ManySpins):
-            for i in range(mode.size):
-                # Construct tensor product of operators acting on each spin.
-                # Take a tensor product where every operator except the nth
-                # is the identity, add those together
-                for n in range(spin.n_spins):
-                    term = h_single_mode_pulse(
-                        spin.spins[n],
-                        omegas[i],
-                        amplitudes[i],
-                        phases[i],
-                        thetas[i],
-                        phis[i],
-                        t,
-                        pulse_times[i],
-                        factor_t_dependence=False,
-                        sigma=sigmas[i],
-                        pulse_shape=mode.shape
-                    )
-                    ops = []
-                    for m in range(spin.n_spins):
-                        if m == n:
-                            ops.append(term)
-                        else:
-                            ops.append(qeye(spin.spins[m].d))
-                    term_n = tensor(ops)
-                    h_pulse += term_n
-        elif isinstance(spin, NuclearSpin):
-            for i in range(mode.size):
-                h_pulse += h_single_mode_pulse(
-                    spin,
-                    omegas[i],
-                    amplitudes[i],
-                    phases[i],
-                    thetas[i],
-                    phis[i],
-                    t,
-                    pulse_times[i],
-                    factor_t_dependence=False,
-                    sigma=sigmas[i],
-                    pulse_shape=mode.shape
-                )
-        return Qobj(h_pulse)
 
 
 # Global Hamiltonian of the system (stationary term + pulse term) cast in the picture generated by

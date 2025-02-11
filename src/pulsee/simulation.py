@@ -35,7 +35,7 @@ def nuclear_system_setup(
         h_user: np.ndarray = None,
         initial_state: str | np.ndarray | dict = "canonical",
         temperature: float = 1e-4,
-) -> tuple[NuclearSpin | ManySpins, Qobj, list[Qobj]]:
+) -> tuple[NuclearSpin | ManySpins, list[Qobj], Qobj]:
     """
     Sets up the nuclear system under study, returning the objects representing
     the spin (either a single one or a multiple spins' system), the unperturbed
@@ -1100,14 +1100,14 @@ def ed_evolve(
         if "ipykernel" in sys.modules:
             # make sure to have a running cluser:
             try:
-                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=False)
+                res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
             except OSError:
                 raise OSError(
                     "Make sure to have a running cluster. " + "Try opening a new cmd and running ipcluster start."
                 )
 
         else:
-            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=False)
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
 
         for r, e in res:
             rho_t.append(r)
