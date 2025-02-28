@@ -7,7 +7,7 @@ class NuclearSpin:
     An instance of the following class is to be thought as an all-round representation of the
     nuclear spin angular momentum. Indeed, it includes all the operators typically associated
     with the spin and also specific parameters like the spin quantum number and the spin multiplicity.
-    
+
     Attributes
     ----------
     quantum_number : float
@@ -16,8 +16,8 @@ class NuclearSpin:
         Dimensions of the spin Hilbert space.
     gyro_ratio_over_2pi : float
         Gyromagnetic ratio (over 2 pi) of the nuclear spin measured in units of
-        MHz/T. 
-        The gyromagnetic ratio is the constant of proportionality  between the 
+        MHz/T.
+        The gyromagnetic ratio is the constant of proportionality  between the
         intrinsic magnetic moment and the spin angular momentum of a particle.
     I : dict
         Dictionary whose values are Operator objects representing the cartesian
@@ -35,7 +35,7 @@ class NuclearSpin:
     def __init__(self, s: float = 1, gamma_over_2pi: float = 1):
         """
         Constructs an instance of NuclearSpin.
-        
+
         Parameters
         ----------
         s : float
@@ -44,7 +44,7 @@ class NuclearSpin:
             Default value is 1;
         gamma_over_2pi : float
             Gyromagnetic ratio over 2 pi (in units of MHz/T).
-        
+
         Action
         ------
         Assigns the passed argument s to the attribute quantum_number.
@@ -73,7 +73,9 @@ class NuclearSpin:
         """
         s = float(s)
         if not np.isclose(int(2 * s), 2 * s, rtol=1e-10):
-            raise ValueError("The given spin quantum number is not a half-integer number")
+            raise ValueError(
+                "The given spin quantum number is not a half-integer number"
+            )
         self.quantum_number = s
         self.d = self.multiplicity()
 
@@ -82,21 +84,25 @@ class NuclearSpin:
         # Raising & lowering operators
         self.Ip, self.Im = (self.Ix + 1j * self.Iy, self.Ix - 1j * self.Iy)
         # Pack everything into a dict
-        self.I = {'-': self.Im,
-                  '+': self.Ip,
-                  'x': self.Ix,
-                  'y': self.Iy,
-                  'z': self.Iz,
-                  'I': self.quantum_number}
+        self.I = {
+            "-": self.Im,
+            "+": self.Ip,
+            "x": self.Ix,
+            "y": self.Iy,
+            "z": self.Iz,
+            "I": self.quantum_number,
+        }
 
         self.gyro_ratio_over_2pi = float(gamma_over_2pi)
         # Helper dimension size of the space
-        self.shape = self.I['-'].shape
-        self.dims = self.I['-'].dims
+        self.shape = self.I["-"].shape
+        self.dims = self.I["-"].dims
 
     def __repr__(self):
-        return (f'quantum_number: {self.quantum_number}, '
-                f'multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}')
+        return (
+            f"quantum_number: {self.quantum_number}, "
+            f"multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}"
+        )
 
     def multiplicity(self):
         """
@@ -108,7 +114,7 @@ class NuclearSpin:
         """
         Returns the Ix, Iy, and Iz operators.
         """
-        return self.I['x'], self.I['y'], self.I['z']
+        return self.I["x"], self.I["y"], self.I["z"]
 
 
 class ManySpins(NuclearSpin):
@@ -121,20 +127,20 @@ class ManySpins(NuclearSpin):
     def __init__(self, spins: list[NuclearSpin]):
         """
         Constructs an instance of ManySpins.
-  
+
         Parameters
         ----------
         spins : list[NuclearSpin]
             A list of the NuclearSpin objects which represent the spins in the system.
-        
+
         Action
         ------
         Stores the NuclearSpin objects contained in the spins argument into the
         attribute spin, maintaining their original ordering.
-  
+
         Initialises the attribute d with the product of each spin's dimensions d.
-  
-        Initialises the elements of the dictionary I from the corresponding 
+
+        Initialises the elements of the dictionary I from the corresponding
         attributes of its spin components by calling the method many_spin_operator.
 
         Returns
@@ -156,22 +162,25 @@ class ManySpins(NuclearSpin):
             self.dims = self.dims.tolist()
 
         self.shape = (self.d, self.d)
-        self.I = {'-': self.many_spin_operator('-'),
-                  '+': self.many_spin_operator('+'),
-                  'x': self.many_spin_operator('x'),
-                  'y': self.many_spin_operator('y'),
-                  'z': self.many_spin_operator('z')}
+        self.I = {
+            "-": self.many_spin_operator("-"),
+            "+": self.many_spin_operator("+"),
+            "x": self.many_spin_operator("x"),
+            "y": self.many_spin_operator("y"),
+            "z": self.many_spin_operator("z"),
+        }
 
         # For now, we are using just the first gamma value. This should be fixed later.
         self.gyro_ratio_over_2pi = spins[0].gyro_ratio_over_2pi
 
     def __repr__(self):
-        return f' shape: {self.shape}, dims: {self.dims}'
+        return f" shape: {self.shape}, dims: {self.dims}"
 
     def many_spin_operator(
-            self,
-            component: str | list[str] = "z",
-            spin_target: str | int | list[int] = "all") -> Qobj:
+        self,
+        component: str | list[str] = "z",
+        spin_target: str | int | list[int] = "all",
+    ) -> Qobj:
         """
         Returns a spin operator with the dimension of the ManySpins system, with the specified components at
         specified indices (details below).
@@ -223,21 +232,30 @@ class ManySpins(NuclearSpin):
         if isinstance(component, list):
             if not len(component) == self.n_spins:
                 raise ValueError(
-                f"The length of `component` ({len(component)}) must be equal to the number of spins ({self.n_spins}). "
-                "You must specify the spin component for every spin. At positions where you do not want to apply an "
-                "operator, put a dummy placeholder in that position, such as None.")
+                    f"The length of `component` ({len(component)}) must be equal to the number of spins ({self.n_spins}). "
+                    "You must specify the spin component for every spin. At positions where you do not want to apply an "
+                    "operator, put a dummy placeholder in that position, such as None."
+                )
 
             # If component is a list, overwrite spin_target as a list of indices with proper component values
             spin_target = []
             for i, comp in enumerate(component):
                 if comp in self.I:  # {'x', 'y', 'z', '+', '-'}
                     spin_target.append(self.I[comp])
-                elif comp is not None:  # To prevent unexpected bugs when a user makes a typo
-                    raise ValueError(f"Every element of `component` must be one of: ('x', 'y', 'z', '+', '-', None)")
-        elif isinstance(component, str):  # A string specifying the component, which will be applied to ALL spins.
+                elif (
+                    comp is not None
+                ):  # To prevent unexpected bugs when a user makes a typo
+                    raise ValueError(
+                        f"Every element of `component` must be one of: ('x', 'y', 'z', '+', '-', None)"
+                    )
+        elif isinstance(
+            component, str
+        ):  # A string specifying the component, which will be applied to ALL spins.
             component = self.n_spins * [component]
         else:
-            raise TypeError(f"The argument `component` must be a string or a list of strings.")
+            raise TypeError(
+                f"The argument `component` must be a string or a list of strings."
+            )
 
         if isinstance(spin_target, int):
             spin_target = [spin_target]
@@ -245,14 +263,18 @@ class ManySpins(NuclearSpin):
             assert spin_target == "all", "If `spin_target` is a string, must be 'all'."
         elif isinstance(spin_target, list):
             for s in spin_target:
-                assert isinstance(s, int), "If `spin_target` is a list, must be a list of integers!"
+                assert isinstance(
+                    s, int
+                ), "If `spin_target` is a list, must be a list of integers!"
         else:
-            raise TypeError(f"The argument `spin_target` must be a string, int, or a list of ints.")
+            raise TypeError(
+                f"The argument `spin_target` must be a string, int, or a list of ints."
+            )
 
         # Constructing the operator
         many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
         for i in range(self.n_spins):
-            if spin_target == 'all':
+            if spin_target == "all":
                 # Apply the spin operator component to all the spins
                 term = self.spins[i].I[component[i]]
             elif isinstance(spin_target, list) and (i in spin_target):
@@ -277,14 +299,14 @@ class ManySpins(NuclearSpin):
         return many_spin_op
 
     def tensored_operator(
-            self,
-            component: str | list[str] = "z",
-            spin_target: str | int | list[int] = "all") -> Qobj:
+        self,
+        component: str | list[str] = "z",
+        spin_target: str | int | list[int] = "all",
+    ) -> Qobj:
         pass
-
 
     def spin_J_set(self):
         """
         Returns the Ix, Iy, and Iz operators.
         """
-        return self.I['x'], self.I['y'], self.I['z']
+        return self.I["x"], self.I["y"], self.I["z"]
