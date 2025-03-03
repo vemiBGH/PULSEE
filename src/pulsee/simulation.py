@@ -449,15 +449,17 @@ def evolve(
         state. If string, must be either `mesolve` or `magnus.`
 
     mode : Pulses
-        Pulses dataclass that contains the following information -
+        Pulses dataclass that contains the following list attributes, with each index c
+        orresponding to a different pulse in the sequence. The shape of the pulse applies to
+        all pulses in the sequence, not to each individually.
 
-        |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
-        |-----|-----------|-----------|---------|---------|-------|------------|--------|-------|
-        |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
-        |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |gaussian| sig_0 |
-        |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
-        | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
-        |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
+        |'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
+        |-----------|-----------|---------|---------|-------|------------|--------|-------|
+        | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
+        |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |gaussian| sig_0 |
+        |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
+        |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
+        |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
 
 
         where the meaning of each column is analogous to the corresponding
@@ -785,7 +787,7 @@ def FID_signal(
         The total number of samples for the signal.
         Default value is 1000.
 
-    pulse_mode : pandas.DataFrame
+    pulse_mode : Pulses
         The user can decide to apply a pulse during the measurement of the FID.
         Although unusual, this is necessary for axion simulations.
         Refer to the argument 'mode' in the function evolve() for details about

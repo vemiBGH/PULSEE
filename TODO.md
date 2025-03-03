@@ -17,8 +17,6 @@ Ilija
 - [ ] Add notebook selective pulse
 
 Alex
-- [ ] Update demo notebooks
-- [ ] Add an option for a Gaussian shape pulse
 - [ ] Arbitrary pulse shape (not just square pulse)
 
 ### General Features

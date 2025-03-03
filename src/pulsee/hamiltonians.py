@@ -77,7 +77,6 @@ def make_h_unperturbed(
             )
 
     for i in range(n_spins):
-
         h_i = h_quad[i] + h_zeem[i]
         for j in range(i):
             h_i = tensor(qeye(spin_system.spins[j].d), h_i)
@@ -147,17 +146,20 @@ def h_multiple_mode_pulse(
     spin : NuclearSpin or ManySpins
         Spin or spin system under study;
     mode : Pulses
-        Pulses dataclass that contains the following information -
+        Pulses dataclass that contains the following list attributes, with each index c
+        orresponding to a different pulse in the sequence. The shape of the pulse applies to
+        all pulses in the sequence, not to each individually.
 
-    |index|'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
-    |-----|-----------|-----------|---------|---------|-------|------------|--------|-------|
-    |     | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
-    |  0  |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |gaussian| sig_0 |
-    |  1  |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
-    | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
-    |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
+        |'frequency'|'amplitude'| 'phase' |'theta_p'|'phi_p'|'pulse_time'|'shape' |'sigma'|
+        |-----------|-----------|---------|---------|-------|------------|--------|-------|
+        | (rad/sec) |    (T)    |  (rad)  |  (rad)  | (rad) |   (mus)    |square  | (sec) |
+        |  omega_0  |    B_0    | phase_0 | theta_0 | phi_0 |   tau_0    |gaussian| sig_0 |
+        |  omega_1  |    B_1    | phase_1 | theta_1 | phi_1 |   tau_1    |        | sig_1 |
+        |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |        |  ...  |
+        |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    |        | sig_N |
 
-    where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
+
+        where the meaning of each column is analogous to the corresponding parameters in h_single_mode_pulse.
 
     t : float
         Time of evaluation of the Hamiltonian (expressed in microseconds).
@@ -465,6 +467,8 @@ def magnus(
         Spin under study.
     mode : Pulses
         Dataclass of the parameters of each electromagnetic mode in the pulse.
+        Refer to parameter mode in the function h_multiple_mode_pulse for more
+        information.
     o_change_of_picture : Qobj
         Operator which generates the change to the new picture.
 
