@@ -190,7 +190,7 @@ def h_multiple_mode_pulse(
         mode_hamiltonians = []
         if isinstance(spin, ManySpins):
             for i in range(mode.size):
-                if mode.shape == "cosine":
+                if mode.shape == "square":
                     t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
                 elif mode.shape == "gaussian":
                     if sigmas is None:
