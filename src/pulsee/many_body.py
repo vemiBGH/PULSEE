@@ -62,9 +62,7 @@ def ptrace_subspace(operator: Qobj, subspaces_dimensions: list, index_position: 
 
     d_uphill = int(np.prod(d[0:i]))
 
-    ptrace_subspace = np.empty(
-        (d_downhill, d_downhill * (d_uphill + 1)), dtype=np.ndarray
-    )
+    ptrace_subspace = np.empty((d_downhill, d_downhill * (d_uphill + 1)), dtype=np.ndarray)
     for j in range(d_uphill):
         p_t_row = np.empty((d_downhill, d_downhill), dtype=np.ndarray)
         for k in range(d_uphill):
@@ -72,11 +70,7 @@ def ptrace_subspace(operator: Qobj, subspaces_dimensions: list, index_position: 
             p_t_block = np.zeros((d_downhill, d_downhill))
             for l in range(d[i]):
                 p_t_block = (
-                    p_t_block
-                    + block[
-                        l * d_downhill : (l + 1) * d_downhill,
-                        l * d_downhill : (l + 1) * d_downhill,
-                    ]
+                    p_t_block + block[l * d_downhill : (l + 1) * d_downhill, l * d_downhill : (l + 1) * d_downhill]
                 )
             p_t_row = np.concatenate((p_t_row, p_t_block), axis=1)
         ptrace_subspace = np.concatenate((ptrace_subspace, p_t_row), axis=0)

@@ -68,42 +68,21 @@ def coherent_spin_state(spin_system: NuclearSpin, initial_state: list[dict]) -> 
     """
     for d in initial_state:
         if ("theta" not in d.keys()) or ("phi" not in d.keys()):
-            raise ValueError(
-                "Please check that both 'theta' and 'phi' are given for all the spins."
-            )
+            raise ValueError("Please check that both 'theta' and 'phi' are given for all the spins.")
 
     if isinstance(spin_system, NuclearSpin) and not isinstance(spin_system, ManySpins):
-        assert (
-            len(initial_state) == 1
-        ), "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
-        dm = spin_coherent(
-            spin_system.I["I"],
-            initial_state[0]["theta"],
-            initial_state[0]["phi"],
-            type="dm",
-        )
+        assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
+        dm = spin_coherent(spin_system.I["I"], initial_state[0]["theta"], initial_state[0]["phi"], type="dm")
         return dm
 
     assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
-    assert (
-        len(initial_state) == spin_system.n_spins
-    ), "Length of `initial_state` must match the number of spins!"
+    assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
 
-    dm = spin_coherent(
-        spin_system.spins[0].I["I"],
-        initial_state[0]["theta"],
-        initial_state[0]["phi"],
-        type="dm",
-    )
+    dm = spin_coherent(spin_system.spins[0].I["I"], initial_state[0]["theta"], initial_state[0]["phi"], type="dm")
     for i in range(1, spin_system.n_spins):
         dm = tensor(
             dm,
-            spin_coherent(
-                spin_system.spins[i].I["I"],
-                initial_state[i]["theta"],
-                initial_state[i]["phi"],
-                type="dm",
-            ),
+            spin_coherent(spin_system.spins[i].I["I"], initial_state[i]["theta"], initial_state[i]["phi"], type="dm"),
         )
     return dm
 
@@ -142,20 +121,13 @@ def populate_averge_values(dms: list[Qobj], sqz_ops: UsefulSqzOps):
 
     sqz_ops.avIx, sqz_ops.avIy, sqz_ops.avIz = (res[0], res[1], res[2])
     sqz_ops.avIx2, sqz_ops.avIy2, sqz_ops.avIz2 = (res[3], res[4], res[5])
-    sqz_ops.avIm, sqz_ops.avIp, sqz_ops.avIp2, sqz_ops.avIp_2Iz = (
-        res[6],
-        res[7],
-        res[8],
-        res[9],
-    )
+    sqz_ops.avIm, sqz_ops.avIp, sqz_ops.avIp2, sqz_ops.avIp_2Iz = (res[6], res[7], res[8], res[9])
     sqz_ops.avIyIz, sqz_ops.avIzIy = (res[10], res[11])
 
     return sqz_ops
 
 
-def calc_squeez_param(
-    sqz_ops: UsefulSqzOps, I: int, xi_sq: bool = False, return_av_sphere: bool = False
-) -> tuple:
+def calc_squeez_param(sqz_ops: UsefulSqzOps, I: int, xi_sq: bool = False, return_av_sphere: bool = False) -> tuple:
     """
     Calculates the generalized squeezing parameter and the squeezing angle.
 
@@ -202,25 +174,20 @@ def calc_squeez_param(
     phi = np.arctan2(np.array(Jy, dtype=np.float64), np.array(Jx, dtype=np.float64))
 
     Jn_1 = -Jx * np.sin(phi) + Jy * np.cos(phi)
-    Jn_2 = (
-        -Jx * np.cos(th) * np.cos(phi) - Jy * np.sin(phi) * np.cos(th) + Jz * np.sin(th)
-    )
-    Jn_3 = (
-        Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
-    )
+    Jn_2 = -Jx * np.cos(th) * np.cos(phi) - Jy * np.sin(phi) * np.cos(th) + Jz * np.sin(th)
+    Jn_3 = Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
 
     A = (1 / 2) * (
         np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2)
-        - (1 + np.cos(th) ** 2)
-        * (Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi))
+        - (1 + np.cos(th) ** 2) * (Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi))
         + np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi))
     )
 
     C = I * (I + 1) - Jz2 - Jp2.imag * np.sin(2 * phi) - Jp2.real * np.cos(2 * phi) - A
 
-    B = np.cos(th) * (Jp2.real * np.sin(2 * phi) - Jp2.imag * np.cos(2 * phi)) + np.sin(
-        th
-    ) * (-Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
+    B = np.cos(th) * (Jp2.real * np.sin(2 * phi) - Jp2.imag * np.cos(2 * phi)) + np.sin(th) * (
+        -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi)
+    )
 
     if xi_sq:
         xi = (C - np.sqrt(A**2 + B**2)) / I
@@ -293,12 +260,7 @@ def plot_values(
         # axis is a list here! Maybe meant axs[i] ?
         for i in range(len(vals)):
             if put_brackets:
-                axs.plot(
-                    times,
-                    vals[i],
-                    colors[i],
-                    label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]),
-                )
+                axs.plot(times, vals[i], colors[i], label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]))
             else:
                 axs.plot(times, vals[i], colors[i], label=r"${}$".format(labels[i]))
         axs.set_xlabel(x_label)
@@ -308,12 +270,7 @@ def plot_values(
         fig, axs = plt.subplots(*num_plots)
         for i in range(max(num_plots[0], num_plots[1])):
             if put_brackets:
-                axs[i].plot(
-                    times,
-                    vals[i],
-                    colors[i],
-                    label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]),
-                )
+                axs[i].plot(times, vals[i], colors[i], label=r"${} {} {}$".format(brackets[0], labels[i], brackets[1]))
             else:
                 axs[i].plot(times, vals[i], colors[i], label=r"${}$".format(labels[i]))
         axs.flat[1].set_xlabel(x_label)
@@ -326,17 +283,10 @@ def plot_values(
             for j in range(num_plots[1]):
                 if put_brackets:
                     axs[i, j].plot(
-                        times,
-                        vals[cnt],
-                        colors[cnt],
-                        label=r"${} {} {}$".format(
-                            brackets[0], labels[cnt], brackets[1]
-                        ),
+                        times, vals[cnt], colors[cnt], label=r"${} {} {}$".format(brackets[0], labels[cnt], brackets[1])
                     )
                 else:
-                    axs[i, j].plot(
-                        times, vals[cnt], colors[cnt], label=r"${}$".format(labels[cnt])
-                    )
+                    axs[i, j].plot(times, vals[cnt], colors[cnt], label=r"${}$".format(labels[cnt]))
                 cnt += 1
         axs.flat[2].set_xlabel(x_label)
         axs.flat[0].set_ylabel(y_label)

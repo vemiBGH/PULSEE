@@ -73,9 +73,7 @@ class NuclearSpin:
         """
         s = float(s)
         if not np.isclose(int(2 * s), 2 * s, rtol=1e-10):
-            raise ValueError(
-                "The given spin quantum number is not a half-integer number"
-            )
+            raise ValueError("The given spin quantum number is not a half-integer number")
         self.quantum_number = s
         self.d = self.multiplicity()
 
@@ -84,14 +82,7 @@ class NuclearSpin:
         # Raising & lowering operators
         self.Ip, self.Im = (self.Ix + 1j * self.Iy, self.Ix - 1j * self.Iy)
         # Pack everything into a dict
-        self.I = {
-            "-": self.Im,
-            "+": self.Ip,
-            "x": self.Ix,
-            "y": self.Iy,
-            "z": self.Iz,
-            "I": self.quantum_number,
-        }
+        self.I = {"-": self.Im, "+": self.Ip, "x": self.Ix, "y": self.Iy, "z": self.Iz, "I": self.quantum_number}
 
         self.gyro_ratio_over_2pi = float(gamma_over_2pi)
         # Helper dimension size of the space
@@ -100,8 +91,7 @@ class NuclearSpin:
 
     def __repr__(self):
         return (
-            f"quantum_number: {self.quantum_number}, "
-            f"multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}"
+            f"quantum_number: {self.quantum_number}, " f"multiplicity: {self.d}, shape: {self.shape}, dims: {self.dims}"
         )
 
     def multiplicity(self):
@@ -176,11 +166,7 @@ class ManySpins(NuclearSpin):
     def __repr__(self):
         return f" shape: {self.shape}, dims: {self.dims}"
 
-    def many_spin_operator(
-        self,
-        component: str | list[str] = "z",
-        spin_target: str | int | list[int] = "all",
-    ) -> Qobj:
+    def many_spin_operator(self, component: str | list[str] = "z", spin_target: str | int | list[int] = "all") -> Qobj:
         """
         Returns a spin operator with the dimension of the ManySpins system, with the specified components at
         specified indices (details below).
@@ -242,20 +228,12 @@ class ManySpins(NuclearSpin):
             for i, comp in enumerate(component):
                 if comp in self.I:  # {'x', 'y', 'z', '+', '-'}
                     spin_target.append(self.I[comp])
-                elif (
-                    comp is not None
-                ):  # To prevent unexpected bugs when a user makes a typo
-                    raise ValueError(
-                        f"Every element of `component` must be one of: ('x', 'y', 'z', '+', '-', None)"
-                    )
-        elif isinstance(
-            component, str
-        ):  # A string specifying the component, which will be applied to ALL spins.
+                elif comp is not None:  # To prevent unexpected bugs when a user makes a typo
+                    raise ValueError(f"Every element of `component` must be one of: ('x', 'y', 'z', '+', '-', None)")
+        elif isinstance(component, str):  # A string specifying the component, which will be applied to ALL spins.
             component = self.n_spins * [component]
         else:
-            raise TypeError(
-                f"The argument `component` must be a string or a list of strings."
-            )
+            raise TypeError(f"The argument `component` must be a string or a list of strings.")
 
         if isinstance(spin_target, int):
             spin_target = [spin_target]
@@ -263,13 +241,9 @@ class ManySpins(NuclearSpin):
             assert spin_target == "all", "If `spin_target` is a string, must be 'all'."
         elif isinstance(spin_target, list):
             for s in spin_target:
-                assert isinstance(
-                    s, int
-                ), "If `spin_target` is a list, must be a list of integers!"
+                assert isinstance(s, int), "If `spin_target` is a list, must be a list of integers!"
         else:
-            raise TypeError(
-                f"The argument `spin_target` must be a string, int, or a list of ints."
-            )
+            raise TypeError(f"The argument `spin_target` must be a string, int, or a list of ints.")
 
         # Constructing the operator
         many_spin_op = Qobj(np.zeros(self.shape), dims=self.dims)
@@ -298,11 +272,7 @@ class ManySpins(NuclearSpin):
         assert isinstance(many_spin_op, Qobj)  # prevent weird Qobj bugs
         return many_spin_op
 
-    def tensored_operator(
-        self,
-        component: str | list[str] = "z",
-        spin_target: str | int | list[int] = "all",
-    ) -> Qobj:
+    def tensored_operator(self, component: str | list[str] = "z", spin_target: str | int | list[int] = "all") -> Qobj:
         pass
 
     def spin_J_set(self):

@@ -60,21 +60,10 @@ def make_h_unperturbed(
         if zeem_par is None:
             h_zeem.append(h_zeeman(spins[i], 0.0, 0.0, 0.0))
         else:
-            h_zeem.append(
-                h_zeeman(
-                    spins[i],
-                    zeem_par["theta_z"],
-                    zeem_par["phi_z"],
-                    zeem_par["field magnitude"],
-                )
-            )
+            h_zeem.append(h_zeeman(spins[i], zeem_par["theta_z"], zeem_par["phi_z"], zeem_par["field magnitude"]))
 
         if (cs_param is not None) and (cs_param != 0.0):
-            h_zeem.append(
-                h_CS_isotropic(
-                    spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]
-                )
-            )
+            h_zeem.append(h_CS_isotropic(spins[i], cs_param["delta_iso"], zeem_par["field magnitude"]))
 
     for i in range(n_spins):
         h_i = h_quad[i] + h_zeem[i]
@@ -127,10 +116,7 @@ def make_h_unperturbed(
 
 
 def h_multiple_mode_pulse(
-    spin: NuclearSpin | ManySpins,
-    mode: Pulses,
-    t: float = None,
-    factor_t_dependence: bool = True,
+    spin: NuclearSpin | ManySpins, mode: Pulses, t: float = None, factor_t_dependence: bool = True
 ) -> Qobj | list:
     """
     Computes the term of the Hamiltonian describing the interaction with
@@ -194,30 +180,20 @@ def h_multiple_mode_pulse(
                     t_dependence = cosine_wrapper(omegas[i], phases[i], pulse_times[i])
                 elif mode.shape == "gaussian":
                     if sigmas is None:
-                        raise ValueError(
-                            "A valid sigma must be provided for a Gaussian pulse."
-                        )
+                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
                     sigma = sigmas[i]
                     if sigma <= 0:
-                        raise ValueError(
-                            "A valid sigma must be provided for a Gaussian pulse."
-                        )
-                    t_dependence = gaussian_wrapper(
-                        omegas[i], phases[i], pulse_times[i], sigma
-                    )
+                        raise ValueError("A valid sigma must be provided for a Gaussian pulse.")
+                    t_dependence = gaussian_wrapper(omegas[i], phases[i], pulse_times[i], sigma)
                 else:
-                    raise ValueError(
-                        "Unsupported pulse shape. Use 'square' or 'gaussian'."
-                    )
+                    raise ValueError("Unsupported pulse shape. Use 'square' or 'gaussian'.")
                 h_t_independent = Qobj(np.zeros((spin.d, spin.d)), dims=dims)
 
                 # Construct tensor product of operators acting on each spin.
                 # Take a tensor product where every operator except the nth
                 # is the identity, add those together
                 for n in range(spin.n_spins):
-                    term = pulse_t_independent_op(
-                        spin.spins[n], amplitudes[i], thetas[i], phis[i]
-                    )
+                    term = pulse_t_independent_op(spin.spins[n], amplitudes[i], thetas[i], phis[i])
                     ops = []
                     for m in range(spin.n_spins):
                         if m == n:
@@ -371,9 +347,7 @@ def h_single_mode_pulse(
 """ Helper Functions that creates Hamiltonian terms in the QuTiP format """
 
 
-def cosine_wrapper(
-    frequency: float, phase: float, pulse_time: float
-) -> Callable[[float], float]:
+def cosine_wrapper(frequency: float, phase: float, pulse_time: float) -> Callable[[float], float]:
     """
     Return the time-dependent coefficient of a pulse Hamiltonian.
 
@@ -401,9 +375,7 @@ def cosine_wrapper(
     return time_dependence_function
 
 
-def pulse_t_independent_op(
-    spin: NuclearSpin, B_1: float, theta_1: float, phi_1: float
-) -> Qobj:
+def pulse_t_independent_op(spin: NuclearSpin, B_1: float, theta_1: float, phi_1: float) -> Qobj:
     """
     Computes the time-independent portion of the Hamiltonian interaction with a
     monochromatic and linearly polarized electromagnetic pulse.
@@ -477,10 +449,7 @@ def magnus(
     qutip.Result instance with the evolved density matrix.
     """
     if order > 3:
-        raise ValueError(
-            "Magnus expansion solver does not support order > 3. "
-            + f"Given order {order}."
-        )
+        raise ValueError("Magnus expansion solver does not support order > 3. " + f"Given order {order}.")
 
     # output = Result()
     # output.times = tlist
@@ -505,12 +474,7 @@ def magnus(
                     factor *= 2
                 if t2 != 0 and t2 != t:
                     factor *= 2
-                integral += (
-                    factor
-                    * commutator(h[t], h[t2])
-                    * ((2 * np.pi * time_step) ** 2)
-                    * (1 / 2)
-                )
+                integral += factor * commutator(h[t], h[t2]) * ((2 * np.pi * time_step) ** 2) * (1 / 2)
 
             # TODO: is this supposed to be inside the for loop? It's weird to reference `t2` outside the loop.
             if order >= 3:
@@ -526,10 +490,7 @@ def magnus(
                         factor
                         * ((2 * np.pi * time_step) ** 3)
                         * (-1j / 6)
-                        * (
-                            commutator(h[t], commutator(h[t2], h[t3]))
-                            + commutator(h[t3], commutator(h[t2], h[t]))
-                        )
+                        * (commutator(h[t], commutator(h[t2], h[t3])) + commutator(h[t3], commutator(h[t2], h[t])))
                     )
 
     # dm_evolved_new_picture = rho0.transform((- integral).expm())
@@ -570,9 +531,7 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
     ValueError, when the passed B_0 is a negative number.
     """
     if B_0 < 0:
-        raise ValueError(
-            "The modulus of the magnetic field must be a non-negative quantity"
-        )
+        raise ValueError("The modulus of the magnetic field must be a non-negative quantity")
 
     h_z = (
         -spin.gyro_ratio_over_2pi
@@ -587,13 +546,7 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
 
 
 def h_quadrupole(
-    spin: NuclearSpin,
-    e2qQ: float,
-    eta: float,
-    alpha_q: float,
-    beta_q: float,
-    gamma_q: float,
-    component_order: int = 0,
+    spin: NuclearSpin, e2qQ: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float, component_order: int = 0
 ) -> Qobj:
     """
     Computes the term of the Hamiltonian associated with the quadrupolar interaction.
@@ -628,12 +581,7 @@ def h_quadrupole(
     h_q = (
         e2qQ
         / (I * (2 * I - 1))
-        * (
-            1
-            / 2
-            * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1))
-            * v0_EFG(eta, alpha_q, beta_q, gamma_q)
-        )
+        * (1 / 2 * (3 * (spin.I["z"] ** 2) - qeye(spin.d) * I * (I + 1)) * v0_EFG(eta, alpha_q, beta_q, gamma_q))
     )
     if component_order > 0:
         h_q += (
@@ -642,10 +590,8 @@ def h_quadrupole(
             * np.sqrt(6)
             / 4
             * (
-                (spin.I["z"] * spin.I["+"] + spin.I["+"] * spin.I["z"])
-                * v1_EFG(-1, eta, alpha_q, beta_q, gamma_q)
-                + (spin.I["z"] * spin.I["-"] + spin.I["-"] * spin.I["z"])
-                * v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)
+                (spin.I["z"] * spin.I["+"] + spin.I["+"] * spin.I["z"]) * v1_EFG(-1, eta, alpha_q, beta_q, gamma_q)
+                + (spin.I["z"] * spin.I["-"] + spin.I["-"] * spin.I["z"]) * v1_EFG(+1, eta, alpha_q, beta_q, gamma_q)
             )
         )
 
@@ -684,16 +630,11 @@ def v0_EFG(eta: float, alpha_q: float, beta_q: float, gamma_q: float) -> float:
     """
     if eta < 0 or eta > 1:
         raise ValueError("The asymmetry parameter must fall in the interval [0, 1]")
-    v0 = (1 / 2) * (
-        ((3 * (np.cos(beta_q)) ** 2 - 1) / 2)
-        - (eta * (np.sin(beta_q)) ** 2) * (np.cos(2 * gamma_q)) / 2
-    )
+    v0 = (1 / 2) * (((3 * (np.cos(beta_q)) ** 2 - 1) / 2) - (eta * (np.sin(beta_q)) ** 2) * (np.cos(2 * gamma_q)) / 2)
     return v0
 
 
-def v1_EFG(
-    sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float
-) -> complex:
+def v1_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float) -> complex:
     """
     Returns the components V+/-1 of the EFG tensor (divided by eq) as seen in the LAB system.
     These quantities are expressed in terms of the Euler angles which relate PAS and LAB systems and the parameter eta.
@@ -726,28 +667,20 @@ def v1_EFG(
         1
         / 2
         * (
-            -1j
-            * sign
-            * np.sqrt(3 / 8)
-            * np.sin(2 * beta_q)
-            * np.exp(sign * 1j * alpha_q)
+            -1j * sign * np.sqrt(3 / 8) * np.sin(2 * beta_q) * np.exp(sign * 1j * alpha_q)
             + 1j
             * (eta / (np.sqrt(6)))
             * np.sin(beta_q)
             * (
-                ((1 + sign * np.cos(beta_q)) / 2)
-                * np.exp(1j * (sign * alpha_q + 2 * gamma_q))
-                - ((1 - sign * np.cos(beta_q)) / 2)
-                * np.exp(1j * (sign * alpha_q - 2 * gamma_q))
+                ((1 + sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q + 2 * gamma_q))
+                - ((1 - sign * np.cos(beta_q)) / 2) * np.exp(1j * (sign * alpha_q - 2 * gamma_q))
             )
         )
     )
     return v1
 
 
-def v2_EFG(
-    sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float
-) -> float:
+def v2_EFG(sign: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float) -> float:
     """
     Returns the components V+/-2 of the EFG tensor (divided by eq) as seen in the LAB system.
     These quantities are expressed in terms of the Euler angles which
@@ -798,9 +731,7 @@ def v2_EFG(
     return v2
 
 
-def gaussian_wrapper(
-    frequency: float, phase: float, pulse_time: float, sigma: float
-) -> Callable[[float], float]:
+def gaussian_wrapper(frequency: float, phase: float, pulse_time: float, sigma: float) -> Callable[[float], float]:
     """
     Return the time-dependent coefficient of a Gaussian-shaped pulse Hamiltonian.
 
@@ -835,11 +766,7 @@ def gaussian_wrapper(
 # Global Hamiltonian of the system (stationary term + pulse term) cast in the picture generated by
 # the Operator h_change_of_picture
 def h_changed_picture(
-    spin: NuclearSpin | ManySpins,
-    mode: Pulses,
-    h_unperturbed: Qobj,
-    h_change_of_picture: Qobj,
-    t: float,
+    spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
 ) -> Qobj:
     """
     Returns the global Hamiltonian of the system, made up of the time-dependent
@@ -869,18 +796,12 @@ def h_changed_picture(
             h_pulse = h_pulse[0]
         h_pulse = QobjEvo(h_pulse).__call__(t=t)
 
-    h_cp = changed_picture(
-        h_unperturbed + h_pulse - h_change_of_picture, h_change_of_picture, t
-    )
+    h_cp = changed_picture(h_unperturbed + h_pulse - h_change_of_picture, h_change_of_picture, t)
     return Qobj(h_cp)
 
 
 def h_changed_picture_func(
-    spin: NuclearSpin | ManySpins,
-    mode: Pulses,
-    h_unperturbed: Qobj,
-    h_change_of_picture: Qobj,
-    t: float,
+    spin: NuclearSpin | ManySpins, mode: Pulses, h_unperturbed: Qobj, h_change_of_picture: Qobj, t: float
 ) -> Callable:
     """
     Returns the global Hamiltonian of the system, made up of the time-dependent
@@ -904,9 +825,7 @@ def h_changed_picture_func(
 
     def func(t, args):
         h_pulse = h_multiple_mode_pulse(spin, mode, t)
-        h_cp = changed_picture(
-            (h_unperturbed + h_pulse - h_change_of_picture), h_change_of_picture, t
-        )
+        h_cp = changed_picture((h_unperturbed + h_pulse - h_change_of_picture), h_change_of_picture, t)
         return Qobj(h_cp)
 
     return func
@@ -985,9 +904,7 @@ def h_CS_isotropic(spin: NuclearSpin, delta_iso: float, B_0: float) -> Qobj:
     ValueError, when the passed B_0 is a negative number.
     """
     if B_0 < 0:
-        raise ValueError(
-            "The magnitude of the magnetic field must be a non-negative quantity"
-        )
+        raise ValueError("The magnitude of the magnetic field must be a non-negative quantity")
     h_cs = -delta_iso * spin.gyro_ratio_over_2pi * B_0 * spin.I["z"]
     return Qobj(h_cs)
 
@@ -1049,11 +966,7 @@ def h_D2(spins: ManySpins, b_D: float, theta: float) -> Qobj:
     representing the Hamiltonian.
 
     """
-    h_d2 = (
-        b_D
-        * (3 * (np.cos(theta) ** 2) - 1)
-        * (tensor(spins.spins[0].I["z"], spins.spins[1].I["z"]))
-    )
+    h_d2 = b_D * (3 * (np.cos(theta) ** 2) - 1) * (tensor(spins.spins[0].I["z"], spins.spins[1].I["z"]))
     return Qobj(h_d2)
 
 
@@ -1201,9 +1114,7 @@ def multiply_by_2pi(h_unscaled: list[Qobj]) -> list[Qobj]:
     return h_scaled
 
 
-def rotating_frame_h(
-    h: QobjEvo, w_ref: float, spins: ManySpins | NuclearSpin
-) -> QobjEvo:
+def rotating_frame_h(h: QobjEvo, w_ref: float, spins: ManySpins | NuclearSpin) -> QobjEvo:
     """
     Transforms the Hamiltonain H into the rotating frame:
     Rz(-angle) * H * Rz(angle) - w_ref * IZ, where 'angle' = w_ref * t + phi_ref

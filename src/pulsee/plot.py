@@ -193,9 +193,7 @@ def plot_real_part_density_matrix(
 
     # Create an X-Y mesh of the same dimension as the 2D data
     # You can think of this as the floor of the plot
-    x_data, y_data = np.meshgrid(
-        np.arange(dmr.shape[1]) + 0.25, np.arange(dmr.shape[0]) + 0.25
-    )
+    x_data, y_data = np.meshgrid(np.arange(dmr.shape[1]) + 0.25, np.arange(dmr.shape[0]) + 0.25)
 
     # Set width of the vertical bars
     dx = dy = 0.5
@@ -215,15 +213,7 @@ def plot_real_part_density_matrix(
         else:
             bar_color[i] = "tab:blue"
 
-    ax.bar3d(
-        x_data,
-        y_data,
-        np.zeros(len(z_data)),
-        dx,
-        dy,
-        np.absolute(z_data),
-        color=bar_color,
-    )
+    ax.bar3d(x_data, y_data, np.zeros(len(z_data)), dx, dy, np.absolute(z_data), color=bar_color)
 
     label_indices(ax, dm, label_size, many_spin_indexing)
 
@@ -261,27 +251,9 @@ def complex_phase_cmap() -> clrs.LinearSegmentedColormap:
     cmap : A matplotlib linear segmented colormap.
     """
     cdict = {
-        "blue": (
-            (0.00, 0.0, 0.0),
-            (0.25, 0.0, 0.0),
-            (0.50, 1.0, 1.0),
-            (0.75, 1.0, 1.0),
-            (1.00, 0.0, 0.0),
-        ),
-        "green": (
-            (0.00, 0.0, 0.0),
-            (0.25, 1.0, 1.0),
-            (0.50, 0.0, 0.0),
-            (0.75, 1.0, 1.0),
-            (1.00, 0.0, 0.0),
-        ),
-        "red": (
-            (0.00, 1.0, 1.0),
-            (0.25, 0.5, 0.5),
-            (0.50, 0.0, 0.0),
-            (0.75, 0.0, 0.0),
-            (1.00, 1.0, 1.0),
-        ),
+        "blue": ((0.00, 0.0, 0.0), (0.25, 0.0, 0.0), (0.50, 1.0, 1.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+        "green": ((0.00, 0.0, 0.0), (0.25, 1.0, 1.0), (0.50, 0.0, 0.0), (0.75, 1.0, 1.0), (1.00, 0.0, 0.0)),
+        "red": ((0.00, 1.0, 1.0), (0.25, 0.5, 0.5), (0.50, 0.0, 0.0), (0.75, 0.0, 0.0), (1.00, 1.0, 1.0)),
     }
 
     cmap = clrs.LinearSegmentedColormap("phase_colormap", cdict, 256)
@@ -431,17 +403,13 @@ def plot_complex_density_matrix(
         ax.set_zlim(zlim)
     elif label_qubit:  # To display as figure in a paper.
         ax.set_zlim(0, 1)
-        ax.set_zticks(
-            [0, 0.5, 1], [0, 0.5, 1], fontsize=label_size, verticalalignment="center"
-        )
+        ax.set_zticks([0, 0.5, 1], [0, 0.5, 1], fontsize=label_size, verticalalignment="center")
     # Adjust the z tick label locations to they line up better with the ticks
     ax.tick_params("z", pad=0)
 
     ax.bar3d(xpos, ypos, zpos, dx, dy, dz, color=colors, shade=True)
     # TODO: change light source? Make color more consistent between elements
-    ax.view_init(
-        elev=view_angle[0], azim=view_angle[1]
-    )  # rotating the plot so the "diagonal" direction is more clear
+    ax.view_init(elev=view_angle[0], azim=view_angle[1])  # rotating the plot so the "diagonal" direction is more clear
     if label_qubit:
         label_qubit_indices(ax, label_size, xpos, ypos)
     else:
@@ -463,9 +431,7 @@ def plot_complex_density_matrix(
     return fig, ax
 
 
-def rotate_colormap(
-    cmap: matplotlib.colors.Colormap, angle: float, flip: bool = False
-) -> matplotlib.colors.Colormap:
+def rotate_colormap(cmap: matplotlib.colors.Colormap, angle: float, flip: bool = False) -> matplotlib.colors.Colormap:
     """
     Helper function for `plot_complex_density_matrix`.
 
@@ -487,15 +453,11 @@ def rotate_colormap(
     shifted_nums = np.roll(nums, int(n * angle / 360))
     if flip:
         shifted_nums = np.flip(shifted_nums)
-    shifted_cmap = matplotlib.colors.LinearSegmentedColormap.from_list(
-        f"{cmap.name}_new", cmap(shifted_nums)
-    )
+    shifted_cmap = matplotlib.colors.LinearSegmentedColormap.from_list(f"{cmap.name}_new", cmap(shifted_nums))
     return shifted_cmap
 
 
-def label_indices(
-    ax: plt.Axes, dm: Qobj, label_size: float, many_spin_indexing: list[int]
-):
+def label_indices(ax: plt.Axes, dm: Qobj, label_size: float, many_spin_indexing: list[int]):
     """
     Helper function for `plot_complex_density_matrix` and `plot_real_part_density_matrix`.
     """
@@ -524,21 +486,14 @@ def label_indices(
                     if j == n_sub - 1:
                         comma = ""
                     tick_label[(j * d_sub[i] + k) * d_downhill + l] = (
-                        m_dict[i][k]
-                        + comma
-                        + tick_label[(j * d_sub[i] + k) * d_downhill + l]
+                        m_dict[i][k] + comma + tick_label[(j * d_sub[i] + k) * d_downhill + l]
                     )
     for i in range(d):
         tick_label[i] = "|" + tick_label[i]
 
     ax.tick_params(axis="both", which="major", labelsize=label_size)
     tick_locations = np.arange(start=0.5, stop=dm.shape[0] + 0.5)
-    ax.set(
-        xticks=tick_locations - 1.5,
-        xticklabels=tick_label,
-        yticks=tick_locations - 0.5,
-        yticklabels=tick_label,
-    )
+    ax.set(xticks=tick_locations - 1.5, xticklabels=tick_label, yticks=tick_locations - 0.5, yticklabels=tick_label)
 
 
 def label_qubit_indices(ax: plt.Axes, label_size: float, xpos, ypos):
@@ -546,12 +501,7 @@ def label_qubit_indices(ax: plt.Axes, label_size: float, xpos, ypos):
     xpos = np.sort(np.unique(np.array(xpos))) + 0.25
     ypos = np.sort(np.unique(np.array(ypos))) + 0.25
     # adapted from qutip's `matrix_histogram_complex`
-    labels = [
-        r"$|$00$\rangle$",
-        r"$|$01$\rangle$",
-        r"$|$10$\rangle$",
-        r"$|$11$\rangle$",
-    ]
+    labels = [r"$|$00$\rangle$", r"$|$01$\rangle$", r"$|$10$\rangle$", r"$|$11$\rangle$"]
     # ax.axes.xaxis.set_major_locator(plt.IndexLocator(1, -0.5))
     # ax.set_xticklabels(labels)
     # ax.tick_params(axis='x', labelsize=label_size)
@@ -782,20 +732,10 @@ def plot_fourier_transform(
 
     for i in range(n_plots):
         if not square_modulus:
-            ax[i].plot(
-                frequencies, np.real(fourier_data[i]), label="Real part " + my_label
-            )
-            ax[i].plot(
-                frequencies,
-                np.imag(fourier_data[i]),
-                label="Imaginary part " + my_label,
-            )
+            ax[i].plot(frequencies, np.real(fourier_data[i]), label="Real part " + my_label)
+            ax[i].plot(frequencies, np.imag(fourier_data[i]), label="Imaginary part " + my_label)
         else:
-            ax[i].plot(
-                frequencies,
-                np.abs(fourier_data[i]) ** 2,
-                label="Square modulus " + my_label,
-            )
+            ax[i].plot(frequencies, np.abs(fourier_data[i]) ** 2, label="Square modulus " + my_label)
 
         if n_plots > 1:
             ax[i].title.set_text(plot_title[i])
