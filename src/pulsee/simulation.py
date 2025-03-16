@@ -1180,8 +1180,7 @@ def ed_evolve(
 
     else:
         e_ops_t = [[] for _ in range(len(e_ops))]
-        # for t in tqdm(tlist):
-        for t in tlist:
+        for t in tqdm(tlist):
             rho, exp = _ed_evolve_solve_t(t, h, rho0, e_ops)
             e_ops_t = np.concatenate([e_ops_t, exp], axis=1)
             rho_t.append(rho)
@@ -1189,8 +1188,7 @@ def ed_evolve(
     if fid:
         fid_exp = []
         fids = e_ops_t[-1]
-        # for i in trange(len(fids)):
-        for i in range(len(fids)):
+        for i in trange(len(fids)):
             # Obtain total decay envelope at that time.
             envelope = 1
             for decay in decay_functions:

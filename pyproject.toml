@@ -1,8 +1,8 @@
 [tool.poetry]
 name = "pulsee"
-version = "0.1.5"
+version = "0.1.4"
 description = "Program for the Simulation of Nuclear Spin Ensemble Evolution"
-authors = ["Jiwoo Seo <lemon6927@gmail.com>, Ilija Nikolov <ilija@brown.edu>, Alex Aoki <alexander_aoki@brown.edu >, Alan Bidart <alanbidart@gmail.com>"]
+authors = ["Jiwoo Seo <lemon6927@gmail.com>, Alan Bidart <alanbidart@gmail.com>"]
 license = "GPL-3.0-or-later"
 readme = "README.md"
 
