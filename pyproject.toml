@@ -20,6 +20,9 @@ notebook = "*"
 pandas = "*"
 ipywidgets = "*"
 
+[tool.poetry.group.dev.dependencies]
+black = "^24.0"
+
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"

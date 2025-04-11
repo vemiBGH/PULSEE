@@ -260,13 +260,9 @@ def nuclear_system_setup(
         raise IndexError("The length of spin_par and quad_par must be equal!")
 
     if len(spin_par) == 1:
-        spin_system = NuclearSpin(
-            spin_par[0]["quantum number"], spin_par[0]["gamma/2pi"]
-        )
+        spin_system = NuclearSpin(spin_par[0]["quantum number"], spin_par[0]["gamma/2pi"])
     else:
-        spins = [
-            NuclearSpin(par["quantum number"], par["gamma/2pi"]) for par in spin_par
-        ]
+        spins = [NuclearSpin(par["quantum number"], par["gamma/2pi"]) for par in spin_par]
         spin_system = ManySpins(spins)
 
     # Very ugly to have this many arguments, so might make a "InitialParams" class
@@ -362,9 +358,7 @@ def power_absorption_spectrum(
     [1]: The list of the corresponding intensities (in arbitrary units).
     """
     if not normalized and dm_initial is None:
-        raise ValueError(
-            "argument `dm_initial` cannot be None if `normalized` is set to True!"
-        )
+        raise ValueError("argument `dm_initial` cannot be None if `normalized` is set to True!")
     # dims = [s.d for s in spin.spin]
     dims = h_unperturbed[0].dims
     shape = h_unperturbed[0].shape
@@ -397,9 +391,7 @@ def power_absorption_spectrum(
                 transition_frequency.append(nu)
                 intensity_nu = nu * np.absolute(mm_in_basis_of_eigenstates[j, i]) ** 2
                 if not normalized:
-                    assert isinstance(
-                        dm_initial, Qobj
-                    ), "`dm_initial` must have type Qobj!"
+                    assert isinstance(dm_initial, Qobj), "`dm_initial` must have type Qobj!"
                     p_i = dm_initial[i, i]
                     p_j = dm_initial[j, j]
                     intensity_nu = np.absolute(p_i - p_j) * intensity_nu
@@ -575,18 +567,13 @@ def evolve(
     if mode is None:
         mode = Pulses()
     if np.min(mode.pulse_times) < 0:
-        raise ValueError(
-            "Pulse duration must be a non-negative number. Given:"
-            + str(np.min(mode.pulse_times))
-        )
+        raise ValueError("Pulse duration must be a non-negative number. Given:" + str(np.min(mode.pulse_times)))
     mode.numpify()
     # In order to use the right hand rule convention, for positive gamma,
     # we 'flip' the pulse by adding pi to the phase,
     # Refer to section 10.6 (pg 244) of 'Spin Dynamics - Levitt' for more detail.
     if spin.gyro_ratio_over_2pi > 0:
-        mode = (
-            mode.copy()
-        )  # in case the user wants to use same 'mode' variable for later uses.
+        mode = mode.copy()  # in case the user wants to use same 'mode' variable for later uses.
         mode.phase_add_pi()
 
     pulse_time = max(np.max(mode.pulse_times), evolution_time)
@@ -621,22 +608,13 @@ def evolve(
                 RRF_par = {"nu_RRF": 0, "theta_RRF": 0, "phi_RRF": 0}
             o_change_of_picture = RRF_operator(spin, RRF_par)
         else:
-            raise ValueError(
-                "This value of argument 'picture' is not supported."
-                "Must be either 'IF' or 'RRF'."
-            )
+            raise ValueError("This value of argument 'picture' is not supported." "Must be either 'IF' or 'RRF'.")
         h_total = Qobj(sum(h_unperturbed), dims=dims)
-        result = magnus(
-            h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture
-        )
+        result = magnus(h_total, Qobj(dm_initial), times, order, spin, mode, o_change_of_picture)
         if return_allstates:
-            raise NotImplementedError(
-                "Return all states not implemented with Magnus. " "Use mesolve instead."
-            )
+            raise NotImplementedError("Return all states not implemented with Magnus. " "Use mesolve instead.")
 
-        dm_evolved = changed_picture(
-            result, o_change_of_picture, pulse_time, invert=True
-        )
+        dm_evolved = changed_picture(result, o_change_of_picture, pulse_time, invert=True)
         return dm_evolved
 
     # Split into operator and time-dependent coefficient as per QuTiP scheme.
@@ -727,9 +705,7 @@ def FID_signal(
     h_unperturbed: list[Qobj],
     dm: Qobj,
     acquisition_time: float,
-    T2: (
-        float | list[float] | Callable[[float], float] | list[Callable[[float], float]]
-    ) = 100,
+    T2: (float | list[float] | Callable[[float], float] | list[Callable[[float], float]]) = 100,
     theta: float = 0,
     phi: float = 0,
     ref_freq: float = 0,
@@ -832,9 +808,7 @@ def FID_signal(
 
     if pulse_mode is not None:
         # copying the method from function 'evolve()' above
-        h_perturbation = h_multiple_mode_pulse(
-            spin, pulse_mode, t=0, factor_t_dependence=True
-        )
+        h_perturbation = h_multiple_mode_pulse(spin, pulse_mode, t=0, factor_t_dependence=True)
         hamiltonian = h_unperturbed + h_perturbation
     else:
         hamiltonian = h_unperturbed
@@ -897,9 +871,7 @@ def make_decay_functions(
     return decay_functions
 
 
-def fourier_transform_signal(
-    signal: NDArray, times: NDArray, abs: bool = False, padding: int | None = None
-):
+def fourier_transform_signal(signal: NDArray, times: NDArray, abs: bool = False, padding: int | None = None):
     """
     Computes the Fourier transform of the passed time-dependent signal using
     the scipy library.
@@ -953,9 +925,7 @@ def fourier_transform_signal(
 
 # Finds out the phase responsible for the displacement of the real and imaginary parts of the Fourier
 # spectrum of the FID with respect to the ideal absorptive/dispersive lorentzian shapes
-def fourier_phase_shift(
-    frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=0.5
-):
+def fourier_phase_shift(frequencies, fourier, fourier_neg=None, peak_frequency=0, int_domain_width=0.5):
     """
     Computes the phase factor which must multiply the Fourier spectrum
     (`fourier`) in order to have the real and imaginary part of the adjusted
@@ -1002,9 +972,7 @@ def fourier_phase_shift(
         fourier = np.concatenate((fourier, fourier_neg))
         frequencies = np.concatenate((frequencies, -frequencies))
 
-    integration_domain = np.nonzero(
-        np.isclose(frequencies, peak_frequency, atol=int_domain_width / 2)
-    )[0]
+    integration_domain = np.nonzero(np.isclose(frequencies, peak_frequency, atol=int_domain_width / 2))[0]
 
     int_real_fourier = 0
     int_imag_fourier = 0
@@ -1074,9 +1042,7 @@ def ed_evolve(
     fid=False,
     parallel=False,
     all_t=False,
-    T2: (
-        float | list[float] | Callable[[float], float] | list[Callable[[float], float]]
-    ) = 100,
+    T2: (float | list[float] | Callable[[float], float] | list[Callable[[float], float]]) = 100,
 ):
     """
     Evolve the given density matrix with the interactions given by the provided
@@ -1158,14 +1124,11 @@ def ed_evolve(
                 res = ipynb_parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops))
             except OSError:
                 raise OSError(
-                    "Make sure to have a running cluster. "
-                    + "Try opening a new cmd and running ipcluster start."
+                    "Make sure to have a running cluster. " + "Try opening a new cmd and running ipcluster start."
                 )
 
         else:
-            res = parallel_map(
-                _ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=None
-            )
+            res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=None)
 
         for r, e in res:
             rho_t.append(r)
