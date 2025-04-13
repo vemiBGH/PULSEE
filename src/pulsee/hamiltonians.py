@@ -504,7 +504,12 @@ def magnus(
 """ Mostly mathematical functions that constructs a specific term for the Hamiltonian """
 
 
-def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qobj:
+def h_zeeman(
+    spin: NuclearSpin, 
+    theta_z: float, 
+    phi_z: float, 
+    B_0: float
+) -> Qobj:
     """
     Computes the term of the Hamiltonian associated with the Zeeman interaction between the nuclear spin and the
      external static field.
@@ -546,7 +551,13 @@ def h_zeeman(spin: NuclearSpin, theta_z: float, phi_z: float, B_0: float) -> Qob
 
 
 def h_quadrupole(
-    spin: NuclearSpin, e2qQ: float, eta: float, alpha_q: float, beta_q: float, gamma_q: float, component_order: int = 0
+    spin: NuclearSpin, 
+    e2qQ: float, 
+    eta: float, 
+    alpha_q: float, 
+    beta_q: float, 
+    gamma_q: float, 
+    component_order: int = 0
 ) -> Qobj:
     """
     Computes the term of the Hamiltonian associated with the quadrupolar interaction.
