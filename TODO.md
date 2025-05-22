@@ -2,17 +2,10 @@
 - [ ] Fix ipyparallel for Jupyter notebook
 
 Jiwoo: 
-- [ ] Update poetry files for package management
-- [ ] Add type hints to simulation.py
-- [ ] Replace pd dataframe (mode) with a new class. Should simplify the code and remove dependency on pandas package
 - [ ] simulate CNOT on ADP
-- [ ] Update `plot_complex_density_matrix` and `plot_real_part_density_matrix` (fix element labels & optional arguments to rotate the plot)
-- [ ] Replace the use of matplotlib.pylab (strongly discouraged by matplotlib documentation) with matplotlib.pyplot
-- [ ] Replace all use of the plotting functions with pulsee.plot instead of pulsee.simulation
 - [ ] Test, QA
 
 Ilija
-- [ ] simulate CNOT on ADP
 - [ ] Check magnus higher order integral approx
 - [ ] Add notebook selective pulse
 
@@ -31,6 +24,12 @@ Alex
 - [ ] FID parallelizable
 
 ### Project status
+- [x] Replace all use of the plotting functions with pulsee.plot instead of pulsee.simulation
+- [x] Update `plot_complex_density_matrix` and `plot_real_part_density_matrix` (fix element labels & optional arguments to rotate the plot)
+- [x] Replace pd dataframe (mode) with a new `Pulses` class. Should simplify the code and remove dependency on pandas package
+- [x] Add type hints to simulation.py
+- [x] Update poetry files for package management
+- [x] Replace the use of matplotlib.pylab (strongly discouraged by matplotlib documentation) with matplotlib.pyplot
 - [x] Time dependent Hamiltonians to simulate FID and add option to add pulses during FID acquisition
 - [x] Add notebook simple 1/2 case
 - [x] Check the demo for hyperfine (small errors) 
