@@ -18,14 +18,14 @@ class UsefulSqzOps:
     def __init__(self, spin_system):
         # Global variable
         (self.Ix, self.Iy, self.Iz) = spin_system.spin_J_set()
-        self.Ix2 = self.Ix ** 2
-        self.Iy2 = self.Iy ** 2
-        self.Iz2 = self.Iz ** 2
+        self.Ix2 = self.Ix**2
+        self.Iy2 = self.Iy**2
+        self.Iz2 = self.Iz**2
 
-        self.Im = spin_system.I['-']
-        self.Ip = spin_system.I['+']
+        self.Im = spin_system.I["-"]
+        self.Ip = spin_system.I["+"]
 
-        self.Ip2 = self.Ip ** 2
+        self.Ip2 = self.Ip**2
         self.Ip_2Iz = self.Ip * (2 * self.Iz + 1)
 
         self.IyIz = self.Iy * self.Iz
@@ -38,12 +38,14 @@ class UsefulSqzOps:
         self.avIyIz, self.avIzIy = 2 * [None]
 
     def __repr__(self):
-        return 'The class contains: Ix, Iy, Iz, Ix2, Iy2, ' \
-               'Iz2, Im, Ip, Ip2, Ip_2Iz, IyIz, IzIy, ' \
-               'and their average values, av[op].'
+        return (
+            "The class contains: Ix, Iy, Iz, Ix2, Iy2, "
+            "Iz2, Im, Ip, Ip2, Ip_2Iz, IyIz, IzIy, "
+            "and their average values, av[op]."
+        )
 
 
-def coherent_spin_state(spin_system : NuclearSpin, initial_state: list[dict]) -> Qobj:
+def coherent_spin_state(spin_system: NuclearSpin, initial_state: list[dict]) -> Qobj:
     """
     If a dictionary {'theta' : rad, 'phi' : rad} is passed, a spin coherent
     state is created. Can pass a list of dictionaries for a ManySpins system
@@ -65,25 +67,27 @@ def coherent_spin_state(spin_system : NuclearSpin, initial_state: list[dict]) ->
         initialised according to initial_state.
     """
     for d in initial_state:
-        if ('theta' not in d.keys()) or ('phi' not in d.keys()):
+        if ("theta" not in d.keys()) or ("phi" not in d.keys()):
             raise ValueError("Please check that both 'theta' and 'phi' are given for all the spins.")
 
     if isinstance(spin_system, NuclearSpin) and not isinstance(spin_system, ManySpins):
         assert len(initial_state) == 1, "length of `initial_state` should be 1 since `spin_system` only has 1 spin!"
-        dm = spin_coherent(spin_system.I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+        dm = spin_coherent(spin_system.I["I"], initial_state[0]["theta"], initial_state[0]["phi"], type="dm")
         return dm
 
     assert isinstance(spin_system, ManySpins), "Not a valid type of `spin_system`!"
     assert len(initial_state) == spin_system.n_spins, "Length of `initial_state` must match the number of spins!"
 
-    dm = spin_coherent(spin_system.spins[0].I['I'], initial_state[0]['theta'], initial_state[0]['phi'], type='dm')
+    dm = spin_coherent(spin_system.spins[0].I["I"], initial_state[0]["theta"], initial_state[0]["phi"], type="dm")
     for i in range(1, spin_system.n_spins):
-        dm = tensor(dm, spin_coherent(spin_system.spins[i].I['I'], initial_state[i]['theta'],
-                                      initial_state[i]['phi'], type='dm'))
+        dm = tensor(
+            dm,
+            spin_coherent(spin_system.spins[i].I["I"], initial_state[i]["theta"], initial_state[i]["phi"], type="dm"),
+        )
     return dm
 
 
-def populate_averge_values(dms : list[Qobj], sqz_ops : UsefulSqzOps):
+def populate_averge_values(dms: list[Qobj], sqz_ops: UsefulSqzOps):
     """
     Populates the class useful_sqz_ops with the average value of the operators in the states
     [density matrices] given.
@@ -97,21 +101,33 @@ def populate_averge_values(dms : list[Qobj], sqz_ops : UsefulSqzOps):
     -------
     Populated class useful_sqz_ops
     """
-    res = calc_e_ops(dms, [sqz_ops.Ix, sqz_ops.Iy, sqz_ops.Iz,
-                           sqz_ops.Ix2, sqz_ops.Iy2, sqz_ops.Iz2,
-                           sqz_ops.Im, sqz_ops.Ip, sqz_ops.Ip2, sqz_ops.Ip_2Iz,
-                           sqz_ops.IyIz, sqz_ops.IzIy])
+    res = calc_e_ops(
+        dms,
+        [
+            sqz_ops.Ix,
+            sqz_ops.Iy,
+            sqz_ops.Iz,
+            sqz_ops.Ix2,
+            sqz_ops.Iy2,
+            sqz_ops.Iz2,
+            sqz_ops.Im,
+            sqz_ops.Ip,
+            sqz_ops.Ip2,
+            sqz_ops.Ip_2Iz,
+            sqz_ops.IyIz,
+            sqz_ops.IzIy,
+        ],
+    )
 
     sqz_ops.avIx, sqz_ops.avIy, sqz_ops.avIz = (res[0], res[1], res[2])
     sqz_ops.avIx2, sqz_ops.avIy2, sqz_ops.avIz2 = (res[3], res[4], res[5])
-    sqz_ops.avIm, sqz_ops.avIp, sqz_ops.avIp2, sqz_ops.avIp_2Iz = (res[6], res[7],
-                                                                   res[8], res[9])
+    sqz_ops.avIm, sqz_ops.avIp, sqz_ops.avIp2, sqz_ops.avIp_2Iz = (res[6], res[7], res[8], res[9])
     sqz_ops.avIyIz, sqz_ops.avIzIy = (res[10], res[11])
 
     return sqz_ops
 
 
-def calc_squeez_param(sqz_ops : UsefulSqzOps, I : int, xi_sq : bool =False, return_av_sphere : bool =False) -> tuple:
+def calc_squeez_param(sqz_ops: UsefulSqzOps, I: int, xi_sq: bool = False, return_av_sphere: bool = False) -> tuple:
     """
     Calculates the generalized squeezing parameter and the squeezing angle.
 
@@ -157,23 +173,26 @@ def calc_squeez_param(sqz_ops : UsefulSqzOps, I : int, xi_sq : bool =False, retu
     th = np.arctan2(np.array(r, dtype=np.float64), np.array(Jz, dtype=np.float64))
     phi = np.arctan2(np.array(Jy, dtype=np.float64), np.array(Jx, dtype=np.float64))
 
-    Jn_1 = - Jx * np.sin(phi) + Jy * np.cos(phi)
-    Jn_2 = - Jx * np.cos(th) * np.cos(phi) - Jy * np.sin(phi) * np.cos(th) + Jz * np.sin(th)
+    Jn_1 = -Jx * np.sin(phi) + Jy * np.cos(phi)
+    Jn_2 = -Jx * np.cos(th) * np.cos(phi) - Jy * np.sin(phi) * np.cos(th) + Jz * np.sin(th)
     Jn_3 = Jx * np.sin(th) * np.cos(phi) + Jy * np.sin(phi) * np.sin(th) + Jz * np.cos(th)
 
-    A = (1 / 2) * (np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2) - (1 + np.cos(th) ** 2) * (
-            Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi)) +
-                   np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi)))
+    A = (1 / 2) * (
+        np.sin(th) ** 2 * (I * (I + 1) - 3 * Jz2)
+        - (1 + np.cos(th) ** 2) * (Jp2.imag * np.sin(2 * phi) + Jp2.real * np.cos(2 * phi))
+        + np.sin(2 * th) * (Jp_2Jz.imag * np.sin(phi) + Jp_2Jz.real * np.cos(phi))
+    )
 
     C = I * (I + 1) - Jz2 - Jp2.imag * np.sin(2 * phi) - Jp2.real * np.cos(2 * phi) - A
 
     B = np.cos(th) * (Jp2.real * np.sin(2 * phi) - Jp2.imag * np.cos(2 * phi)) + np.sin(th) * (
-            -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi))
+        -Jp_2Jz.real * np.sin(phi) + Jp_2Jz.imag * np.cos(phi)
+    )
 
     if xi_sq:
-        xi = (C - np.sqrt(A ** 2 + B ** 2)) / I
+        xi = (C - np.sqrt(A**2 + B**2)) / I
     else:
-        xi = np.sqrt(C - np.sqrt(A ** 2 + B ** 2)) / np.sqrt(I)
+        xi = np.sqrt(C - np.sqrt(A**2 + B**2)) / np.sqrt(I)
 
     alpha = (1 / 2) * np.arctan(B / A)
 
@@ -183,9 +202,18 @@ def calc_squeez_param(sqz_ops : UsefulSqzOps, I : int, xi_sq : bool =False, retu
         return xi, alpha
 
 
-def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magnetization',
-                x_label='Time (MHz)', y_label='Magnetization (Arb.)', labels=None,
-                colors=None, put_brackets=True):
+def plot_values(
+    vals,
+    times,
+    num_plots,
+    axis_scaler,
+    title="Mean values of magnetization",
+    x_label="Time (MHz)",
+    y_label="Magnetization (Arb.)",
+    labels=None,
+    colors=None,
+    put_brackets=True,
+):
     """
     Helper plotting function for the squeezing module
     Parameters
@@ -219,9 +247,9 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
     """
 
     if colors is None:
-        colors = ['b', 'r', 'g', 'y']
+        colors = ["b", "r", "g", "y"]
     if labels is None:
-        labels = ['I_x', 'I_y', 'I_z', 'I_T']
+        labels = ["I_x", "I_y", "I_z", "I_T"]
 
     brackets = ["\langle ", " \\rangle"]
     times = times / axis_scaler
@@ -254,8 +282,9 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
         for i in range(num_plots[0]):
             for j in range(num_plots[1]):
                 if put_brackets:
-                    axs[i, j].plot(times, vals[cnt], colors[cnt],
-                                   label=r"${} {} {}$".format(brackets[0], labels[cnt], brackets[1]))
+                    axs[i, j].plot(
+                        times, vals[cnt], colors[cnt], label=r"${} {} {}$".format(brackets[0], labels[cnt], brackets[1])
+                    )
                 else:
                     axs[i, j].plot(times, vals[cnt], colors[cnt], label=r"${}$".format(labels[cnt]))
                 cnt += 1
@@ -263,7 +292,7 @@ def plot_values(vals, times, num_plots, axis_scaler, title='Mean values of magne
         axs.flat[0].set_ylabel(y_label)
 
     else:
-        raise TypeError('`num_plot` should either be type int or list!')
+        raise TypeError("`num_plot` should either be type int or list!")
 
     fig.suptitle(title)
     fig.legend()
