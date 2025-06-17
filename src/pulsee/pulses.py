@@ -6,8 +6,10 @@
 #        | ... |    ...    |    ...    |   ...   |   ...   |  ...  |    ...     |  ...  |
 #        |  N  |  omega_N  |    B_N    | phase_N | theta_N | phi_N |   tau_N    | sig_N |
 import copy
+from dataclasses import dataclass, field, fields
+
 import numpy as np
-from dataclasses import dataclass, field
+
 
 @dataclass
 class Pulses:
@@ -21,10 +23,11 @@ class Pulses:
     sigma: list[float] = field(default_factory=lambda: [1.0])
 
     def __post_init__(self):
-        self.size=len(self.frequencies)
+        self.size = len(self.frequencies)
 
     def copy(self):
         return copy.deepcopy(self)
+
     def numpify(self):
         self.frequencies = np.array(self.frequencies)
         self.amplitdues = np.array(self.amplitudes)
@@ -32,5 +35,20 @@ class Pulses:
         self.theta_p = np.array(self.theta_p)
         self.phi_p = np.array(self.phi_p)
         self.pulse_times = np.array(self.pulse_times)
+
     def phase_add_pi(self):
-        self.phases = np.add(self.phases, np.pi) 
+        self.phases = np.add(self.phases, np.pi)
+
+    def add_pulse(self, other: 'Pulses'):
+        for attr in fields(self):
+            attr_name = attr.name
+            if attr_name == "shape":
+                continue  # Skip shape
+            # Only process attributes that are lists
+            self_attr = getattr(self, attr_name)
+            other_attr = getattr(other, attr_name)
+            if isinstance(self_attr, list) and isinstance(other_attr, list):
+                self_attr.extend(other_attr)
+            else:
+                raise ValueError("Currently, we are only allowing pulses attributes to be lists")
+        self.size = len(self.frequencies)

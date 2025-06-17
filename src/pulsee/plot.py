@@ -430,7 +430,7 @@ def plot_complex_density_matrix(
         cb.set_label("Phase")
 
     if save_to != "":
-        plt.savefig(save_to, dpi=fig_dpi, bbox_inches='tight')
+        fig.savefig(save_to, dpi=fig_dpi, bbox_inches='tight')
 
     if show:
         plt.show()

@@ -9,7 +9,6 @@ import numpy as np
 from numpy.typing import NDArray
 from qutip import Options, Qobj, QobjEvo, expect, mesolve, sesolve, qeye, tensor
 from qutip.ipynbtools import parallel_map as ipynb_parallel_map
-from qutip.solver.parallel import parallel_map
 from scipy.fft import fft, fftfreq, fftshift
 from tqdm import tqdm, trange
 
@@ -1107,6 +1106,7 @@ def ed_evolve(
                 )
 
         else:
+            from qutip.solver.parallel import parallel_map
             res = parallel_map(_ed_evolve_solve_t, tlist, (h, rho0, e_ops), progress_bar=None)
 
         for r, e in res:
