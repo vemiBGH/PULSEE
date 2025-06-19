@@ -69,11 +69,21 @@ class Pulses:
             attr_name = attr.name
             if attr_name == "shape":
                 continue  # Skip shape
-            # Only process attributes that are lists
             self_attr = getattr(self, attr_name)
             other_attr = getattr(other, attr_name)
-            if isinstance(self_attr, list) and isinstance(other_attr, list):
-                self_attr.extend(other_attr)
-            else:
-                raise ValueError("Currently, we are only allowing pulses attributes to be lists")
+            # Type check
+            valid_types = (list, np.ndarray)
+            if not isinstance(self_attr, valid_types) or not isinstance(other_attr, valid_types):
+                raise ValueError(
+                    f"Both attributes must be a list or numpy array.\n"
+                    f"Attribute '{attr_name}':\n"
+                    f"  self_attr: {self_attr} (type: {type(self_attr)})\n"
+                    f"  other_attr: {other_attr} (type: {type(other_attr)})"
+                )
+            # Convert both to numpy arrays and concatenate
+            arr_self = np.array(self_attr)
+            arr_other = np.array(other_attr)
+            setattr(self, attr_name, np.concatenate([arr_self, arr_other]))
         self.size = len(self.frequencies)
+
+
